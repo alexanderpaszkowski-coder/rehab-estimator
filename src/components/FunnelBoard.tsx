@@ -156,15 +156,7 @@ function PropertySummaryModal({
           <div className="summary-photo">
             <img src={home.photoUrl} alt={home.address} />
             <div className="summary-photo-overlay">
-              <div className="summary-source-chip">
-                <SourceLogo source={home.source} customLabel={customLabel} size={32} />
-                <span>{getSourceLabel(home)}</span>
-                {auctionType && (
-                  <span className="summary-source-type">
-                    {auctionType === 'bank-owned' ? 'Bank Owned' : 'Auction'}
-                  </span>
-                )}
-              </div>
+              <SourceLogo source={home.source} customLabel={customLabel} size={53} />
               <span className="summary-review-badge" style={{ background: reviewMeta.bg, color: reviewMeta.color }}>
                 {reviewMeta.label}
               </span>
@@ -173,15 +165,7 @@ function PropertySummaryModal({
         ) : (
           /* No-photo header bar */
           <div className="summary-no-photo-bar">
-            <div className="summary-source-chip summary-source-chip--dark">
-              <SourceLogo source={home.source} customLabel={customLabel} size={32} />
-              <span>{getSourceLabel(home)}</span>
-              {auctionType && (
-                <span className="summary-source-type">
-                  {auctionType === 'bank-owned' ? 'Bank Owned' : 'Auction'}
-                </span>
-              )}
-            </div>
+            <SourceLogo source={home.source} customLabel={customLabel} size={53} />
             <span className="lead-badge" style={{ background: reviewMeta.bg, color: reviewMeta.color }}>
               {reviewMeta.label}
             </span>
@@ -263,6 +247,13 @@ function PropertySummaryModal({
         {quickNotes && (
           <p className="summary-notes">{quickNotes}</p>
         )}
+
+        {/* ── Source watermark ── */}
+        <div className="summary-source-watermark">
+          <SourceLogo source={home.source} customLabel={customLabel} size={16} />
+          <span>{getSourceLabel(home)}</span>
+          {auctionType && <span>· {auctionType === 'bank-owned' ? 'Bank Owned' : 'Auction'}</span>}
+        </div>
 
         {/* ── Actions ── */}
         <div className="summary-actions">
@@ -474,10 +465,7 @@ function LeadCard({ home, onSummary }: { home: HomeFile; onSummary: () => void }
           <img src={home.photoUrl} alt={home.address} loading="lazy" />
           {/* Gradient overlay with source + status badges */}
           <div className="lead-card-photo-overlay">
-            <div className="lead-card-source-chip">
-              <SourceLogo source={home.source} customLabel={customLabel} size={32} />
-              <span>{getSourceLabel(home)}</span>
-            </div>
+            <SourceLogo source={home.source} customLabel={customLabel} size={53} />
             <span
               className="lead-card-status-badge"
               style={{ background: reviewMeta.bg, color: reviewMeta.color }}
@@ -489,10 +477,7 @@ function LeadCard({ home, onSummary }: { home: HomeFile; onSummary: () => void }
       ) : (
         /* No photo: compact source/status bar at top */
         <div className="lead-card-topbar">
-          <div className="lead-card-source-chip lead-card-source-chip--light">
-            <SourceLogo source={home.source} customLabel={customLabel} size={32} />
-            <span>{getSourceLabel(home)}</span>
-          </div>
+          <SourceLogo source={home.source} customLabel={customLabel} size={53} />
           <span
             className="lead-badge"
             style={{ background: reviewMeta.bg, color: reviewMeta.color }}

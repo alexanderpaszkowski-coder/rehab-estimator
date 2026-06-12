@@ -124,18 +124,17 @@ export async function scrapeRealtorListing(url: string): Promise<RealtorScrapedD
 
   const text = json.data.markdown
 
-  // Guard: must look like a property detail page
-  const isListingPage =
-    /\bfor\s+sale\b|\bactive\b|\bpending\b/i.test(text.slice(0, 2000)) ||
-    /\blist\s+price\b|\blisting\s+price\b/i.test(text) ||
-    /\bbeds?\b.*\bbaths?\b/i.test(text.slice(0, 3000)) ||
-    /\byear\s+built\b/i.test(text) ||
-    /realtor\.com\s+(estimate|home\s+value)/i.test(text)
+  // Guard: must look like a property detail page, not a search results page.
+  // Keep this loose — realtor.com renders varied layouts.
+  const isSearchPage =
+    /realestateandhomes-search|\/homes-for-sale\//i.test(url) ||
+    (/\bproperties?\s+found\b|\bresults?\b.*\bfor\s+sale\b/i.test(text.slice(0, 1000)) &&
+      !/year\s+built|\$[\d,]{4,}|bed|bath/i.test(text.slice(0, 500)))
 
-  if (!isListingPage) {
+  if (isSearchPage) {
     throw new Error(
-      `This doesn't look like a property detail page. ` +
-      `Make sure you're linking directly to the listing (not search results).`
+      `This looks like a search results page. ` +
+      `Paste a link directly to a single property listing.`
     )
   }
 

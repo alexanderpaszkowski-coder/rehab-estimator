@@ -998,6 +998,29 @@ textarea { resize: vertical; }
   text-align: center;
 }
 
+/* ── Address confirmation pills ────────────────────── */
+.address-pills-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  animation: fadeIn .15s ease;
+}
+.address-pill {
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  background: var(--surface-2);
+  padding: 5px 13px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text);
+  width: auto;
+  transition: border-color .15s;
+}
+.address-pill:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(194,65,12,.1); border-radius: 20px; }
+.address-pill-city { flex: 1; min-width: 80px; }
+.address-pill-state { width: 52px; flex-shrink: 0; text-align: center; }
+.address-pill-zip { width: 72px; flex-shrink: 0; }
+
 /* ── Intake step 0 — URL-first layout ─────────────── */
 .intake-url-section {
   text-align: center;

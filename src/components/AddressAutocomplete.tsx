@@ -30,6 +30,7 @@ interface Props {
   value: string
   onChange: (raw: string) => void
   onSelect: (fill: AddressFill) => void
+  onBlur?: () => void
   placeholder?: string
   autoFocus?: boolean
 }
@@ -67,7 +68,7 @@ function formatSuggestion(r: NominatimResult): string {
   return parts.length >= 2 ? parts.join(', ') : r.display_name
 }
 
-export function AddressAutocomplete({ value, onChange, onSelect, placeholder, autoFocus }: Props) {
+export function AddressAutocomplete({ value, onChange, onSelect, onBlur, placeholder, autoFocus }: Props) {
   const [suggestions, setSuggestions] = useState<NominatimResult[]>([])
   const [active, setActive] = useState(-1)
   const [open, setOpen] = useState(false)
@@ -164,6 +165,7 @@ export function AddressAutocomplete({ value, onChange, onSelect, placeholder, au
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={handleKey}
           onFocus={() => suggestions.length > 0 && setOpen(true)}
+          onBlur={onBlur}
           autoComplete="off"
           spellCheck={false}
         />

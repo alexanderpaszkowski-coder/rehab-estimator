@@ -295,6 +295,7 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
   const [fetchState, setFetchState] = useState<FetchState>('idle')
   const [fetchError, setFetchError] = useState<string | null>(null)
   const [fetchedFields, setFetchedFields] = useState<string[]>([])
+  const [addressBlurred, setAddressBlurred] = useState(false)
 
   const updateFunnel = (patch: Partial<FunnelScreen>) =>
     setData((d) => ({ ...d, funnel: { ...d.funnel, ...patch } }))
@@ -432,38 +433,46 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
                 <span>or enter address manually</span>
               </div>
 
-              {/* ── Secondary: manual address entry ── */}
-              <div className="field-grid">
-                <div className="field" style={{ gridColumn: '1 / -1' }}>
-                  <label>Street Address</label>
-                  <AddressAutocomplete
-                    value={data.address}
-                    onChange={(street) => setData((d) => ({ ...d, address: street }))}
-                    onSelect={(fill) =>
-                      setData((d) => ({
-                        ...d,
-                        address: fill.street || d.address,
-                        city: fill.city || d.city,
-                        state: fill.state || d.state,
-                        zip: fill.zip || d.zip,
-                      }))
-                    }
+              {/* ── Secondary: single address input ── */}
+              <AddressAutocomplete
+                value={data.address}
+                onChange={(street) => setData((d) => ({ ...d, address: street }))}
+                onSelect={(fill) => {
+                  setData((d) => ({
+                    ...d,
+                    address: fill.street || d.address,
+                    city: fill.city || d.city,
+                    state: fill.state || d.state,
+                    zip: fill.zip || d.zip,
+                  }))
+                  setAddressBlurred(true)
+                }}
+                onBlur={() => { if (data.address.trim()) setAddressBlurred(true) }}
+              />
+
+              {(addressBlurred || data.city || data.state || data.zip) && (
+                <div className="address-pills-row">
+                  <input
+                    className="address-pill address-pill-city"
+                    value={data.city}
+                    onChange={(e) => setData((d) => ({ ...d, city: e.target.value }))}
+                    placeholder="City"
                   />
-                  <p className="field-hint">Start typing — suggestions pull from a national address database</p>
+                  <input
+                    className="address-pill address-pill-state"
+                    value={data.state}
+                    onChange={(e) => setData((d) => ({ ...d, state: e.target.value }))}
+                    placeholder="ST"
+                    maxLength={2}
+                  />
+                  <input
+                    className="address-pill address-pill-zip"
+                    value={data.zip}
+                    onChange={(e) => setData((d) => ({ ...d, zip: e.target.value }))}
+                    placeholder="ZIP"
+                  />
                 </div>
-                <div className="field">
-                  <label>City</label>
-                  <input value={data.city} onChange={(e) => setData({ ...data, city: e.target.value })} />
-                </div>
-                <div className="field">
-                  <label>State</label>
-                  <input value={data.state} onChange={(e) => setData({ ...data, state: e.target.value })} maxLength={2} placeholder="IL" />
-                </div>
-                <div className="field">
-                  <label>ZIP</label>
-                  <input value={data.zip} onChange={(e) => setData({ ...data, zip: e.target.value })} placeholder="60601" />
-                </div>
-              </div>
+              )}
             </div>
           )}
 

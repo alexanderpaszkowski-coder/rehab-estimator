@@ -357,6 +357,7 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
   // 'idle' | 'loading' | 'processing' | 'revealing'
   const [fetchPhase, setFetchPhase] = useState<'idle' | 'loading' | 'processing' | 'revealing'>('idle')
   const [fetchError, setFetchError] = useState<string | null>(null)
+  const [debugSnippet, setDebugSnippet] = useState<string | null>(null)
   const [addressBlurred, setAddressBlurred] = useState(false)
   const [addressAnimated, setAddressAnimated] = useState(false)
   const [photoUrl, setPhotoUrl] = useState<string | undefined>(undefined)
@@ -421,6 +422,10 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
         if (scraped.realtorEstimate)  funnelPatch.arv = scraped.realtorEstimate
         if (scraped.occupancy)        funnelPatch.occupancy = scraped.occupancy
         if (scraped.yearBuilt)        funnelPatch.yearBuilt = scraped.yearBuilt
+        // Show debug snippet if price/estimate didn't parse
+        if (!scraped.listPrice && !scraped.realtorEstimate && scraped._debug) {
+          setDebugSnippet(scraped._debug)
+        }
       }
 
       // Phase 1: processing spinner
@@ -525,6 +530,28 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
 
                 {fetchError && (
                   <p className="auction-autofill-error" style={{ marginTop: 8 }}>{fetchError}</p>
+                )}
+                {debugSnippet && (
+                  <details style={{ marginTop: 10 }}>
+                    <summary style={{ fontSize: '0.75rem', color: 'var(--text-muted)', cursor: 'pointer' }}>
+                      ⚠ Price/estimate not found — tap to see raw page text
+                    </summary>
+                    <pre style={{
+                      fontSize: '0.65rem',
+                      background: 'var(--surface-2)',
+                      border: '1px solid var(--border)',
+                      borderRadius: 6,
+                      padding: 10,
+                      marginTop: 6,
+                      whiteSpace: 'pre-wrap',
+                      wordBreak: 'break-all',
+                      maxHeight: 200,
+                      overflowY: 'auto',
+                      color: 'var(--text-muted)',
+                    }}>
+                      {debugSnippet}
+                    </pre>
+                  </details>
                 )}
               </div>
 

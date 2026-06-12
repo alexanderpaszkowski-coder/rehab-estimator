@@ -9,7 +9,7 @@ interface Props {
   onCancel: () => void
 }
 
-const STEPS = ['Address', 'Source', 'Links & Notes', 'Screen']
+const STEPS = ['Address', 'Source', 'Screen', 'Notes']
 
 function TriToggle({
   value,
@@ -115,7 +115,6 @@ function AuctionScreen({
 }) {
   return (
     <>
-      {/* Listing type — early, drives what follows */}
       <div className="screen-item" style={{ gridColumn: '1 / -1' }}>
         <label>Listing type</label>
         <div className="condition-pills">
@@ -149,7 +148,6 @@ function AuctionScreen({
         )}
       </div>
 
-      {/* Auction.com estimate price — same data as ARV, different label */}
       <div className="field" style={{ gridColumn: '1 / -1' }}>
         <label>Auction.com estimate price</label>
         <input
@@ -160,7 +158,6 @@ function AuctionScreen({
         />
       </div>
 
-      {/* Starting bid — same data as askingPrice, different label */}
       <div className="field" style={{ gridColumn: '1 / -1' }}>
         <label>Starting bid</label>
         <input
@@ -276,8 +273,6 @@ function StandardScreen({
   )
 }
 
-type FetchState = 'idle' | 'loading' | 'success' | 'error'
-
 export function PropertyIntake({ onSubmit, onCancel }: Props) {
   const [step, setStep] = useState(0)
   const [data, setData] = useState<IntakeData>({
@@ -290,11 +285,9 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
     funnel: { ...DEFAULT_FUNNEL },
     links: [],
   })
-  const [linkInput, setLinkInput] = useState('')
   const [auctionUrl, setAuctionUrl] = useState('')
-  const [fetchState, setFetchState] = useState<FetchState>('idle')
+  const [fetching, setFetching] = useState(false)
   const [fetchError, setFetchError] = useState<string | null>(null)
-  const [fetchedFields, setFetchedFields] = useState<string[]>([])
   const [addressBlurred, setAddressBlurred] = useState(false)
 
   const updateFunnel = (patch: Partial<FunnelScreen>) =>
@@ -303,61 +296,37 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
   const handleAuctionFetch = async () => {
     const url = auctionUrl.trim()
     if (!url) return
-    setFetchState('loading')
+    setFetching(true)
     setFetchError(null)
-    setFetchedFields([])
     try {
       const scraped = await scrapeAuctionListing(url)
-      const filled: string[] = []
 
       setData((prev) => {
         const next = { ...prev, source: 'auction.com' as const }
-
-        if (scraped.address) { next.address = scraped.address; filled.push('Address') }
-        if (scraped.city) { next.city = scraped.city; filled.push('City') }
+        if (scraped.address) next.address = scraped.address
+        if (scraped.city) next.city = scraped.city
         if (scraped.state) next.state = scraped.state
         if (scraped.zip) next.zip = scraped.zip
-
         next.funnel = { ...prev.funnel }
-        if (scraped.estimatePrice) { next.funnel.arv = scraped.estimatePrice; filled.push('Estimate price') }
-        if (scraped.openingBid) { next.funnel.askingPrice = scraped.openingBid; filled.push('Starting bid') }
-        if (scraped.listingType) { next.funnel.auctionType = scraped.listingType; filled.push('Listing type') }
-        if (scraped.startingCreditBid) { next.funnel.startingCreditBid = scraped.startingCreditBid; filled.push('Credit bid') }
-        if (scraped.occupancy) { next.funnel.occupancy = scraped.occupancy; filled.push('Occupancy') }
-        if (scraped.yearBuilt) { next.funnel.yearBuilt = scraped.yearBuilt; filled.push('Year built') }
-
+        if (scraped.estimatePrice) next.funnel.arv = scraped.estimatePrice
+        if (scraped.openingBid) next.funnel.askingPrice = scraped.openingBid
+        if (scraped.listingType) next.funnel.auctionType = scraped.listingType
+        if (scraped.startingCreditBid) next.funnel.startingCreditBid = scraped.startingCreditBid
+        if (scraped.occupancy) next.funnel.occupancy = scraped.occupancy
+        if (scraped.yearBuilt) next.funnel.yearBuilt = scraped.yearBuilt
         return next
       })
 
-      setFetchedFields(filled)
-      setFetchState('success')
+      // Go straight to Notes (last step) — source + screen already populated
+      setStep(STEPS.length - 1)
     } catch (err) {
       setFetchError(err instanceof Error ? err.message : 'Failed to fetch listing')
-      setFetchState('error')
+    } finally {
+      setFetching(false)
     }
   }
 
-  const addLink = () => {
-    const trimmed = linkInput.trim()
-    if (!trimmed) return
-    setData((d) => ({ ...d, links: [...(d.links ?? []), trimmed] }))
-    setLinkInput('')
-  }
-
-  const removeLink = (i: number) => {
-    setData((d) => ({ ...d, links: (d.links ?? []).filter((_, idx) => idx !== i) }))
-  }
-
-  const canNext = step === 0 ? (data.address.trim().length > 0 || fetchState === 'success') : true
-
-  // After a URL fetch, skip the source-selection step (source is already set)
-  const handleNext = () => {
-    if (step === 0 && fetchState === 'success') {
-      setStep(2)
-    } else {
-      setStep(step + 1)
-    }
-  }
+  const canNext = step === 0 ? data.address.trim().length > 0 : true
 
   return (
     <div className="modal-overlay" onClick={onCancel}>
@@ -382,68 +351,47 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
         </div>
 
         <div className="modal-body">
+
+          {/* ── Step 0: Address ── */}
           {step === 0 && (
             <div>
-              {/* ── Primary: listing URL paste ── */}
               <div className="intake-url-section">
-                {fetchState === 'success' ? (
-                  <div className="intake-fetch-success">
-                    <span className="intake-fetch-success-text">
-                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true" style={{ flexShrink: 0 }}>
-                        <circle cx="7" cy="7" r="6.5" stroke="currentColor" strokeWidth="1.5" />
-                        <path d="M4 7l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                      {fetchedFields.length > 0 ? fetchedFields.join(', ') + ' filled' : 'Fetched — fill remaining fields manually'}
-                    </span>
-                    <button
-                      type="button"
-                      className="intake-fetch-reset"
-                      onClick={() => { setAuctionUrl(''); setFetchState('idle'); setFetchedFields([]) }}
-                    >
-                      ↺ Try another
-                    </button>
-                  </div>
-                ) : (
-                  <div className="intake-url-row">
-                    <input
-                      type="url"
-                      autoFocus
-                      value={auctionUrl}
-                      onChange={(e) => { setAuctionUrl(e.target.value); setFetchState('idle') }}
-                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void handleAuctionFetch() } }}
-                      placeholder="Paste listing link…"
-                      disabled={fetchState === 'loading'}
-                      className="intake-url-input"
-                    />
-                    <button
-                      type="button"
-                      className="intake-fetch-btn"
-                      onClick={() => void handleAuctionFetch()}
-                      disabled={!auctionUrl.trim() || fetchState === 'loading'}
-                      title="Fetch listing"
-                    >
-                      {fetchState === 'loading'
-                        ? <span className="intake-spinner" />
-                        : (
-                          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-                            <path d="M3.5 9h11M10 4.5l4.5 4.5L10 13.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                        )}
-                    </button>
-                  </div>
-                )}
-
-                {fetchState === 'error' && (
+                <div className="intake-url-row">
+                  <input
+                    type="url"
+                    autoFocus
+                    value={auctionUrl}
+                    onChange={(e) => { setAuctionUrl(e.target.value); setFetchError(null) }}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void handleAuctionFetch() } }}
+                    placeholder="Paste listing link…"
+                    disabled={fetching}
+                    className="intake-url-input"
+                  />
+                  <button
+                    type="button"
+                    className="intake-fetch-btn"
+                    onClick={() => void handleAuctionFetch()}
+                    disabled={!auctionUrl.trim() || fetching}
+                    title="Fetch listing"
+                  >
+                    {fetching
+                      ? <span className="intake-spinner" />
+                      : (
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+                          <path d="M3.5 9h11M10 4.5l4.5 4.5L10 13.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      )}
+                  </button>
+                </div>
+                {fetchError && (
                   <p className="auction-autofill-error" style={{ marginTop: 8 }}>{fetchError}</p>
                 )}
               </div>
 
-              {/* ── OR divider ── */}
               <div className="intake-or-divider">
                 <span>or enter address manually</span>
               </div>
 
-              {/* ── Secondary: single address input ── */}
               <AddressAutocomplete
                 value={data.address}
                 onChange={(street) => setData((d) => ({ ...d, address: street }))}
@@ -486,6 +434,7 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
             </div>
           )}
 
+          {/* ── Step 1: Source ── */}
           {step === 1 && (
             <div>
               <p className="modal-hint">Where did this lead come from?</p>
@@ -518,36 +467,8 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
             </div>
           )}
 
+          {/* ── Step 2: Screen ── */}
           {step === 2 && (
-            <div>
-              <p className="modal-hint">Paste any relevant links — Zillow, Redfin, Google Maps, photos, etc.</p>
-              <div className="link-input-row">
-                <input
-                  value={linkInput}
-                  onChange={(e) => setLinkInput(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addLink() } }}
-                  placeholder="https://www.zillow.com/homedetails/…"
-                />
-                <button type="button" className="btn btn-secondary btn-sm" onClick={addLink}>Add</button>
-              </div>
-              {(data.links ?? []).length > 0 && (
-                <ul className="link-list">
-                  {(data.links ?? []).map((url, i) => (
-                    <li key={i}>
-                      <a href={url} target="_blank" rel="noopener noreferrer">{url}</a>
-                      <button type="button" className="btn btn-ghost btn-sm btn-danger" onClick={() => removeLink(i)}>✕</button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              <div className="field" style={{ marginTop: 20 }}>
-                <label>Quick notes</label>
-                <textarea rows={3} value={data.funnel.quickNotes} onChange={(e) => updateFunnel({ quickNotes: e.target.value })} placeholder="Anything notable about this property" />
-              </div>
-            </div>
-          )}
-
-          {step === 3 && (
             <div className="screen-grid">
               {data.source === 'auction.com' ? (
                 <AuctionScreen funnel={data.funnel} onChange={updateFunnel} />
@@ -556,6 +477,21 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
               )}
             </div>
           )}
+
+          {/* ── Step 3: Notes ── */}
+          {step === 3 && (
+            <div className="field">
+              <label>Quick notes</label>
+              <textarea
+                rows={6}
+                autoFocus
+                value={data.funnel.quickNotes}
+                onChange={(e) => updateFunnel({ quickNotes: e.target.value })}
+                placeholder="Anything notable about this property — condition, seller situation, access notes, etc."
+              />
+            </div>
+          )}
+
         </div>
 
         <div className="modal-actions">
@@ -565,7 +501,7 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
             <button type="button" className="btn btn-ghost" onClick={onCancel}>Cancel</button>
           )}
           {step < STEPS.length - 1 ? (
-            <button type="button" className="btn btn-primary" disabled={!canNext} onClick={handleNext}>
+            <button type="button" className="btn btn-primary" disabled={!canNext} onClick={() => setStep(step + 1)}>
               Next →
             </button>
           ) : (

@@ -123,13 +123,22 @@ export async function scrapeAuctionListing(url: string): Promise<AuctionScrapedD
     ])
   }
 
-  // Occupancy — only match an explicit field label, not FAQ boilerplate
-  const occupancyField = text.match(/occupancy(?:\s+status)?[:\s]+(\w+)/i)
-  if (occupancyField) {
-    const val = occupancyField[1].toLowerCase()
-    if (val === 'vacant') result.occupancy = 'vacant'
-    else if (val === 'occupied') result.occupancy = 'occupied'
-    else result.occupancy = 'unknown'
+  // Occupancy — match explicit label or the specific auction.com "Occupied: Do not disturb" notice
+  if (
+    /\boccupied\s*:\s*do\s+not\s+disturb/i.test(text) ||
+    /^occupied[\s:]/im.test(text)
+  ) {
+    result.occupancy = 'occupied'
+  } else if (/^vacant[\s:]/im.test(text) || /^property\s+is\s+vacant/im.test(text)) {
+    result.occupancy = 'vacant'
+  } else {
+    // Fall back to explicit "occupancy: <value>" field label
+    const occupancyField = text.match(/occupancy(?:\s+status)?\s*[:\-]\s*(\w+)/i)
+    if (occupancyField) {
+      const val = occupancyField[1].toLowerCase()
+      if (val === 'vacant') result.occupancy = 'vacant'
+      else if (val === 'occupied') result.occupancy = 'occupied'
+    }
   }
 
   // Year built

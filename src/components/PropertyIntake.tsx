@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import type { FunnelScreen, IntakeData, PropertySource, TriState } from '../types'
 import { DEFAULT_FUNNEL, PROPERTY_SOURCES } from '../lib/funnel'
 import { AddressAutocomplete } from './AddressAutocomplete'
@@ -365,17 +365,11 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
     links: [],
   })
   const [listingUrl, setListingUrl] = useState('')
-  // 'idle' | 'loading' | 'processing' | 'revealing'
-  const [fetchPhase, setFetchPhase] = useState<'idle' | 'loading' | 'processing' | 'revealing'>('idle')
+  const [fetchLoading, setFetchLoading] = useState(false)
   const [fetchError, setFetchError] = useState<string | null>(null)
   const [debugSnippet, setDebugSnippet] = useState<string | null>(null)
   const [addressBlurred, setAddressBlurred] = useState(false)
-  const [addressAnimated, setAddressAnimated] = useState(false)
   const [photoUrl, setPhotoUrl] = useState<string | undefined>(undefined)
-  const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  // Clean up timer on unmount
-  useEffect(() => () => { if (advanceTimer.current) clearTimeout(advanceTimer.current) }, [])
 
   const updateFunnel = (patch: Partial<FunnelScreen>) =>
     setData((d) => ({ ...d, funnel: { ...d.funnel, ...patch } }))
@@ -395,8 +389,9 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
       return
     }
 
-    setFetchPhase('loading')
+    setFetchLoading(true)
     setFetchError(null)
+    setDebugSnippet(null)
     try {
       let photo: string | undefined
       let addressPatch: { address?: string; city?: string; state?: string; zip?: string } = {}
@@ -408,12 +403,12 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
         const scraped = await scrapeAuctionListing(url)
         photo = scraped.photoUrl
         addressPatch = { address: scraped.address, city: scraped.city, state: scraped.state, zip: scraped.zip }
-        if (scraped.estimatePrice)     funnelPatch.arv              = scraped.estimatePrice
-        if (scraped.openingBid)        funnelPatch.askingPrice      = scraped.openingBid
-        if (scraped.listingType)       funnelPatch.auctionType      = scraped.listingType
+        if (scraped.estimatePrice)     funnelPatch.arv               = scraped.estimatePrice
+        if (scraped.openingBid)        funnelPatch.askingPrice       = scraped.openingBid
+        if (scraped.listingType)       funnelPatch.auctionType       = scraped.listingType
         if (scraped.startingCreditBid) funnelPatch.startingCreditBid = scraped.startingCreditBid
-        if (scraped.occupancy)         funnelPatch.occupancy        = scraped.occupancy
-        if (scraped.yearBuilt)         funnelPatch.yearBuilt        = scraped.yearBuilt
+        if (scraped.occupancy)         funnelPatch.occupancy         = scraped.occupancy
+        if (scraped.yearBuilt)         funnelPatch.yearBuilt         = scraped.yearBuilt
       } else {
         const scraped = await scrapeListingUrl(url)
         source = scraped.source
@@ -428,39 +423,29 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
         }
       }
 
-      // Phase 1: processing spinner
-      setFetchPhase('processing')
-
-      advanceTimer.current = setTimeout(() => {
-        // Phase 2: populate data + animate address in
-        if (photo) setPhotoUrl(photo)
-
-        setData((prev) => {
-          const next = { ...prev, source }
-          if (addressPatch.address) next.address = addressPatch.address
-          if (addressPatch.city)    next.city    = addressPatch.city
-          if (addressPatch.state)   next.state   = addressPatch.state
-          if (addressPatch.zip)     next.zip     = addressPatch.zip
-          next.funnel = { ...prev.funnel, ...funnelPatch }
-          return next
-        })
-
-        setAddressBlurred(true)
-        setAddressAnimated(true)
-        setFetchPhase('revealing')
-
-        // Phase 3: after address pops in, advance to Screen
-        advanceTimer.current = setTimeout(() => setStep(2), 900)
-      }, 1500)
+      // Populate data immediately and advance to Screen step
+      if (photo) setPhotoUrl(photo)
+      setData((prev) => {
+        const next = { ...prev, source }
+        if (addressPatch.address) next.address = addressPatch.address
+        if (addressPatch.city)    next.city    = addressPatch.city
+        if (addressPatch.state)   next.state   = addressPatch.state
+        if (addressPatch.zip)     next.zip     = addressPatch.zip
+        next.funnel = { ...prev.funnel, ...funnelPatch }
+        return next
+      })
+      setAddressBlurred(true)
+      setStep(2)
 
     } catch (err) {
       setFetchError(err instanceof Error ? err.message : 'Failed to fetch listing')
-      setFetchPhase('idle')
+    } finally {
+      setFetchLoading(false)
     }
   }
 
   const canNext = step === 0
-    ? (data.address.trim().length > 0 && fetchPhase !== 'loading' && fetchPhase !== 'processing')
+    ? (data.address.trim().length > 0 && !fetchLoading)
     : true
 
   return (
@@ -491,42 +476,33 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
           {step === 0 && (
             <div>
               <div className="intake-url-section">
-
-                {/* Processing overlay — shows after fetch completes, before revealing */}
-                {fetchPhase === 'processing' ? (
-                  <div className="intake-processing">
-                    <div className="intake-processing-ring" />
-                    <span>Importing property data…</span>
-                  </div>
-                ) : (
-                  <div className="intake-url-row">
-                    <input
-                      type="url"
-                      autoFocus
-                      value={listingUrl}
-                      onChange={(e) => { setListingUrl(e.target.value); setFetchError(null) }}
-                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void handleListingFetch() } }}
-                      placeholder="Paste listing link…"
-                      disabled={fetchPhase === 'loading'}
-                      className="intake-url-input"
-                    />
-                    <button
-                      type="button"
-                      className="intake-fetch-btn"
-                      onClick={() => void handleListingFetch()}
-                      disabled={!listingUrl.trim() || fetchPhase === 'loading'}
-                      title="Fetch listing"
-                    >
-                      {fetchPhase === 'loading'
-                        ? <span className="intake-spinner" />
-                        : (
-                          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-                            <path d="M3.5 9h11M10 4.5l4.5 4.5L10 13.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                        )}
-                    </button>
-                  </div>
-                )}
+                <div className="intake-url-row">
+                  <input
+                    type="url"
+                    autoFocus
+                    value={listingUrl}
+                    onChange={(e) => { setListingUrl(e.target.value); setFetchError(null) }}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void handleListingFetch() } }}
+                    placeholder="Paste listing link…"
+                    disabled={fetchLoading}
+                    className="intake-url-input"
+                  />
+                  <button
+                    type="button"
+                    className="intake-fetch-btn"
+                    onClick={() => void handleListingFetch()}
+                    disabled={!listingUrl.trim() || fetchLoading}
+                    title="Fetch listing"
+                  >
+                    {fetchLoading
+                      ? <span className="intake-spinner" />
+                      : (
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+                          <path d="M3.5 9h11M10 4.5l4.5 4.5L10 13.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      )}
+                  </button>
+                </div>
 
                 {fetchError && (
                   <p className="auction-autofill-error" style={{ marginTop: 8 }}>{fetchError}</p>
@@ -569,15 +545,11 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
                 )}
               </div>
 
-              {/* OR divider — hide during processing */}
-              {fetchPhase !== 'processing' && (
-                <div className="intake-or-divider">
-                  <span>or enter address manually</span>
-                </div>
-              )}
+              <div className="intake-or-divider">
+                <span>or enter address manually</span>
+              </div>
 
-              {/* Address field — animates in when revealed */}
-              <div className={addressAnimated ? 'address-reveal' : ''}>
+              <div>
                 <AddressAutocomplete
                   value={data.address}
                   onChange={(street) => setData((d) => ({ ...d, address: street }))}
@@ -595,7 +567,7 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
                 />
 
                 {(addressBlurred || data.city || data.state || data.zip) && (
-                  <div className={`address-pills-row ${addressAnimated ? 'pills-reveal' : ''}`}>
+                  <div className="address-pills-row">
                     <input
                       className="address-pill address-pill-city"
                       value={data.city}

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { FunnelScreen, IntakeData, PropertySource, TriState } from '../types'
 import { DEFAULT_FUNNEL, PROPERTY_SOURCES } from '../lib/funnel'
 import { AddressAutocomplete } from './AddressAutocomplete'
@@ -286,10 +286,16 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
     links: [],
   })
   const [auctionUrl, setAuctionUrl] = useState('')
-  const [fetching, setFetching] = useState(false)
+  // 'idle' | 'loading' | 'processing' | 'revealing'
+  const [fetchPhase, setFetchPhase] = useState<'idle' | 'loading' | 'processing' | 'revealing'>('idle')
   const [fetchError, setFetchError] = useState<string | null>(null)
   const [addressBlurred, setAddressBlurred] = useState(false)
+  const [addressAnimated, setAddressAnimated] = useState(false)
   const [photoUrl, setPhotoUrl] = useState<string | undefined>(undefined)
+  const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Clean up timer on unmount
+  useEffect(() => () => { if (advanceTimer.current) clearTimeout(advanceTimer.current) }, [])
 
   const updateFunnel = (patch: Partial<FunnelScreen>) =>
     setData((d) => ({ ...d, funnel: { ...d.funnel, ...patch } }))
@@ -297,40 +303,53 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
   const handleAuctionFetch = async () => {
     const url = auctionUrl.trim()
     if (!url) return
-    setFetching(true)
+    setFetchPhase('loading')
     setFetchError(null)
     try {
       const scraped = await scrapeAuctionListing(url)
 
-      if (scraped.photoUrl) setPhotoUrl(scraped.photoUrl)
-      if (scraped.address || scraped.city) setAddressBlurred(true)
+      // Phase 1: show processing spinner for ~1.5s before revealing
+      setFetchPhase('processing')
 
-      setData((prev) => {
-        const next = { ...prev, source: 'auction.com' as const }
-        if (scraped.address) next.address = scraped.address
-        if (scraped.city) next.city = scraped.city
-        if (scraped.state) next.state = scraped.state
-        if (scraped.zip) next.zip = scraped.zip
-        next.funnel = { ...prev.funnel }
-        if (scraped.estimatePrice) next.funnel.arv = scraped.estimatePrice
-        if (scraped.openingBid) next.funnel.askingPrice = scraped.openingBid
-        if (scraped.listingType) next.funnel.auctionType = scraped.listingType
-        if (scraped.startingCreditBid) next.funnel.startingCreditBid = scraped.startingCreditBid
-        if (scraped.occupancy) next.funnel.occupancy = scraped.occupancy
-        if (scraped.yearBuilt) next.funnel.yearBuilt = scraped.yearBuilt
-        return next
-      })
+      advanceTimer.current = setTimeout(() => {
+        // Phase 2: populate data + animate address in
+        if (scraped.photoUrl) setPhotoUrl(scraped.photoUrl)
 
-      // Jump to Screen so the user can review what was auto-filled
-      setStep(2)
+        setData((prev) => {
+          const next = { ...prev, source: 'auction.com' as const }
+          if (scraped.address) next.address = scraped.address
+          if (scraped.city) next.city = scraped.city
+          if (scraped.state) next.state = scraped.state
+          if (scraped.zip) next.zip = scraped.zip
+          next.funnel = { ...prev.funnel }
+          if (scraped.estimatePrice) next.funnel.arv = scraped.estimatePrice
+          if (scraped.openingBid) next.funnel.askingPrice = scraped.openingBid
+          if (scraped.listingType) next.funnel.auctionType = scraped.listingType
+          if (scraped.startingCreditBid) next.funnel.startingCreditBid = scraped.startingCreditBid
+          if (scraped.occupancy) next.funnel.occupancy = scraped.occupancy
+          if (scraped.yearBuilt) next.funnel.yearBuilt = scraped.yearBuilt
+          return next
+        })
+
+        setAddressBlurred(true)
+        setAddressAnimated(true)
+        setFetchPhase('revealing')
+
+        // Phase 3: after address pops in, advance to Screen
+        advanceTimer.current = setTimeout(() => {
+          setStep(2)
+        }, 900)
+      }, 1500)
+
     } catch (err) {
       setFetchError(err instanceof Error ? err.message : 'Failed to fetch listing')
-    } finally {
-      setFetching(false)
+      setFetchPhase('idle')
     }
   }
 
-  const canNext = step === 0 ? data.address.trim().length > 0 : true
+  const canNext = step === 0
+    ? (data.address.trim().length > 0 && fetchPhase !== 'loading' && fetchPhase !== 'processing')
+    : true
 
   return (
     <div className="modal-overlay" onClick={onCancel}>
@@ -360,81 +379,97 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
           {step === 0 && (
             <div>
               <div className="intake-url-section">
-                <div className="intake-url-row">
-                  <input
-                    type="url"
-                    autoFocus
-                    value={auctionUrl}
-                    onChange={(e) => { setAuctionUrl(e.target.value); setFetchError(null) }}
-                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void handleAuctionFetch() } }}
-                    placeholder="Paste listing link…"
-                    disabled={fetching}
-                    className="intake-url-input"
-                  />
-                  <button
-                    type="button"
-                    className="intake-fetch-btn"
-                    onClick={() => void handleAuctionFetch()}
-                    disabled={!auctionUrl.trim() || fetching}
-                    title="Fetch listing"
-                  >
-                    {fetching
-                      ? <span className="intake-spinner" />
-                      : (
-                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-                          <path d="M3.5 9h11M10 4.5l4.5 4.5L10 13.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                      )}
-                  </button>
-                </div>
+
+                {/* Processing overlay — shows after fetch completes, before revealing */}
+                {fetchPhase === 'processing' ? (
+                  <div className="intake-processing">
+                    <div className="intake-processing-ring" />
+                    <span>Importing property data…</span>
+                  </div>
+                ) : (
+                  <div className="intake-url-row">
+                    <input
+                      type="url"
+                      autoFocus
+                      value={auctionUrl}
+                      onChange={(e) => { setAuctionUrl(e.target.value); setFetchError(null) }}
+                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void handleAuctionFetch() } }}
+                      placeholder="Paste listing link…"
+                      disabled={fetchPhase === 'loading'}
+                      className="intake-url-input"
+                    />
+                    <button
+                      type="button"
+                      className="intake-fetch-btn"
+                      onClick={() => void handleAuctionFetch()}
+                      disabled={!auctionUrl.trim() || fetchPhase === 'loading'}
+                      title="Fetch listing"
+                    >
+                      {fetchPhase === 'loading'
+                        ? <span className="intake-spinner" />
+                        : (
+                          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+                            <path d="M3.5 9h11M10 4.5l4.5 4.5L10 13.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        )}
+                    </button>
+                  </div>
+                )}
+
                 {fetchError && (
                   <p className="auction-autofill-error" style={{ marginTop: 8 }}>{fetchError}</p>
                 )}
               </div>
 
-              <div className="intake-or-divider">
-                <span>or enter address manually</span>
-              </div>
-
-              <AddressAutocomplete
-                value={data.address}
-                onChange={(street) => setData((d) => ({ ...d, address: street }))}
-                onSelect={(fill) => {
-                  setData((d) => ({
-                    ...d,
-                    address: fill.street || d.address,
-                    city: fill.city || d.city,
-                    state: fill.state || d.state,
-                    zip: fill.zip || d.zip,
-                  }))
-                  setAddressBlurred(true)
-                }}
-                onBlur={() => { if (data.address.trim()) setAddressBlurred(true) }}
-              />
-
-              {(addressBlurred || data.city || data.state || data.zip) && (
-                <div className="address-pills-row">
-                  <input
-                    className="address-pill address-pill-city"
-                    value={data.city}
-                    onChange={(e) => setData((d) => ({ ...d, city: e.target.value }))}
-                    placeholder="City"
-                  />
-                  <input
-                    className="address-pill address-pill-state"
-                    value={data.state}
-                    onChange={(e) => setData((d) => ({ ...d, state: e.target.value }))}
-                    placeholder="ST"
-                    maxLength={2}
-                  />
-                  <input
-                    className="address-pill address-pill-zip"
-                    value={data.zip}
-                    onChange={(e) => setData((d) => ({ ...d, zip: e.target.value }))}
-                    placeholder="ZIP"
-                  />
+              {/* OR divider — hide during processing */}
+              {fetchPhase !== 'processing' && (
+                <div className="intake-or-divider">
+                  <span>or enter address manually</span>
                 </div>
               )}
+
+              {/* Address field — animates in when revealed */}
+              <div className={addressAnimated ? 'address-reveal' : ''}>
+                <AddressAutocomplete
+                  value={data.address}
+                  onChange={(street) => setData((d) => ({ ...d, address: street }))}
+                  onSelect={(fill) => {
+                    setData((d) => ({
+                      ...d,
+                      address: fill.street || d.address,
+                      city: fill.city || d.city,
+                      state: fill.state || d.state,
+                      zip: fill.zip || d.zip,
+                    }))
+                    setAddressBlurred(true)
+                  }}
+                  onBlur={() => { if (data.address.trim()) setAddressBlurred(true) }}
+                />
+
+                {(addressBlurred || data.city || data.state || data.zip) && (
+                  <div className={`address-pills-row ${addressAnimated ? 'pills-reveal' : ''}`}>
+                    <input
+                      className="address-pill address-pill-city"
+                      value={data.city}
+                      onChange={(e) => setData((d) => ({ ...d, city: e.target.value }))}
+                      placeholder="City"
+                    />
+                    <input
+                      className="address-pill address-pill-state"
+                      value={data.state}
+                      onChange={(e) => setData((d) => ({ ...d, state: e.target.value }))}
+                      placeholder="ST"
+                      maxLength={2}
+                    />
+                    <input
+                      className="address-pill address-pill-zip"
+                      value={data.zip}
+                      onChange={(e) => setData((d) => ({ ...d, zip: e.target.value }))}
+                      placeholder="ZIP"
+                    />
+                  </div>
+                )}
+              </div>
             </div>
           )}
 

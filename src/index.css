@@ -1179,6 +1179,54 @@ textarea { resize: vertical; }
   border-radius: 50%;
   animation: spin .6s linear infinite;
 }
+
+/* ── Processing state ── */
+.intake-processing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 28px 0 24px;
+  animation: fadeIn .25s ease;
+}
+.intake-processing span {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  animation: processingPulse 1s ease-in-out infinite;
+}
+.intake-processing-ring {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 3px solid var(--border);
+  border-top-color: var(--primary);
+  animation: spin .75s linear infinite;
+}
+
+/* ── Address reveal animations ── */
+@keyframes addressPopIn {
+  0%   { opacity: 0; transform: translateY(8px) scale(0.98); }
+  60%  { opacity: 1; transform: translateY(-2px) scale(1.005); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes pillsSlideIn {
+  0%   { opacity: 0; transform: translateY(6px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes processingPulse {
+  0%, 100% { opacity: 0.5; }
+  50%       { opacity: 1; }
+}
+
+.address-reveal {
+  animation: addressPopIn .45s cubic-bezier(.34,1.56,.64,1) both;
+}
+.pills-reveal {
+  animation: pillsSlideIn .35s ease .15s both;
+}
 .intake-or-divider {
   display: flex;
   align-items: center;

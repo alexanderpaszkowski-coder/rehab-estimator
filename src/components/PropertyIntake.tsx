@@ -395,7 +395,7 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
                     value={auctionUrl}
                     onChange={(e) => { setAuctionUrl(e.target.value); setFetchState('idle') }}
                     onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void handleAuctionFetch() } }}
-                    placeholder="https://www.auction.com/details/…"
+                    placeholder="Paste listing link…"
                     disabled={fetchState === 'loading'}
                     className="intake-url-input"
                   />

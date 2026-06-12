@@ -145,10 +145,10 @@ export async function scrapeAuctionListing(url: string): Promise<AuctionScrapedD
     /current\s+bid[\s\S]{0,10}?(\$[\d,]+)/im,
   ])
 
-  // Estimate price
+  // Estimate price — "Est. MarketValue" (no space) or "Est. Market Value"
   result.estimatePrice = firstMoney(text, [
-    /est\.?\s+market\s+value[\s\S]{0,15}?(\$[\d,]+)/im,
-    /est\.?\s+retail\s+value[\s\S]{0,15}?(\$[\d,]+)/im,
+    /est\.?\s+market\s*value[\s\S]{0,20}?(\$[\d,]+)/im,
+    /est\.?\s+retail\s*value[\s\S]{0,20}?(\$[\d,]+)/im,
     /estimated?\s+value[\s\S]{0,15}?(\$[\d,]+)/im,
     /\bbpo[\s\S]{0,10}?(\$[\d,]+)/im,
     /broker.?price.?opinion[\s\S]{0,10}?(\$[\d,]+)/im,

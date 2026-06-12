@@ -42,10 +42,10 @@ export const DEFAULT_PROPERTY: PropertyInputs = {
   marketAdj: 1,
 }
 
-export function createDefaultQuickEstimate(): QuickSystem[] {
+export function createDefaultQuickEstimate(rehabLevel?: 'Light' | 'Moderate' | 'Heavy' | null): QuickSystem[] {
   return template.quickEstimateSystems.map((s) => ({
     ...s,
-    condition: s.condition as QuickSystem['condition'],
+    condition: (rehabLevel ?? s.condition) as QuickSystem['condition'],
     qty: s.qty ?? '',
   }))
 }
@@ -75,7 +75,7 @@ export function createHomeFile(address: string, intake?: Partial<IntakeData>): H
     createdAt: now,
     updatedAt: now,
     property: { ...DEFAULT_PROPERTY },
-    quickEstimate: createDefaultQuickEstimate(),
+    quickEstimate: createDefaultQuickEstimate(intake?.funnel?.rehabLevel),
     sowLines: createEmptySowLines(),
     notes: '',
     submittedBy: intake?.submittedBy ?? 'reviewer',

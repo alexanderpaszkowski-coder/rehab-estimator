@@ -384,48 +384,57 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
         <div className="modal-body">
           {step === 0 && (
             <div>
-              {/* ── Primary: auction.com URL paste ── */}
+              {/* ── Primary: listing URL paste ── */}
               <div className="intake-url-section">
-                <div className="intake-url-row">
-                  <input
-                    type="url"
-                    autoFocus
-                    value={auctionUrl}
-                    onChange={(e) => { setAuctionUrl(e.target.value); setFetchState('idle') }}
-                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void handleAuctionFetch() } }}
-                    placeholder="Paste listing link…"
-                    disabled={fetchState === 'loading'}
-                    className="intake-url-input"
-                  />
-                  <button
-                    type="button"
-                    className="intake-fetch-btn"
-                    onClick={() => void handleAuctionFetch()}
-                    disabled={!auctionUrl.trim() || fetchState === 'loading'}
-                    title="Fetch listing"
-                  >
-                    {fetchState === 'loading'
-                      ? <span className="intake-spinner" />
-                      : (
-                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-                          <path d="M3.5 9h11M10 4.5l4.5 4.5L10 13.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                      )}
-                  </button>
-                </div>
-
-                {fetchState === 'success' && fetchedFields.length > 0 && (
-                  <div className="auction-autofill-success" style={{ marginTop: 10 }}>
-                    <span>✓ Filled: {fetchedFields.join(', ')}</span>
+                {fetchState === 'success' ? (
+                  <div className="intake-fetch-success">
+                    <span className="intake-fetch-success-text">
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true" style={{ flexShrink: 0 }}>
+                        <circle cx="7" cy="7" r="6.5" stroke="currentColor" strokeWidth="1.5" />
+                        <path d="M4 7l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      {fetchedFields.length > 0 ? fetchedFields.join(', ') + ' filled' : 'Fetched — fill remaining fields manually'}
+                    </span>
+                    <button
+                      type="button"
+                      className="intake-fetch-reset"
+                      onClick={() => { setAuctionUrl(''); setFetchState('idle'); setFetchedFields([]) }}
+                    >
+                      ↺ Try another
+                    </button>
+                  </div>
+                ) : (
+                  <div className="intake-url-row">
+                    <input
+                      type="url"
+                      autoFocus
+                      value={auctionUrl}
+                      onChange={(e) => { setAuctionUrl(e.target.value); setFetchState('idle') }}
+                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void handleAuctionFetch() } }}
+                      placeholder="Paste listing link…"
+                      disabled={fetchState === 'loading'}
+                      className="intake-url-input"
+                    />
+                    <button
+                      type="button"
+                      className="intake-fetch-btn"
+                      onClick={() => void handleAuctionFetch()}
+                      disabled={!auctionUrl.trim() || fetchState === 'loading'}
+                      title="Fetch listing"
+                    >
+                      {fetchState === 'loading'
+                        ? <span className="intake-spinner" />
+                        : (
+                          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+                            <path d="M3.5 9h11M10 4.5l4.5 4.5L10 13.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        )}
+                    </button>
                   </div>
                 )}
-                {fetchState === 'success' && fetchedFields.length === 0 && (
-                  <p className="auction-autofill-error" style={{ marginTop: 10 }}>
-                    Fetched, but no data parsed — check the address below and fill manually.
-                  </p>
-                )}
+
                 {fetchState === 'error' && (
-                  <p className="auction-autofill-error" style={{ marginTop: 10 }}>{fetchError}</p>
+                  <p className="auction-autofill-error" style={{ marginTop: 8 }}>{fetchError}</p>
                 )}
               </div>
 

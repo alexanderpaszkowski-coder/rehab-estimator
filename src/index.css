@@ -822,7 +822,20 @@ textarea { resize: vertical; }
   border-radius: 6px;
   object-fit: contain;
   flex-shrink: 0;
-  filter: drop-shadow(0 1px 3px rgba(0,0,0,.35));
+}
+
+/* On dark photo overlays — screen blend removes dark backgrounds, keeps the icon */
+.lead-card-photo-overlay .source-logo,
+.summary-photo-overlay .source-logo {
+  mix-blend-mode: screen;
+  filter: brightness(1.15);
+}
+
+/* On light card surface / topbar — multiply blend removes white backgrounds */
+.lead-card-topbar .source-logo,
+.summary-no-photo-bar .source-logo,
+.summary-source-watermark .source-logo {
+  mix-blend-mode: multiply;
 }
 .source-logo-text {
   font-size: 0.68rem;

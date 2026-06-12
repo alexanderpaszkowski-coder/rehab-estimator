@@ -116,6 +116,96 @@ function StagePicker({ stage, onChange }: { stage: FunnelStage; onChange: (s: Fu
   )
 }
 
+// ── Filter pill (custom dropdown, replaces native <select>) ──────────────────
+
+const SOURCE_PILL_OPTIONS = [
+  { value: 'all',          label: 'All Sources'  },
+  { value: 'auction.com',  label: 'Auction.com'  },
+  { value: 'zillow',       label: 'Zillow'        },
+  { value: 'redfin',       label: 'Redfin'        },
+  { value: 'realtor.com',  label: 'Realtor.com'   },
+  { value: 'new-western',  label: 'New Western'   },
+  { value: 'mls',          label: 'MLS'           },
+  { value: 'off-market',   label: 'Off Market'    },
+  { value: 'other',        label: 'Other'         },
+]
+
+const SORT_PILL_OPTIONS = [
+  { value: 'score',   label: 'Deal Score' },
+  { value: 'spread',  label: 'Spread'     },
+  { value: 'arv',     label: 'ARV'        },
+  { value: 'newest',  label: 'Newest'     },
+]
+
+function FilterPill({
+  value,
+  options,
+  onChange,
+  prefix,
+}: {
+  value: string
+  options: { value: string; label: string }[]
+  onChange: (v: string) => void
+  prefix?: string
+}) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  const current = options.find((o) => o.value === value)
+  const isActive = value !== options[0].value
+
+  useEffect(() => {
+    if (!open) return
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [open])
+
+  return (
+    <div className={`fpill${isActive ? ' fpill--active' : ''}`} ref={ref}>
+      <button
+        type="button"
+        className={`fpill-btn${open ? ' fpill-btn--open' : ''}`}
+        onClick={() => setOpen((o) => !o)}
+      >
+        {prefix && <span className="fpill-prefix">{prefix}</span>}
+        <span className="fpill-value">{current?.label ?? value}</span>
+        <svg
+          className={`fpill-chevron${open ? ' fpill-chevron--up' : ''}`}
+          width="11" height="11" viewBox="0 0 11 11" fill="none"
+          aria-hidden="true"
+        >
+          <path d="M2 4l3.5 3.5L9 4" stroke="currentColor" strokeWidth="1.5"
+            strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+      {open && (
+        <div className="fpill-menu">
+          {options.map((o) => (
+            <button
+              key={o.value}
+              type="button"
+              className={`fpill-option${o.value === value ? ' fpill-option--selected' : ''}`}
+              onClick={() => { onChange(o.value); setOpen(false) }}
+            >
+              <span className="fpill-option-check" aria-hidden="true">
+                {o.value === value && (
+                  <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+                    <path d="M1.5 5.5l3 3 5-5" stroke="currentColor" strokeWidth="1.5"
+                      strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                )}
+              </span>
+              {o.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Summary modal helpers ─────────────────────────────────────────────────────
 
 function MetricTile({ label, value, accent }: {
@@ -534,12 +624,46 @@ function DealCard({
 
 interface QueueCardDef {
   key: QueueFilter
-  icon: string
   label: string
   count: number
   sub: string
   color: string
   bg: string
+}
+
+// Clean line icons per queue category
+const QUEUE_SVG: Record<string, React.ReactNode> = {
+  'need-arv': (
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M2 12V9M5 12V6M8 12V8M11 12V3" />
+      <path d="M2 13.5h11" />
+    </svg>
+  ),
+  'need-rehab': (
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9.5 2a4 4 0 0 1-5.3 5.9L2 11.5V13h1.5l2.6-2.6A4 4 0 0 1 9.5 2z" />
+    </svg>
+  ),
+  'thin-margin': (
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M7.5 2L14 13H1L7.5 2z" />
+      <path d="M7.5 6.5v3" />
+      <circle cx="7.5" cy="11" r=".7" fill="currentColor" stroke="none" />
+    </svg>
+  ),
+  'strong': (
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="7.5" cy="7.5" r="6" />
+      <circle cx="7.5" cy="7.5" r="2.5" />
+      <circle cx="7.5" cy="7.5" r=".7" fill="currentColor" stroke="none" />
+    </svg>
+  ),
+  'solid': (
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="2" width="11" height="11" rx="2.5" />
+      <path d="M4.5 7.5L6.5 9.5 10.5 5" />
+    </svg>
+  ),
 }
 
 function DealQueue({
@@ -556,23 +680,30 @@ function DealQueue({
 
   return (
     <section className="deal-queue">
-      <div className="deal-queue-label">Today's Deal Queue</div>
+      <span className="deal-queue-eyebrow">Today's Deal Queue</span>
       <div className="deal-queue-track">
-        {cards.map((card) => (
-          <button
-            key={card.key}
-            className={`queue-card${activeFilter === card.key ? ' queue-card--active' : ''}${card.count === 0 ? ' queue-card--empty' : ''}`}
-            onClick={() => onFilter(activeFilter === card.key ? null : card.key)}
-            style={{ '--qc': card.color, '--qb': card.bg } as React.CSSProperties}
-          >
-            <span className="queue-card-icon">{card.icon}</span>
-            <span className="queue-card-count" style={{ color: card.count > 0 ? card.color : 'var(--text-muted)' }}>
-              {card.count}
-            </span>
-            <span className="queue-card-label">{card.label}</span>
-            <span className="queue-card-sub">{card.sub}</span>
-          </button>
-        ))}
+        {cards.map((card) => {
+          const isEmpty = card.count === 0
+          const isActive = activeFilter === card.key
+          return (
+            <button
+              key={card.key}
+              className={`queue-card${isActive ? ' queue-card--active' : ''}${isEmpty ? ' queue-card--empty' : ''}`}
+              onClick={() => !isEmpty && onFilter(isActive ? null : card.key)}
+              style={{ '--qc': card.color, '--qb': card.bg } as React.CSSProperties}
+              disabled={isEmpty}
+            >
+              <span className="queue-card-icon" style={{ color: isEmpty ? 'var(--text-muted)' : card.color }}>
+                {QUEUE_SVG[card.key ?? ''] ?? null}
+              </span>
+              <span className="queue-card-count" style={{ color: isEmpty ? 'var(--text-muted)' : card.color }}>
+                {card.count}
+              </span>
+              <span className="queue-card-label">{card.label}</span>
+              <span className="queue-card-sub">{card.sub}</span>
+            </button>
+          )
+        })}
       </div>
     </section>
   )
@@ -618,42 +749,32 @@ function CommandBar({
         )}
       </div>
 
-      <select
-        className="cmd-select"
+      <FilterPill
         value={sourceFilter}
-        onChange={(e) => setSourceFilter(e.target.value as PropertySource | 'all')}
-      >
-        <option value="all">All Sources</option>
-        <option value="auction.com">Auction.com</option>
-        <option value="zillow">Zillow</option>
-        <option value="redfin">Redfin</option>
-        <option value="realtor.com">Realtor.com</option>
-        <option value="new-western">New Western</option>
-        <option value="mls">MLS</option>
-        <option value="off-market">Off Market</option>
-        <option value="other">Other</option>
-      </select>
+        options={SOURCE_PILL_OPTIONS}
+        onChange={(v) => setSourceFilter(v as PropertySource | 'all')}
+      />
 
-      <select
-        className="cmd-select"
+      <FilterPill
         value={sortBy}
-        onChange={(e) => setSortBy(e.target.value as SortOption)}
-      >
-        <option value="score">Sort: Deal Score</option>
-        <option value="spread">Sort: Spread</option>
-        <option value="arv">Sort: ARV</option>
-        <option value="newest">Sort: Newest</option>
-      </select>
+        options={SORT_PILL_OPTIONS}
+        prefix="Sort:"
+        onChange={(v) => setSortBy(v as SortOption)}
+      />
+
+      <div className="cmd-sep" aria-hidden="true" />
 
       <div className="cmd-view-toggle">
         <button
-          className={`cmd-view-btn${viewMode === 'pipeline' ? ' active' : ''}`}
+          type="button"
+          className={`cmd-view-btn${viewMode === 'pipeline' ? ' cmd-view-btn--active' : ''}`}
           onClick={() => setViewMode('pipeline')}
         >
           Pipeline
         </button>
         <button
-          className={`cmd-view-btn${viewMode === 'priority' ? ' active' : ''}`}
+          type="button"
+          className={`cmd-view-btn${viewMode === 'priority' ? ' cmd-view-btn--active' : ''}`}
           onClick={() => setViewMode('priority')}
         >
           Priority
@@ -747,43 +868,38 @@ export function FunnelBoard({ homes, onSelect, onCreate, onStageChange, onDelete
     return [
       {
         key: 'need-arv',
-        icon: '📐',
         label: 'Need ARV',
         count: needArv,
-        sub: needArv > 0 ? 'Start with these first' : 'All properties have ARV',
+        sub: needArv > 0 ? 'Start with these first' : 'All have ARV',
         color: '#2563eb',
         bg: '#eff6ff',
       },
       {
         key: 'need-rehab',
-        icon: '🔨',
         label: 'Need Rehab Est.',
         count: needRehab,
-        sub: needRehab > 0 ? 'Calculate rehab costs' : 'Rehab estimates complete',
+        sub: needRehab > 0 ? 'Calculate rehab costs' : 'All estimates in',
         color: '#7c3aed',
         bg: '#faf5ff',
       },
       {
         key: 'thin-margin',
-        icon: '⚠️',
         label: 'Thin Margin',
         count: thinMargin,
-        sub: thinMargin > 0 ? 'Spread may not survive costs' : 'No thin margin deals',
+        sub: thinMargin > 0 ? 'Spread may not cover costs' : 'No margin warnings',
         color: '#b91c1c',
         bg: '#fef2f2',
       },
       {
         key: 'strong',
-        icon: '🎯',
         label: 'Strong Deals',
         count: strong,
-        sub: strong > 0 ? 'High score — worth prioritizing' : 'No strong deals yet',
+        sub: strong > 0 ? 'High score — prioritize' : 'No strong deals yet',
         color: '#15803d',
         bg: '#f0fdf4',
       },
       {
         key: 'solid',
-        icon: '✅',
         label: 'Ready to Offer',
         count: solid,
         sub: solid > 0 ? 'Move quickly on these' : 'No offers pending',

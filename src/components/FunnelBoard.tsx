@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { FunnelStage, HomeFile, IntakeData, PropertySource } from '../types'
 import { formatCurrency, calcQuickEstimate } from '../lib/calculations'
-import { FUNNEL_STAGES, getSourceLabel, getStageMeta, passesQuickScreen, screenScore } from '../lib/funnel'
+import { FUNNEL_STAGES, getSourceLabel, getStageMeta, passesQuickScreen, screenScore, getArvLabel, getBidLabel } from '../lib/funnel'
 import { PropertyIntake } from './PropertyIntake'
 
 interface Props {
@@ -36,6 +36,13 @@ const REVIEW_META: Record<string, { label: string; color: string; bg: string }> 
 const SOURCE_DOMAIN: Partial<Record<PropertySource, string>> = {
   'auction.com':  'auction.com',
   'realtor.com':  'realtor.com',
+  'zillow':       'zillow.com',
+  'redfin':       'redfin.com',
+  'new-western':  'newwestern.com',
+  'zenlist':      'zenlist.com',
+  'homes.com':    'homes.com',
+  'homepath':     'homepath.com',
+  'hubzu':        'hubzu.com',
   'mls':          'mls.com',
 }
 
@@ -136,10 +143,8 @@ function PropertySummaryModal({
   onStageChange: (s: FunnelStage) => void
   onDelete: () => void
 }) {
-  const isAuction  = home.source === 'auction.com'
-  const isRealtor  = home.source === 'realtor.com'
-  const arvLabel   = isAuction ? 'Est. Value'    : isRealtor ? 'Estimate'   : 'ARV'
-  const bidLabel   = isAuction ? 'Starting Bid'  : isRealtor ? 'List Price' : 'Asking'
+  const arvLabel = getArvLabel(home.source)
+  const bidLabel = getBidLabel(home.source)
   const { arv, askingPrice, occupancy, rehabLevel, inTargetArea, auctionType, quickNotes } = home.funnel
   const spread       = arv && askingPrice ? arv - askingPrice : null
   const quick        = calcQuickEstimate(home.property, home.quickEstimate)
@@ -431,10 +436,8 @@ export function FunnelBoard({ homes, onSelect, onCreate, onStageChange, onDelete
 function LeadCard({ home, onSummary }: { home: HomeFile; onSummary: () => void }) {
   const [flipping, setFlipping] = useState(false)
 
-  const isAuction   = home.source === 'auction.com'
-  const isRealtor   = home.source === 'realtor.com'
-  const arvLabel    = isAuction ? 'Est. Value'   : isRealtor ? 'Estimate'   : 'ARV'
-  const bidLabel    = isAuction ? 'Starting Bid' : isRealtor ? 'List Price' : 'Asking'
+  const arvLabel = getArvLabel(home.source)
+  const bidLabel = getBidLabel(home.source)
   const { arv, askingPrice, occupancy, rehabLevel, inTargetArea } = home.funnel
   const spread      = arv && askingPrice ? arv - askingPrice : null
   const spreadColor = spread == null ? 'var(--text)'

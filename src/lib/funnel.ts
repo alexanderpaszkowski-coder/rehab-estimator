@@ -1,15 +1,47 @@
 import type { FunnelScreen, FunnelStage, HomeFile, PropertySource } from '../types'
 
 export const PROPERTY_SOURCES: { id: PropertySource; label: string }[] = [
-  { id: 'auction.com', label: 'Auction.com' },
-  { id: 'realtor.com', label: 'Realtor.com' },
-  { id: 'mls', label: 'MLS' },
-  { id: 'off-market', label: 'Off Market' },
-  { id: 'wholesale', label: 'Wholesale' },
-  { id: 'direct-mail', label: 'Direct Mail' },
+  // ── Online marketplaces (auto-import capable) ──
+  { id: 'auction.com',  label: 'Auction.com' },
+  { id: 'realtor.com',  label: 'Realtor.com' },
+  { id: 'zillow',       label: 'Zillow' },
+  { id: 'redfin',       label: 'Redfin' },
+  { id: 'new-western',  label: 'New Western' },
+  { id: 'zenlist',      label: 'Zenlist' },
+  { id: 'homes.com',    label: 'Homes.com' },
+  { id: 'homepath',     label: 'Homepath' },
+  { id: 'hubzu',        label: 'Hubzu' },
+  // ── Manual sources ──
+  { id: 'mls',                 label: 'MLS' },
+  { id: 'off-market',          label: 'Off Market' },
+  { id: 'wholesale',           label: 'Wholesale' },
+  { id: 'direct-mail',         label: 'Direct Mail' },
   { id: 'driving-for-dollars', label: 'Driving for Dollars' },
-  { id: 'other', label: 'Other' },
+  { id: 'other',               label: 'Other' },
 ]
+
+// ── Source category helpers ────────────────────────────────────────────────────
+
+/** Sources that behave like auctions (Opening bid / Est. Value labels) */
+export const AUCTION_SOURCES: PropertySource[] = ['auction.com', 'hubzu']
+
+/** Sources that behave like MLS listings (List Price / Estimate labels) */
+export const MLS_SOURCES: PropertySource[] = [
+  'realtor.com', 'zillow', 'redfin', 'zenlist', 'homes.com', 'homepath',
+]
+
+export function getArvLabel(source: PropertySource): string {
+  if (AUCTION_SOURCES.includes(source)) return 'Est. Value'
+  if (MLS_SOURCES.includes(source))     return 'Estimate'
+  return 'ARV'
+}
+
+export function getBidLabel(source: PropertySource): string {
+  if (AUCTION_SOURCES.includes(source)) return 'Starting Bid'
+  if (MLS_SOURCES.includes(source))     return 'List Price'
+  if (source === 'new-western')          return 'Purchase Price'
+  return 'Asking'
+}
 
 export const FUNNEL_STAGES: { id: FunnelStage; label: string; color: string }[] = [
   { id: 'lead', label: 'Lead', color: '#78716c' },

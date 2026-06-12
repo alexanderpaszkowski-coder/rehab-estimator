@@ -3,7 +3,8 @@ import type { FunnelScreen, IntakeData, PropertySource, TriState } from '../type
 import { DEFAULT_FUNNEL, PROPERTY_SOURCES } from '../lib/funnel'
 import { AddressAutocomplete } from './AddressAutocomplete'
 import { scrapeAuctionListing } from '../lib/auctionScraper'
-import { scrapeRealtorListing } from '../lib/realtorScraper'
+import { scrapeListingUrl, detectListingSite } from '../lib/listingScraper'
+import { AUCTION_SOURCES, MLS_SOURCES } from '../lib/funnel'
 
 interface Props {
   onSubmit: (data: IntakeData) => void
@@ -202,13 +203,23 @@ function AuctionScreen({
   )
 }
 
+const ESTIMATE_LABELS: Partial<Record<PropertySource, string>> = {
+  'zillow':      'Zestimate',
+  'redfin':      'Redfin Estimate',
+  'realtor.com': 'Realtor.com Estimate',
+  'homes.com':   'Homes.com Estimate',
+}
+
 function RealtorScreen({
   funnel,
   onChange,
+  source,
 }: {
   funnel: FunnelScreen
   onChange: (patch: Partial<FunnelScreen>) => void
+  source?: PropertySource
 }) {
+  const estimateLabel = source ? (ESTIMATE_LABELS[source] ?? 'Estimated Value') : 'Estimated Value'
   return (
     <>
       <div className="field" style={{ gridColumn: '1 / -1' }}>
@@ -222,7 +233,7 @@ function RealtorScreen({
       </div>
 
       <div className="field" style={{ gridColumn: '1 / -1' }}>
-        <label>Realtor.com Estimate</label>
+        <label>{estimateLabel}</label>
         <input
           type="number"
           value={funnel.arv ?? ''}
@@ -369,66 +380,51 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
   const updateFunnel = (patch: Partial<FunnelScreen>) =>
     setData((d) => ({ ...d, funnel: { ...d.funnel, ...patch } }))
 
-  const detectSource = (url: string): PropertySource | null => {
-    if (/auction\.com/i.test(url)) return 'auction.com'
-    if (/realtor\.com/i.test(url)) return 'realtor.com'
-    return null
-  }
-
   const handleListingFetch = async () => {
     const url = listingUrl.trim()
     if (!url) return
 
-    const detectedSource = detectSource(url)
-    if (!detectedSource) {
-      setFetchError('Auto-import only supports auction.com and realtor.com links right now.')
+    // auction.com has its own dedicated scraper
+    const isAuction = /auction\.com/i.test(url)
+    const listingSite = isAuction ? null : detectListingSite(url)
+
+    if (!isAuction && !listingSite) {
+      setFetchError(
+        'Auto-import supports: auction.com, realtor.com, zillow, redfin, new western, zenlist, homes.com, homepath, hubzu.'
+      )
       return
     }
 
     setFetchPhase('loading')
     setFetchError(null)
     try {
-      // Scrape with the right tool
       let photo: string | undefined
       let addressPatch: { address?: string; city?: string; state?: string; zip?: string } = {}
       let funnelPatch: Partial<FunnelScreen> = {}
-      let source: PropertySource = detectedSource
+      let source: PropertySource
 
-      if (detectedSource === 'auction.com') {
+      if (isAuction) {
+        source = 'auction.com'
         const scraped = await scrapeAuctionListing(url)
         photo = scraped.photoUrl
-        addressPatch = {
-          address: scraped.address,
-          city: scraped.city,
-          state: scraped.state,
-          zip: scraped.zip,
-        }
-        if (scraped.estimatePrice)    funnelPatch.arv = scraped.estimatePrice
-        if (scraped.openingBid)       funnelPatch.askingPrice = scraped.openingBid
-        if (scraped.listingType)      funnelPatch.auctionType = scraped.listingType
+        addressPatch = { address: scraped.address, city: scraped.city, state: scraped.state, zip: scraped.zip }
+        if (scraped.estimatePrice)     funnelPatch.arv              = scraped.estimatePrice
+        if (scraped.openingBid)        funnelPatch.askingPrice      = scraped.openingBid
+        if (scraped.listingType)       funnelPatch.auctionType      = scraped.listingType
         if (scraped.startingCreditBid) funnelPatch.startingCreditBid = scraped.startingCreditBid
-        if (scraped.occupancy)        funnelPatch.occupancy = scraped.occupancy
-        if (scraped.yearBuilt)        funnelPatch.yearBuilt = scraped.yearBuilt
+        if (scraped.occupancy)         funnelPatch.occupancy        = scraped.occupancy
+        if (scraped.yearBuilt)         funnelPatch.yearBuilt        = scraped.yearBuilt
       } else {
-        const scraped = await scrapeRealtorListing(url)
-        photo = scraped.photoUrl
-        addressPatch = {
-          address: scraped.address,
-          city: scraped.city,
-          state: scraped.state,
-          zip: scraped.zip,
-        }
-        if (scraped.listPrice)        funnelPatch.askingPrice = scraped.listPrice
-        if (scraped.realtorEstimate)  funnelPatch.arv = scraped.realtorEstimate
-        if (scraped.occupancy)        funnelPatch.occupancy = scraped.occupancy
-        if (scraped.yearBuilt)        funnelPatch.yearBuilt = scraped.yearBuilt
-        // Show note if realtor.com blocked price scraping (address still imported)
-        if (!scraped.listPrice && !scraped.realtorEstimate) {
-          setDebugSnippet(
-            scraped._debug === 'blocked'
-              ? 'blocked'
-              : scraped._debug ?? null
-          )
+        const scraped = await scrapeListingUrl(url)
+        source = scraped.source
+        photo  = scraped.photoUrl
+        addressPatch = { address: scraped.address, city: scraped.city, state: scraped.state, zip: scraped.zip }
+        if (scraped.listPrice)     funnelPatch.askingPrice = scraped.listPrice
+        if (scraped.estimatePrice) funnelPatch.arv         = scraped.estimatePrice
+        if (scraped.occupancy)     funnelPatch.occupancy   = scraped.occupancy
+        if (scraped.yearBuilt)     funnelPatch.yearBuilt   = scraped.yearBuilt
+        if (!scraped.listPrice && !scraped.estimatePrice) {
+          setDebugSnippet(scraped.blocked ? 'blocked' : scraped._debug ?? null)
         }
       }
 
@@ -661,10 +657,10 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
           {/* ── Step 2: Screen ── */}
           {step === 2 && (
             <div className="screen-grid">
-              {data.source === 'auction.com' ? (
+              {AUCTION_SOURCES.includes(data.source) ? (
                 <AuctionScreen funnel={data.funnel} onChange={updateFunnel} />
-              ) : data.source === 'realtor.com' ? (
-                <RealtorScreen funnel={data.funnel} onChange={updateFunnel} />
+              ) : MLS_SOURCES.includes(data.source) ? (
+                <RealtorScreen funnel={data.funnel} onChange={updateFunnel} source={data.source} />
               ) : (
                 <StandardScreen funnel={data.funnel} onChange={updateFunnel} />
               )}

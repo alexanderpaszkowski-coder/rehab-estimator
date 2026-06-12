@@ -341,7 +341,6 @@ export function FunnelBoard({ homes, onSelect, onCreate, onStageChange, onDelete
               <LeadCard
                 key={home.id}
                 home={home}
-                onOpen={() => onSelect(home)}
                 onSummary={() => setSummaryHome(home)}
                 onStageChange={(s) => onStageChange(home.id, s)}
                 onDelete={() => { if (confirm(`Delete ${home.address}?`)) onDelete(home.id) }}
@@ -363,9 +362,8 @@ export function FunnelBoard({ homes, onSelect, onCreate, onStageChange, onDelete
 
 // ── Lead card (large) ───────────────────────────────────────────────────────
 
-function LeadCard({ home, onOpen, onSummary, onStageChange, onDelete }: {
+function LeadCard({ home, onSummary, onStageChange, onDelete }: {
   home: HomeFile
-  onOpen: () => void
   onSummary: () => void
   onStageChange: (s: FunnelStage) => void
   onDelete: () => void
@@ -394,7 +392,7 @@ function LeadCard({ home, onOpen, onSummary, onStageChange, onDelete }: {
     >
       {/* property photo */}
       {home.photoUrl && (
-        <div className="lead-card-photo" onClick={onOpen}>
+        <div className="lead-card-photo">
           <img src={home.photoUrl} alt={home.address} loading="lazy" />
         </div>
       )}
@@ -414,7 +412,7 @@ function LeadCard({ home, onOpen, onSummary, onStageChange, onDelete }: {
         </div>
 
         {/* address */}
-        <div className="lead-card-address" onClick={onOpen}>
+        <div className="lead-card-address">
           <h3>{home.address}</h3>
           <p>{[home.city, home.state].filter(Boolean).join(', ') || <em>No location</em>}</p>
         </div>

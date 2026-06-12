@@ -124,6 +124,9 @@ export async function scrapeRealtorListing(url: string): Promise<RealtorScrapedD
 
   const text = json.data.markdown
 
+  // Temporary debug — remove after tuning
+  console.log('[realtorScraper] raw markdown (first 4000 chars):\n', text.slice(0, 4000))
+
   // Guard: must look like a property detail page, not a search results page.
   // Keep this loose — realtor.com renders varied layouts.
   const isSearchPage =

@@ -4,6 +4,7 @@ export type Tab = 'funnel' | 'lead' | 'property' | 'quick' | 'sow' | 'summary'
 
 export type PropertySource =
   | 'auction.com'
+  | 'realtor.com'
   | 'mls'
   | 'off-market'
   | 'wholesale'

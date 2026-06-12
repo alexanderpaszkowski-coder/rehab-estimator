@@ -34,8 +34,9 @@ const REVIEW_META: Record<string, { label: string; color: string; bg: string }> 
 // ── Source logo ───────────────────────────────────────────────────────────────
 
 const SOURCE_DOMAIN: Partial<Record<PropertySource, string>> = {
-  'auction.com': 'auction.com',
-  'mls':         'mls.com',
+  'auction.com':  'auction.com',
+  'realtor.com':  'realtor.com',
+  'mls':          'mls.com',
 }
 
 function SourceLogo({
@@ -135,7 +136,10 @@ function PropertySummaryModal({
   onStageChange: (s: FunnelStage) => void
   onDelete: () => void
 }) {
-  const isAuction = home.source === 'auction.com'
+  const isAuction  = home.source === 'auction.com'
+  const isRealtor  = home.source === 'realtor.com'
+  const arvLabel   = isAuction ? 'Est. Value'    : isRealtor ? 'Estimate'   : 'ARV'
+  const bidLabel   = isAuction ? 'Starting Bid'  : isRealtor ? 'List Price' : 'Asking'
   const { arv, askingPrice, occupancy, rehabLevel, inTargetArea, auctionType, quickNotes } = home.funnel
   const spread       = arv && askingPrice ? arv - askingPrice : null
   const quick        = calcQuickEstimate(home.property, home.quickEstimate)
@@ -200,13 +204,13 @@ function PropertySummaryModal({
           <div className="summary-financials">
             {arv && (
               <div className="summary-fin-item">
-                <span className="summary-fin-label">{isAuction ? 'Est. Value' : 'ARV'}</span>
+                <span className="summary-fin-label">{arvLabel}</span>
                 <span className="summary-fin-value">{formatCurrency(arv)}</span>
               </div>
             )}
             {askingPrice && (
               <div className="summary-fin-item">
-                <span className="summary-fin-label">{isAuction ? 'Starting Bid' : 'Asking'}</span>
+                <span className="summary-fin-label">{bidLabel}</span>
                 <span className="summary-fin-value">{formatCurrency(askingPrice)}</span>
               </div>
             )}
@@ -437,6 +441,9 @@ function LeadCard({ home, onSummary }: { home: HomeFile; onSummary: () => void }
   const [flipping, setFlipping] = useState(false)
 
   const isAuction   = home.source === 'auction.com'
+  const isRealtor   = home.source === 'realtor.com'
+  const arvLabel    = isAuction ? 'Est. Value'   : isRealtor ? 'Estimate'   : 'ARV'
+  const bidLabel    = isAuction ? 'Starting Bid' : isRealtor ? 'List Price' : 'Asking'
   const { arv, askingPrice, occupancy, rehabLevel, inTargetArea } = home.funnel
   const spread      = arv && askingPrice ? arv - askingPrice : null
   const spreadColor = spread == null ? 'var(--text)'
@@ -517,13 +524,13 @@ function LeadCard({ home, onSummary }: { home: HomeFile; onSummary: () => void }
             )}
             {arv && (
               <div className="lead-fin-item">
-                <span className="lead-fin-label">{isAuction ? 'Est. Value' : 'ARV'}</span>
+                <span className="lead-fin-label">{arvLabel}</span>
                 <span className="lead-fin-value">{formatCurrency(arv)}</span>
               </div>
             )}
             {askingPrice && (
               <div className="lead-fin-item">
-                <span className="lead-fin-label">{isAuction ? 'Starting Bid' : 'Asking'}</span>
+                <span className="lead-fin-label">{bidLabel}</span>
                 <span className="lead-fin-value">{formatCurrency(askingPrice)}</span>
               </div>
             )}

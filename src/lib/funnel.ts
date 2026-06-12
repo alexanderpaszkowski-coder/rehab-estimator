@@ -2,6 +2,7 @@ import type { FunnelScreen, FunnelStage, HomeFile, PropertySource } from '../typ
 
 export const PROPERTY_SOURCES: { id: PropertySource; label: string }[] = [
   { id: 'auction.com', label: 'Auction.com' },
+  { id: 'realtor.com', label: 'Realtor.com' },
   { id: 'mls', label: 'MLS' },
   { id: 'off-market', label: 'Off Market' },
   { id: 'wholesale', label: 'Wholesale' },

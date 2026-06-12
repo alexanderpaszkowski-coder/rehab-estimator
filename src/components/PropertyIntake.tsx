@@ -3,6 +3,7 @@ import type { FunnelScreen, IntakeData, PropertySource, TriState } from '../type
 import { DEFAULT_FUNNEL, PROPERTY_SOURCES } from '../lib/funnel'
 import { AddressAutocomplete } from './AddressAutocomplete'
 import { scrapeAuctionListing } from '../lib/auctionScraper'
+import { scrapeRealtorListing } from '../lib/realtorScraper'
 
 interface Props {
   onSubmit: (data: IntakeData) => void
@@ -201,6 +202,73 @@ function AuctionScreen({
   )
 }
 
+function RealtorScreen({
+  funnel,
+  onChange,
+}: {
+  funnel: FunnelScreen
+  onChange: (patch: Partial<FunnelScreen>) => void
+}) {
+  return (
+    <>
+      <div className="field" style={{ gridColumn: '1 / -1' }}>
+        <label>List Price</label>
+        <input
+          type="number"
+          value={funnel.askingPrice ?? ''}
+          onChange={(e) => onChange({ askingPrice: e.target.value ? parseFloat(e.target.value) : null })}
+          placeholder="$0"
+        />
+      </div>
+
+      <div className="field" style={{ gridColumn: '1 / -1' }}>
+        <label>Realtor.com Estimate</label>
+        <input
+          type="number"
+          value={funnel.arv ?? ''}
+          onChange={(e) => onChange({ arv: e.target.value ? parseFloat(e.target.value) : null })}
+          placeholder="$0"
+        />
+      </div>
+
+      <div className="screen-item">
+        <label>Occupancy</label>
+        <OccupancyPills value={funnel.occupancy} onChange={(v) => onChange({ occupancy: v })} />
+      </div>
+
+      <div className="screen-item">
+        <label>In your target area?</label>
+        <TargetAreaPills value={funnel.inTargetArea} onChange={(v) => onChange({ inTargetArea: v })} />
+      </div>
+
+      <div className="screen-item">
+        <label>Title clear?</label>
+        <TriToggle value={funnel.titleClear} onChange={(v) => onChange({ titleClear: v })} />
+      </div>
+
+      <div className="screen-item">
+        <label>Seller motivated?</label>
+        <TriToggle value={funnel.sellerMotivated} onChange={(v) => onChange({ sellerMotivated: v })} />
+      </div>
+
+      <div className="screen-item">
+        <label>Rehab level</label>
+        <RehabLevelPills value={funnel.rehabLevel} onChange={(v) => onChange({ rehabLevel: v })} />
+      </div>
+
+      <div className="field">
+        <label>Year built</label>
+        <input
+          type="number"
+          value={funnel.yearBuilt ?? ''}
+          onChange={(e) => onChange({ yearBuilt: e.target.value ? parseInt(e.target.value) : null })}
+          placeholder="Optional"
+        />
+      </div>
+    </>
+  )
+}
+
 function StandardScreen({
   funnel,
   onChange,
@@ -285,7 +353,7 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
     funnel: { ...DEFAULT_FUNNEL },
     links: [],
   })
-  const [auctionUrl, setAuctionUrl] = useState('')
+  const [listingUrl, setListingUrl] = useState('')
   // 'idle' | 'loading' | 'processing' | 'revealing'
   const [fetchPhase, setFetchPhase] = useState<'idle' | 'loading' | 'processing' | 'revealing'>('idle')
   const [fetchError, setFetchError] = useState<string | null>(null)
@@ -300,34 +368,75 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
   const updateFunnel = (patch: Partial<FunnelScreen>) =>
     setData((d) => ({ ...d, funnel: { ...d.funnel, ...patch } }))
 
-  const handleAuctionFetch = async () => {
-    const url = auctionUrl.trim()
+  const detectSource = (url: string): PropertySource | null => {
+    if (/auction\.com/i.test(url)) return 'auction.com'
+    if (/realtor\.com/i.test(url)) return 'realtor.com'
+    return null
+  }
+
+  const handleListingFetch = async () => {
+    const url = listingUrl.trim()
     if (!url) return
+
+    const detectedSource = detectSource(url)
+    if (!detectedSource) {
+      setFetchError('Auto-import only supports auction.com and realtor.com links right now.')
+      return
+    }
+
     setFetchPhase('loading')
     setFetchError(null)
     try {
-      const scraped = await scrapeAuctionListing(url)
+      // Scrape with the right tool
+      let photo: string | undefined
+      let addressPatch: { address?: string; city?: string; state?: string; zip?: string } = {}
+      let funnelPatch: Partial<FunnelScreen> = {}
+      let source: PropertySource = detectedSource
 
-      // Phase 1: show processing spinner for ~1.5s before revealing
+      if (detectedSource === 'auction.com') {
+        const scraped = await scrapeAuctionListing(url)
+        photo = scraped.photoUrl
+        addressPatch = {
+          address: scraped.address,
+          city: scraped.city,
+          state: scraped.state,
+          zip: scraped.zip,
+        }
+        if (scraped.estimatePrice)    funnelPatch.arv = scraped.estimatePrice
+        if (scraped.openingBid)       funnelPatch.askingPrice = scraped.openingBid
+        if (scraped.listingType)      funnelPatch.auctionType = scraped.listingType
+        if (scraped.startingCreditBid) funnelPatch.startingCreditBid = scraped.startingCreditBid
+        if (scraped.occupancy)        funnelPatch.occupancy = scraped.occupancy
+        if (scraped.yearBuilt)        funnelPatch.yearBuilt = scraped.yearBuilt
+      } else {
+        const scraped = await scrapeRealtorListing(url)
+        photo = scraped.photoUrl
+        addressPatch = {
+          address: scraped.address,
+          city: scraped.city,
+          state: scraped.state,
+          zip: scraped.zip,
+        }
+        if (scraped.listPrice)        funnelPatch.askingPrice = scraped.listPrice
+        if (scraped.realtorEstimate)  funnelPatch.arv = scraped.realtorEstimate
+        if (scraped.occupancy)        funnelPatch.occupancy = scraped.occupancy
+        if (scraped.yearBuilt)        funnelPatch.yearBuilt = scraped.yearBuilt
+      }
+
+      // Phase 1: processing spinner
       setFetchPhase('processing')
 
       advanceTimer.current = setTimeout(() => {
         // Phase 2: populate data + animate address in
-        if (scraped.photoUrl) setPhotoUrl(scraped.photoUrl)
+        if (photo) setPhotoUrl(photo)
 
         setData((prev) => {
-          const next = { ...prev, source: 'auction.com' as const }
-          if (scraped.address) next.address = scraped.address
-          if (scraped.city) next.city = scraped.city
-          if (scraped.state) next.state = scraped.state
-          if (scraped.zip) next.zip = scraped.zip
-          next.funnel = { ...prev.funnel }
-          if (scraped.estimatePrice) next.funnel.arv = scraped.estimatePrice
-          if (scraped.openingBid) next.funnel.askingPrice = scraped.openingBid
-          if (scraped.listingType) next.funnel.auctionType = scraped.listingType
-          if (scraped.startingCreditBid) next.funnel.startingCreditBid = scraped.startingCreditBid
-          if (scraped.occupancy) next.funnel.occupancy = scraped.occupancy
-          if (scraped.yearBuilt) next.funnel.yearBuilt = scraped.yearBuilt
+          const next = { ...prev, source }
+          if (addressPatch.address) next.address = addressPatch.address
+          if (addressPatch.city)    next.city    = addressPatch.city
+          if (addressPatch.state)   next.state   = addressPatch.state
+          if (addressPatch.zip)     next.zip     = addressPatch.zip
+          next.funnel = { ...prev.funnel, ...funnelPatch }
           return next
         })
 
@@ -336,9 +445,7 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
         setFetchPhase('revealing')
 
         // Phase 3: after address pops in, advance to Screen
-        advanceTimer.current = setTimeout(() => {
-          setStep(2)
-        }, 900)
+        advanceTimer.current = setTimeout(() => setStep(2), 900)
       }, 1500)
 
     } catch (err) {
@@ -391,9 +498,9 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
                     <input
                       type="url"
                       autoFocus
-                      value={auctionUrl}
-                      onChange={(e) => { setAuctionUrl(e.target.value); setFetchError(null) }}
-                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void handleAuctionFetch() } }}
+                      value={listingUrl}
+                      onChange={(e) => { setListingUrl(e.target.value); setFetchError(null) }}
+                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void handleListingFetch() } }}
                       placeholder="Paste listing link…"
                       disabled={fetchPhase === 'loading'}
                       className="intake-url-input"
@@ -401,8 +508,8 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
                     <button
                       type="button"
                       className="intake-fetch-btn"
-                      onClick={() => void handleAuctionFetch()}
-                      disabled={!auctionUrl.trim() || fetchPhase === 'loading'}
+                      onClick={() => void handleListingFetch()}
+                      disabled={!listingUrl.trim() || fetchPhase === 'loading'}
                       title="Fetch listing"
                     >
                       {fetchPhase === 'loading'
@@ -511,6 +618,8 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
             <div className="screen-grid">
               {data.source === 'auction.com' ? (
                 <AuctionScreen funnel={data.funnel} onChange={updateFunnel} />
+              ) : data.source === 'realtor.com' ? (
+                <RealtorScreen funnel={data.funnel} onChange={updateFunnel} />
               ) : (
                 <StandardScreen funnel={data.funnel} onChange={updateFunnel} />
               )}

@@ -1,4 +1,5 @@
 import type { HomeFile } from '../types'
+import { AUCTION_SOURCES } from './funnel'
 import { calcQuickEstimate } from './calculations'
 
 export type NextActionKey =
@@ -13,6 +14,24 @@ export type NextActionKey =
 
 export type PriorityGroup = 'work-now' | 'needs-review' | 'watchlist' | 'pass'
 
+export interface Tag {
+  label: string
+  group: 'status' | 'risk' | 'opportunity' | 'action'
+  /** Priority within the group — lower = more important */
+  priority: number
+}
+
+export interface StructuredTags {
+  status: Tag[]
+  risk: Tag[]
+  opportunity: Tag[]
+  action: Tag[]
+  /** Up to 4 chips for card display, already prioritized */
+  cardChips: Tag[]
+  /** Count of all tags not shown on card */
+  overflow: number
+}
+
 export interface DealAnalysis {
   score: number
   scoreLabel: string
@@ -20,12 +39,98 @@ export interface DealAnalysis {
   nextAction: string
   nextActionKey: NextActionKey
   priorityGroup: PriorityGroup
-  riskChips: string[]
+  tags: StructuredTags
   isThinMargin: boolean
   spread: number | null
   netMargin: number | null
   rehabEst: number | null
 }
+
+// ── Tag helpers ───────────────────────────────────────────────────────────────
+
+function t(label: string, group: Tag['group'], priority: number): Tag {
+  return { label, group, priority }
+}
+
+function computeStructuredTags(home: HomeFile, analysis: {
+  score: number
+  rehabEst: number | null
+  isThinMargin: boolean
+  spread: number | null
+  nextAction: string
+  nextActionKey: NextActionKey
+}): StructuredTags {
+  const f = home.funnel
+  const isAuction = AUCTION_SOURCES.includes(home.source)
+
+  // ── Status tags ──────────────────────────────────────
+  const status: Tag[] = []
+  if (home.stage === 'lead' && home.reviewStatus === 'pending') status.push(t('New', 'status', 1))
+  if (!f.arv) status.push(t('ARV Needed', 'status', 2))
+  if (f.arv && !analysis.rehabEst) status.push(t('Rehab Needed', 'status', 3))
+  if (home.stage === 'solid-candidate') status.push(t('Offer Ready', 'status', 0))
+  if (home.stage === 'under-contract') status.push(t('Under Contract', 'status', 0))
+  if (home.stage === 'rehab') status.push(t('In Rehab', 'status', 0))
+  if (home.stage === 'listed') status.push(t('Listed', 'status', 0))
+  if (home.stage === 'sold') status.push(t('Sold', 'status', 0))
+  if (home.stage === 'passed') status.push(t('Passed', 'status', 0))
+
+  // ── Risk tags ────────────────────────────────────────
+  const risk: Tag[] = []
+  if (f.titleClear === 'no') risk.push(t('Title Issue', 'risk', 0))
+  if (analysis.isThinMargin) risk.push(t('Thin Margin', 'risk', 1))
+  if (f.occupancy === 'occupied') risk.push(t('Occupied', 'risk', 2))
+  if (!f.arv) risk.push(t('ARV Unknown', 'risk', 3))
+  if (!analysis.rehabEst) risk.push(t('Rehab Unknown', 'risk', 4))
+  if (f.titleClear === null) risk.push(t('Title Unknown', 'risk', 5))
+  if (f.occupancy === null) risk.push(t('Occupancy Unknown', 'risk', 6))
+  if (f.inTargetArea === 'no') risk.push(t('Out of Area', 'risk', 7))
+  if (isAuction) risk.push(t('Auction', 'risk', 8))
+
+  // ── Opportunity tags ─────────────────────────────────
+  const opportunity: Tag[] = []
+  if (analysis.spread !== null && analysis.spread > 100_000) opportunity.push(t('Big Spread', 'opportunity', 0))
+  if (f.occupancy === 'vacant') opportunity.push(t('Vacant', 'opportunity', 1))
+  if (f.sellerMotivated === 'yes') opportunity.push(t('Motivated Seller', 'opportunity', 2))
+  if (f.rehabLevel === 'Light') opportunity.push(t('Cosmetic Rehab', 'opportunity', 3))
+  if (f.inTargetArea === 'yes') opportunity.push(t('In Target Area', 'opportunity', 4))
+  if (analysis.score >= 75) opportunity.push(t('High Score', 'opportunity', 5))
+  if (f.titleClear === 'yes') opportunity.push(t('Clear Title', 'opportunity', 6))
+
+  // ── Action tags ──────────────────────────────────────
+  const action: Tag[] = []
+  action.push(t(analysis.nextAction, 'action', 0))
+  if (f.titleClear === null && analysis.nextActionKey !== 'check-title') action.push(t('Check Liens', 'action', 1))
+  if (f.occupancy === null && analysis.nextActionKey !== 'verify-occupancy') action.push(t('Drive By', 'action', 2))
+  if (home.stage === 'solid-candidate' && analysis.nextActionKey !== 'submit-offer') action.push(t('Submit Offer', 'action', 3))
+
+  // ── Card chips (max 4, priority-ordered across groups) ───────────────────────
+  // Priority order: top risk → best opportunity → status context → secondary risk
+  const candidates: Tag[] = [
+    ...risk.slice(0, 2),
+    ...opportunity.slice(0, 1),
+    ...status.filter((s) => s.priority === 0).slice(0, 1),   // high-value status (Offer Ready etc.)
+    ...risk.slice(2, 3),
+    ...opportunity.slice(1, 2),
+    ...status.filter((s) => s.priority > 0).slice(0, 1),
+  ]
+  const seen = new Set<string>()
+  const cardChips: Tag[] = []
+  for (const tag of candidates) {
+    if (cardChips.length >= 4) break
+    if (!seen.has(tag.label)) {
+      seen.add(tag.label)
+      cardChips.push(tag)
+    }
+  }
+
+  const totalTags = status.length + risk.length + opportunity.length + action.length
+  const overflow = Math.max(0, totalTags - cardChips.length - 1) // -1 for the action button shown separately
+
+  return { status, risk, opportunity, action, cardChips, overflow }
+}
+
+// ── Main analyzer ─────────────────────────────────────────────────────────────
 
 export function analyzeDeal(home: HomeFile): DealAnalysis {
   const f = home.funnel
@@ -40,8 +145,7 @@ export function analyzeDeal(home: HomeFile): DealAnalysis {
   // ── Scoring (0–100) ──────────────────────────────────────────────────────────
   let score = 42
 
-  if (f.arv) score += 8
-  else score -= 8
+  if (f.arv) score += 8; else score -= 8
 
   if (spread !== null) {
     if (spread > 150_000) score += 22
@@ -138,22 +242,16 @@ export function analyzeDeal(home: HomeFile): DealAnalysis {
     priorityGroup = 'pass'
   }
 
-  // ── Risk chips (priority-ordered) ────────────────────────────────────────────
-  const risks: string[] = []
-  if (f.titleClear === 'no') risks.push('Title Issue')
-  if (isThinMargin) risks.push('Thin Margin')
-  if (f.occupancy === 'occupied') risks.push('Occupied')
-  if (!f.arv) risks.push('ARV Unknown')
-  if (!rehabEst) risks.push('Rehab Unknown')
-  if (f.titleClear === null) risks.push('Title Unknown')
-  if (f.occupancy === null && f.occupancy !== 'occupied') risks.push('Occupancy Unknown')
-  if (f.inTargetArea === 'no') risks.push('Out of Area')
+  // ── Structured tags ──────────────────────────────────────────────────────────
+  const tags = computeStructuredTags(home, {
+    score, rehabEst, isThinMargin, spread, nextAction, nextActionKey,
+  })
 
   return {
     score, scoreLabel, scoreTier,
     nextAction, nextActionKey,
     priorityGroup,
-    riskChips: risks.slice(0, 3),
+    tags,
     isThinMargin, spread, netMargin, rehabEst,
   }
 }

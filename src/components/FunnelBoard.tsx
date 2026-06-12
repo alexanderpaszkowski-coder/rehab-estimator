@@ -6,7 +6,7 @@ import {
   passesQuickScreen, screenScore, getArvLabel, getBidLabel,
 } from '../lib/funnel'
 import { analyzeDeal } from '../lib/dealScore'
-import type { DealAnalysis } from '../lib/dealScore'
+import type { DealAnalysis, Tag } from '../lib/dealScore'
 import { PropertyIntake } from './PropertyIntake'
 
 interface Props {
@@ -142,6 +142,39 @@ function formatShortDate(iso: string): string {
   } catch { return '—' }
 }
 
+// ── Grouped tags panel (for summary modal) ───────────────────────────────────
+
+const TAG_GROUP_META: Record<Tag['group'], { label: string; cls: string }> = {
+  status:      { label: 'Status',      cls: 'status' },
+  risk:        { label: 'Risks',       cls: 'risk' },
+  opportunity: { label: 'Opportunity', cls: 'opportunity' },
+  action:      { label: 'Next Actions', cls: 'action' },
+}
+
+function TagGroups({ home }: { home: HomeFile }) {
+  const analysis = analyzeDeal(home)
+  const { tags } = analysis
+  const groups = (['status', 'risk', 'opportunity', 'action'] as Tag['group'][]).filter(
+    (g) => tags[g].length > 0
+  )
+  if (groups.length === 0) return null
+
+  return (
+    <div className="summary-tag-groups">
+      {groups.map((g) => (
+        <div key={g} className="summary-tag-group">
+          <span className="summary-tag-group-label">{TAG_GROUP_META[g].label}</span>
+          <div className="summary-tag-group-chips">
+            {tags[g].map((tag) => (
+              <span key={tag.label} className={`stag stag--${g}`}>{tag.label}</span>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 // ── Property summary modal ("back of card") ───────────────────────────────────
 
 function PropertySummaryModal({ home, onEdit, onClose, onStageChange, onDelete }: {
@@ -273,6 +306,9 @@ function PropertySummaryModal({ home, onEdit, onClose, onStageChange, onDelete }
             )}
           </div>
         )}
+
+        {/* ── Structured tags (grouped) ── */}
+        <TagGroups home={home} />
 
         {(detailItems.length > 0 || rehabLines.length > 0) && (
           <div className="summary-columns">
@@ -462,12 +498,15 @@ function DealCard({
           </div>
         )}
 
-        {/* Risk chips */}
-        {analysis.riskChips.length > 0 && (
+        {/* Structured chips (max 4 across groups, +X overflow) */}
+        {(analysis.tags.cardChips.length > 0 || analysis.tags.overflow > 0) && (
           <div className="dcard-chips">
-            {analysis.riskChips.map((chip) => (
-              <span key={chip} className="dcard-risk-chip">{chip}</span>
+            {analysis.tags.cardChips.map((chip) => (
+              <span key={chip.label} className={`dcard-tag dcard-tag--${chip.group}`}>{chip.label}</span>
             ))}
+            {analysis.tags.overflow > 0 && (
+              <span className="dcard-tag dcard-tag--overflow">+{analysis.tags.overflow}</span>
+            )}
           </div>
         )}
 

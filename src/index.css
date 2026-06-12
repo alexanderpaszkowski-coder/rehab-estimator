@@ -2643,22 +2643,7 @@ textarea { resize: vertical; }
   color: var(--text);
 }
 
-/* Risk chips */
-.dcard-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-.dcard-risk-chip {
-  font-size: 0.62rem;
-  font-weight: 600;
-  color: #6b7280;
-  background: #f3f4f6;
-  border: 1px solid #e5e7eb;
-  border-radius: 4px;
-  padding: 2px 6px;
-  white-space: nowrap;
-}
+/* chip rows — defined under "Structured tag chips" section above */
 
 /* Next action CTA */
 .dcard-action {
@@ -2676,6 +2661,67 @@ textarea { resize: vertical; }
   transition: filter .1s;
 }
 .dcard-action:hover { filter: brightness(.95); }
+
+/* ── Structured tag chips (card) ────────────────────────────────────── */
+.dcard-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.dcard-tag {
+  font-size: 0.61rem;
+  font-weight: 600;
+  border-radius: 4px;
+  padding: 2px 6px;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+.dcard-tag--status    { color: #1d4ed8; background: #eff6ff; border: 1px solid #bfdbfe; }
+.dcard-tag--risk      { color: #b91c1c; background: #fef2f2; border: 1px solid #fecaca; }
+.dcard-tag--opportunity { color: #15803d; background: #f0fdf4; border: 1px solid #bbf7d0; }
+.dcard-tag--action    { color: #c2410c; background: #fff7ed; border: 1px solid #fed7aa; }
+.dcard-tag--overflow  { color: #6b7280; background: #f3f4f6; border: 1px solid #e5e7eb; }
+
+/* ── Grouped tags in summary modal ──────────────────────────────────── */
+.summary-tag-groups {
+  padding: 10px 22px 12px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.summary-tag-group {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.summary-tag-group-label {
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  min-width: 72px;
+  padding-top: 3px;
+  flex-shrink: 0;
+}
+.summary-tag-group-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.stag {
+  font-size: 0.68rem;
+  font-weight: 600;
+  border-radius: 5px;
+  padding: 3px 8px;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+.stag--status      { color: #1d4ed8; background: #eff6ff; border: 1px solid #bfdbfe; }
+.stag--risk        { color: #b91c1c; background: #fef2f2; border: 1px solid #fecaca; }
+.stag--opportunity { color: #15803d; background: #f0fdf4; border: 1px solid #bbf7d0; }
+.stag--action      { color: #c2410c; background: #fff7ed; border: 1px solid #fed7aa; }
 
 /* ── Empty states ───────────────────────────────────────────────────── */
 .stage-empty {

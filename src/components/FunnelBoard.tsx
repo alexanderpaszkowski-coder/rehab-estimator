@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react'
-import type { FunnelStage, HomeFile, IntakeData } from '../types'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import type { FunnelStage, HomeFile, IntakeData, PropertySource } from '../types'
 import { formatCurrency, calcQuickEstimate } from '../lib/calculations'
 import { FUNNEL_STAGES, getSourceLabel, getStageMeta, passesQuickScreen, screenScore } from '../lib/funnel'
 import { PropertyIntake } from './PropertyIntake'
@@ -29,6 +29,81 @@ const REVIEW_META: Record<string, { label: string; color: string; bg: string }> 
   reviewed: { label: 'Reviewed', color: '#1d4ed8', bg: '#eff6ff' },
   approved: { label: 'Approved', color: 'var(--success)', bg: 'var(--success-soft)' },
   passed: { label: 'Passed', color: '#6b7280', bg: '#f9fafb' },
+}
+
+// ── Source logo ─────────────────────────────────────────────────────────────
+
+const SOURCE_DOMAIN: Partial<Record<PropertySource, string>> = {
+  'auction.com': 'auction.com',
+  'mls': 'mls.com',
+}
+
+function SourceLogo({ source, customLabel }: { source: PropertySource; customLabel?: string }) {
+  const domain = SOURCE_DOMAIN[source]
+  const label = customLabel || source
+  if (domain) {
+    return (
+      <img
+        className="source-logo"
+        src={`https://www.google.com/s2/favicons?domain=${domain}&sz=64`}
+        alt={label}
+        title={label}
+        onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
+      />
+    )
+  }
+  // Fallback: styled text pill
+  return <span className="source-logo-text" title={label}>{label}</span>
+}
+
+// ── Stage picker popover ─────────────────────────────────────────────────────
+
+function StagePicker({ stage, onChange }: { stage: FunnelStage; onChange: (s: FunnelStage) => void }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  const meta = getStageMeta(stage)
+
+  useEffect(() => {
+    if (!open) return
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [open])
+
+  return (
+    <div className="stage-picker" ref={ref}>
+      <button
+        type="button"
+        className="stage-picker-btn"
+        style={{ '--stage-color': meta.color } as React.CSSProperties}
+        onClick={() => setOpen((o) => !o)}
+        title="Change stage"
+      >
+        <span className="stage-picker-dot" />
+        <span>{meta.label}</span>
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ opacity: 0.5 }}>
+          <path d="M2 3.5l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </button>
+      {open && (
+        <div className="stage-picker-menu">
+          {FUNNEL_STAGES.map((s) => (
+            <button
+              key={s.id}
+              type="button"
+              className={`stage-picker-option ${s.id === stage ? 'active' : ''}`}
+              onClick={() => { onChange(s.id); setOpen(false) }}
+            >
+              <span className="stage-picker-dot" style={{ background: s.color }} />
+              {s.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
 }
 
 // ── Main board ──────────────────────────────────────────────────────────────
@@ -271,11 +346,10 @@ function LeadCard({ home, onOpen, onStageChange, onDelete }: {
 
         {/* actions */}
         <div className="lead-card-actions" onClick={(e) => e.stopPropagation()}>
-          <select value={home.stage} onChange={(e) => onStageChange(e.target.value as FunnelStage)}>
-            {FUNNEL_STAGES.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
-          </select>
-          <button className="btn btn-ghost btn-danger btn-sm" onClick={onDelete}>Delete</button>
-          <button className="btn btn-primary btn-sm" style={{ marginLeft: 'auto' }} onClick={onOpen}>Open →</button>
+          <SourceLogo source={home.source} customLabel={home.source === 'other' ? home.sourceCustom : undefined} />
+          <StagePicker stage={home.stage} onChange={onStageChange} />
+          <button className="btn btn-ghost btn-danger btn-sm" style={{ marginLeft: 'auto' }} onClick={onDelete}>Delete</button>
+          <button className="btn btn-primary btn-sm" onClick={onOpen}>Open →</button>
         </div>
       </div>
     </div>
@@ -339,9 +413,7 @@ function StageDetail({ stageMeta, homes, onBack, onSelect, onStageChange, onDele
                   {home.funnel.askingPrice && <span>Ask {formatCurrency(home.funnel.askingPrice)}</span>}
                 </div>
                 <div className="stage-list-actions" onClick={(e) => e.stopPropagation()}>
-                  <select value={home.stage} onChange={(e) => onStageChange(home.id, e.target.value as FunnelStage)}>
-                    {FUNNEL_STAGES.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
-                  </select>
+                  <StagePicker stage={home.stage} onChange={(s) => onStageChange(home.id, s)} />
                   <button className="btn btn-ghost btn-danger btn-sm" onClick={() => { if (confirm(`Delete ${home.address}?`)) onDelete(home.id) }}>Delete</button>
                   <button className="btn btn-primary btn-sm" onClick={() => onSelect(home)}>Open →</button>
                 </div>

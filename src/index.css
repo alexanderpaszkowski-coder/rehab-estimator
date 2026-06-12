@@ -724,9 +724,87 @@ textarea { resize: vertical; }
   align-items: center;
   padding-top: 12px;
   border-top: 2px solid var(--border);
-  margin-top: 2px;
+  margin-top: auto;
 }
-.lead-card-actions select { font-size: 0.76rem; padding: 5px 8px; flex: 1; }
+
+/* ── Source logo ── */
+.source-logo {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+.source-logo-text {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+/* ── Stage picker ── */
+.stage-picker {
+  position: relative;
+}
+.stage-picker-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px 4px 6px;
+  border-radius: 20px;
+  border: 1.5px solid color-mix(in srgb, var(--stage-color) 35%, transparent);
+  background: color-mix(in srgb, var(--stage-color) 10%, transparent);
+  color: var(--stage-color);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .15s, border-color .15s;
+}
+.stage-picker-btn:hover {
+  background: color-mix(in srgb, var(--stage-color) 18%, transparent);
+}
+.stage-picker-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--stage-color, currentColor);
+  flex-shrink: 0;
+}
+.stage-picker-menu {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.12);
+  padding: 4px;
+  z-index: 100;
+  min-width: 160px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.stage-picker-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: 7px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: background .1s;
+}
+.stage-picker-option:hover { background: var(--bg); }
+.stage-picker-option.active { background: var(--bg); font-weight: 700; }
 
 /* ── Pipeline section ──────────────────────────────── */
 .pipeline-section {}

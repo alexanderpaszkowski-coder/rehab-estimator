@@ -157,7 +157,7 @@ function PropertySummaryModal({
             <img src={home.photoUrl} alt={home.address} />
             <div className="summary-photo-overlay">
               <div className="summary-source-chip">
-                <SourceLogo source={home.source} customLabel={customLabel} size={16} />
+                <SourceLogo source={home.source} customLabel={customLabel} size={32} />
                 <span>{getSourceLabel(home)}</span>
                 {auctionType && (
                   <span className="summary-source-type">
@@ -174,7 +174,7 @@ function PropertySummaryModal({
           /* No-photo header bar */
           <div className="summary-no-photo-bar">
             <div className="summary-source-chip summary-source-chip--dark">
-              <SourceLogo source={home.source} customLabel={customLabel} size={16} />
+              <SourceLogo source={home.source} customLabel={customLabel} size={32} />
               <span>{getSourceLabel(home)}</span>
               {auctionType && (
                 <span className="summary-source-type">
@@ -475,7 +475,7 @@ function LeadCard({ home, onSummary }: { home: HomeFile; onSummary: () => void }
           {/* Gradient overlay with source + status badges */}
           <div className="lead-card-photo-overlay">
             <div className="lead-card-source-chip">
-              <SourceLogo source={home.source} customLabel={customLabel} size={14} />
+              <SourceLogo source={home.source} customLabel={customLabel} size={32} />
               <span>{getSourceLabel(home)}</span>
             </div>
             <span
@@ -490,7 +490,7 @@ function LeadCard({ home, onSummary }: { home: HomeFile; onSummary: () => void }
         /* No photo: compact source/status bar at top */
         <div className="lead-card-topbar">
           <div className="lead-card-source-chip lead-card-source-chip--light">
-            <SourceLogo source={home.source} customLabel={customLabel} size={14} />
+            <SourceLogo source={home.source} customLabel={customLabel} size={32} />
             <span>{getSourceLabel(home)}</span>
           </div>
           <span

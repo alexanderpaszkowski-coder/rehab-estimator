@@ -326,8 +326,6 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
         if (scraped.occupancy) { next.funnel.occupancy = scraped.occupancy; filled.push('Occupancy') }
         if (scraped.yearBuilt) { next.funnel.yearBuilt = scraped.yearBuilt; filled.push('Year built') }
 
-        if (!prev.links?.includes(url)) next.links = [...(prev.links ?? []), url]
-
         return next
       })
 

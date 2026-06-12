@@ -1,9 +1,8 @@
 /**
- * Fetches an auction.com listing URL via Jina AI Reader (free, no API key needed)
- * and parses the markdown output for intake-form fields.
+ * Fetches a listing URL via Jina AI Reader (free, no API key, CORS-enabled)
+ * and parses the markdown for intake-form fields.
  *
- * Jina Reader URL: https://r.jina.ai/{target-url}
- * CORS: Jina sets access-control-allow-origin so browser fetch works directly.
+ * Tested against real auction.com listing format (Jina output).
  */
 
 export interface AuctionScrapedData {
@@ -23,16 +22,15 @@ export interface AuctionScrapedData {
 }
 
 function parseMoney(s: string): number | undefined {
-  const clean = s.replace(/[$,\s]/g, '')
-  const n = parseFloat(clean)
+  const n = parseFloat(s.replace(/[$,\s]/g, ''))
   return isNaN(n) || n <= 0 ? undefined : n
 }
 
 function firstMoney(text: string, patterns: RegExp[]): number | undefined {
   for (const re of patterns) {
     const m = text.match(re)
-    if (m) {
-      const v = parseMoney(m[1] ?? m[0])
+    if (m?.[1]) {
+      const v = parseMoney(m[1])
       if (v) return v
     }
   }
@@ -40,42 +38,32 @@ function firstMoney(text: string, patterns: RegExp[]): number | undefined {
 }
 
 function parseAddress(text: string): Pick<AuctionScrapedData, 'address' | 'city' | 'state' | 'zip'> {
-  // Auction.com page titles: "1234 Main St, Chicago, IL 60601 | Auction.com"
-  // Jina markdown Title line: "Title: 1234 Main St, Chicago, IL 60601 | Auction.com"
+  // Jina returns: "Title: 123 Main St, Chicago, IL 60601, Cook County"
   const titleLine = text.match(/^Title:\s*(.+)$/m)?.[1] ?? ''
   const clean = titleLine.replace(/\s*\|\s*auction\.com.*/i, '').trim()
 
-  // Full address with zip: "Street, City, ST 00000"
-  const full = clean.match(/^(.+?),\s*(.+?),\s*([A-Z]{2})\s+(\d{5}(?:-\d{4})?)$/)
-  if (full) {
-    return { address: full[1].trim(), city: full[2].trim(), state: full[3], zip: full[4] }
+  // Match "Street, City, ST ZIP" — trailing county or other text is fine (no $ anchor)
+  const withZip = clean.match(/^(.+?),\s*(.+?),\s*([A-Z]{2})\s+(\d{5}(?:-\d{4})?)/)
+  if (withZip) {
+    return { address: withZip[1].trim(), city: withZip[2].trim(), state: withZip[3], zip: withZip[4] }
   }
 
-  // Address without zip: "Street, City, ST"
-  const noZip = clean.match(/^(.+?),\s*(.+?),\s*([A-Z]{2})$/)
+  // Without zip
+  const noZip = clean.match(/^(.+?),\s*(.+?),\s*([A-Z]{2})(?:[,\s]|$)/)
   if (noZip) {
     return { address: noZip[1].trim(), city: noZip[2].trim(), state: noZip[3] }
-  }
-
-  // Try finding an address anywhere in the text (common heading pattern on listing pages)
-  const inline = text.match(/^#+\s*(.+?,\s*.+?,\s*[A-Z]{2}\s+\d{5})/m)
-  if (inline) {
-    const inner = inline[1].match(/^(.+?),\s*(.+?),\s*([A-Z]{2})\s+(\d{5})$/)
-    if (inner) return { address: inner[1].trim(), city: inner[2].trim(), state: inner[3], zip: inner[4] }
   }
 
   return {}
 }
 
 function parseListingType(text: string): AuctionScrapedData['listingType'] {
-  // REO / bank-owned indicators
-  if (/\b(reo|bank[- ]owned|real estate owned)\b/i.test(text)) return 'bank-owned'
-  // Explicit "Auction" badge text (appearing before other content)
-  // Use positive match but not if it's just the site name
-  if (/\bforeclosure auction\b|\bauction listing\b|\blive auction\b|\bonline auction\b/i.test(text)) return 'auction'
-  // Fallback: look for "Auction" as a property type near the top
-  const top500 = text.slice(0, 500)
-  if (/\bauction\b/i.test(top500) && !/\breo\b|\bbank.?owned\b/i.test(top500)) return 'auction'
+  // "Bank Owned" badge appears near top of auction.com pages
+  if (/\b(reo|bank[\s-]owned|real estate owned)\b/i.test(text)) return 'bank-owned'
+  if (/\b(foreclosure auction|live auction|online auction)\b/i.test(text)) return 'auction'
+  // If "Auction" appears prominently but not alongside bank-owned
+  const top300 = text.slice(0, 300)
+  if (/\bauction\b/i.test(top300) && !/\bbank[\s-]owned\b|\breo\b/i.test(top300)) return 'auction'
   return undefined
 }
 
@@ -91,16 +79,16 @@ export async function scrapeAuctionListing(url: string): Promise<AuctionScrapedD
 
   const text = await res.text()
 
-  // Guard: if Jina returned a search/redirect page instead of a property detail
+  // Guard: must look like a single property page, not a search results page
   const isListingPage =
-    /opening\s+bid|starting\s+bid|bpo|broker.?price/i.test(text) ||
-    /\bbed(?:room)?s?\b.*\bbath/i.test(text) ||
+    /opening\s+bid|starting\s+bid/i.test(text) ||
+    /est\.?\s+market\s+value|bpo|broker.?price/i.test(text) ||
     /year\s+built/i.test(text)
 
   if (!isListingPage) {
     throw new Error(
-      `This URL doesn't appear to be a property detail page. ` +
-        `Make sure you're linking directly to the listing on auction.com.`,
+      `This doesn't look like a property detail page. ` +
+        `Make sure you're linking directly to the listing (not a search result).`,
     )
   }
 
@@ -111,35 +99,43 @@ export async function scrapeAuctionListing(url: string): Promise<AuctionScrapedD
 
   // Opening bid / Starting bid
   result.openingBid = firstMoney(text, [
-    /opening\s+bid[:\s*$]+(\$[\d,]+)/im,
-    /starting\s+bid[:\s*$]+(\$[\d,]+)/im,
-    /current\s+bid[:\s*$]+(\$[\d,]+)/im,
-    /minimum\s+bid[:\s*$]+(\$[\d,]+)/im,
+    /opening\s+bid[\s\S]{0,10}?(\$[\d,]+)/im,
+    /starting\s+bid[\s\S]{0,10}?(\$[\d,]+)/im,
+    /minimum\s+bid[\s\S]{0,10}?(\$[\d,]+)/im,
+    /current\s+bid[\s\S]{0,10}?(\$[\d,]+)/im,
   ])
 
-  // BPO / Estimate price
+  // Estimate price — auction.com uses "Est. Market Value" or "Est. Retail Value"
   result.estimatePrice = firstMoney(text, [
-    /\bbpo[:\s*$]+(\$[\d,]+)/im,
-    /broker.?price.?opinion[:\s*$]+(\$[\d,]+)/im,
-    /estimated?\s+value[:\s*$]+(\$[\d,]+)/im,
-    /home\s+value[:\s*$]+(\$[\d,]+)/im,
-    /assessed\s+value[:\s*$]+(\$[\d,]+)/im,
+    /est\.?\s+market\s+value[\s\S]{0,10}?(\$[\d,]+)/im,
+    /est\.?\s+retail\s+value[\s\S]{0,10}?(\$[\d,]+)/im,
+    /estimated?\s+value[\s\S]{0,10}?(\$[\d,]+)/im,
+    /\bbpo[\s\S]{0,10}?(\$[\d,]+)/im,
+    /broker.?price.?opinion[\s\S]{0,10}?(\$[\d,]+)/im,
+    /home\s+value[\s\S]{0,10}?(\$[\d,]+)/im,
   ])
 
-  // Starting credit bid (sometimes shown on auction pages as "Credit Bid")
+  // Starting credit bid (auction pages only)
   if (result.listingType === 'auction') {
     result.startingCreditBid = firstMoney(text, [
-      /credit\s+bid[:\s*$]+(\$[\d,]+)/im,
-      /opening\s+credit\s+bid[:\s*$]+(\$[\d,]+)/im,
+      /credit\s+bid[\s\S]{0,10}?(\$[\d,]+)/im,
+      /opening\s+credit\s+bid[\s\S]{0,10}?(\$[\d,]+)/im,
     ])
   }
 
-  // Occupancy
-  if (/\bvacant\b/i.test(text)) result.occupancy = 'vacant'
-  else if (/\boccupied\b/i.test(text)) result.occupancy = 'occupied'
+  // Occupancy — only match an explicit field label, not FAQ boilerplate
+  const occupancyField = text.match(/occupancy(?:\s+status)?[:\s]+(\w+)/i)
+  if (occupancyField) {
+    const val = occupancyField[1].toLowerCase()
+    if (val === 'vacant') result.occupancy = 'vacant'
+    else if (val === 'occupied') result.occupancy = 'occupied'
+    else result.occupancy = 'unknown'
+  }
 
   // Year built
-  const yearMatch = text.match(/year\s+built[:\s]+(\d{4})/i) ?? text.match(/built\s+in\s+(\d{4})/i)
+  const yearMatch =
+    text.match(/year\s+built[\s\S]{0,10}?(\d{4})/i) ??
+    text.match(/built\s+in\s+(\d{4})/i)
   if (yearMatch) result.yearBuilt = parseInt(yearMatch[1])
 
   return result

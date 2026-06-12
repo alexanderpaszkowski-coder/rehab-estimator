@@ -155,12 +155,32 @@ export async function scrapeRealtorListing(url: string): Promise<RealtorScrapedD
 
   const text = json.data.markdown
 
+  // ── Detect bot-block / access-denied pages ──
+  const isBlocked =
+    /your request could not be processed/i.test(text) ||
+    /unblockrequest@realtor\.com/i.test(text) ||
+    /reference\s+id.*fc[0-9a-f-]{30,}/i.test(text) ||
+    /access denied|403 forbidden|bot detection/i.test(text)
+
+  // Address from URL is always reliable — use it regardless
+  const urlAddr = parseAddressFromUrl(url)
+
+  if (isBlocked) {
+    // Return address from URL; prices will be filled manually
+    return {
+      ...urlAddr,
+      _debug: 'blocked',
+    }
+  }
+
+  // ── Not blocked — also try markdown address ──
+  const markdownAddr = parseAddressFromMarkdown(text)
+
   // Block obvious search-results pages
   const isSearchPage =
     /realestateandhomes-search|\/homes-for-sale\//i.test(url) ||
     (/properties?\s+found|results?\s+for/i.test(text.slice(0, 800)) &&
       !/\$[\d,]{4,}|year\s+built/i.test(text.slice(0, 500)))
-
   if (isSearchPage) {
     throw new Error(
       `This looks like a search results page. ` +
@@ -168,30 +188,23 @@ export async function scrapeRealtorListing(url: string): Promise<RealtorScrapedD
     )
   }
 
-  // ── Address: URL slug is most reliable, markdown as fallback ──
-  const urlAddr      = parseAddressFromUrl(url)
-  const markdownAddr = parseAddressFromMarkdown(text)
-
   const result: RealtorScrapedData = {
     address: urlAddr.address || markdownAddr.address,
     city:    urlAddr.city    || markdownAddr.city,
     state:   urlAddr.state   || markdownAddr.state,
     zip:     urlAddr.zip     || markdownAddr.zip,
     photoUrl: parsePhoto(text),
-    _debug: text.slice(0, 500),
+    _debug:  text.slice(0, 500),
   }
 
   // ── List price ──
   result.listPrice = firstMoney(text, [
-    // Explicit label
     /list(?:ing)?\s+price[\s\S]{0,60}?(\$[\d,]+)/im,
     /asking\s+price[\s\S]{0,40}?(\$[\d,]+)/im,
     /sale\s+price[\s\S]{0,40}?(\$[\d,]+)/im,
-    // Bold/heading price near top of page — the first large dollar amount
     /^#+\s+(\$[\d,]+)\s*$/m,
     /^\*\*(\$[\d,]+)\*\*\s*$/m,
     /^(\$[\d,]+)\s*$/m,
-    // Any dollar amount ≥ 4 digits near "price" within 300 chars of page start
     /(\$[\d,]{4,})/,
   ])
 

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import type { FunnelStage, HomeFile, IntakeData, PropertySource, TriState } from '../types'
+import type { FunnelStage, HomeFile, IntakeData, PropertySource } from '../types'
 import { formatCurrency, calcQuickEstimate } from '../lib/calculations'
 import { AUCTION_SOURCES, FUNNEL_STAGES, getSourceLabel, getStageMeta, passesQuickScreen, screenScore, getArvLabel, getBidLabel } from '../lib/funnel'
 import { PropertyIntake } from './PropertyIntake'
@@ -130,42 +130,24 @@ function StagePicker({
 
 // ── Summary modal helpers ─────────────────────────────────────────────────────
 
-function triLabel(v: TriState): string {
-  if (v === 'yes') return 'Yes'
-  if (v === 'no') return 'No'
-  if (v === 'unknown') return 'Unknown'
-  return '—'
-}
-
-function SummarySection({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="summary-section">
-      <h3 className="summary-section-title">{title}</h3>
-      {children}
-    </div>
-  )
-}
-
-function SummaryRow({
+function MetricTile({
   label,
   value,
-  highlight,
-  muted,
+  accent,
 }: {
   label: string
-  value: React.ReactNode
-  highlight?: 'positive' | 'negative' | 'neutral'
-  muted?: boolean
+  value: string
+  accent?: 'positive' | 'negative' | 'neutral' | 'muted'
 }) {
   const color =
-    highlight === 'positive' ? 'var(--success)'
-    : highlight === 'negative' ? 'var(--danger)'
-    : muted ? 'var(--text-muted)'
+    accent === 'positive' ? 'var(--success)'
+    : accent === 'negative' ? 'var(--danger)'
+    : accent === 'muted' ? 'var(--text-muted)'
     : undefined
   return (
-    <div className="summary-row">
-      <span className="summary-row-label">{label}</span>
-      <span className="summary-row-value" style={color ? { color } : undefined}>{value}</span>
+    <div className="summary-metric">
+      <span className="summary-metric-value" style={color ? { color } : undefined}>{value}</span>
+      <span className="summary-metric-label">{label}</span>
     </div>
   )
 }
@@ -217,192 +199,157 @@ function PropertySummaryModal({
   const rehabLines = quick.lineCosts
     .filter((l) => l.cost > 0)
     .sort((a, b) => b.cost - a.cost)
-    .slice(0, 5)
+    .slice(0, 3)
 
-  const hasDealMath = !!(arv || askingPrice || rehabEst || maxOffer)
-  const hasPropertyDetails = !!(p.livingArea || p.bedrooms || bathLabel || funnel.yearBuilt || p.finishGrade)
-  const hasScreening = funnel.availableForSale !== null || inTargetArea || funnel.titleClear !== null
-    || funnel.sellerMotivated !== null || occupancy || rehabLevel
+  const spreadAccent = spread == null ? undefined
+    : spread > 100_000 ? 'positive' as const
+    : spread > 50_000 ? 'neutral' as const
+    : 'negative' as const
+  const netAccent = netMargin == null ? undefined
+    : netMargin > 50_000 ? 'positive' as const
+    : netMargin > 0 ? 'neutral' as const
+    : 'negative' as const
+
+  const notesText = [quickNotes, home.notes].filter(Boolean).join('\n\n') || null
+
+  const specChips: { label: string; cls?: string }[] = []
+  if (p.livingArea > 0) specChips.push({ label: `${p.livingArea.toLocaleString()} SF`, cls: 'grey' })
+  if (p.bedrooms > 0) specChips.push({ label: `${p.bedrooms} bed`, cls: 'grey' })
+  if (bathLabel) specChips.push({ label: bathLabel, cls: 'grey' })
+  if (funnel.yearBuilt) specChips.push({ label: `Built ${funnel.yearBuilt}`, cls: 'grey' })
+  if (occupancy === 'vacant') specChips.push({ label: 'Vacant', cls: 'green' })
+  if (occupancy === 'occupied') specChips.push({ label: 'Occupied', cls: 'red' })
+  if (inTargetArea === 'yes') specChips.push({ label: 'In area', cls: 'green' })
+  if (inTargetArea === 'maybe') specChips.push({ label: 'Maybe area', cls: 'yellow' })
+  if (inTargetArea === 'no') specChips.push({ label: 'Out of area', cls: 'red' })
+  if (rehabLevel) specChips.push({ label: `${rehabLevel} rehab`, cls: 'grey' })
+  if (isAuction && auctionType) {
+    specChips.push({ label: auctionType === 'bank-owned' ? 'Bank owned' : 'Auction', cls: 'grey' })
+  }
+
+  const detailItems: { label: string; value: string }[] = []
+  if (rehabEst) detailItems.push({ label: 'Est. rehab', value: formatCurrency(rehabEst) })
+  if (maxOffer) detailItems.push({ label: 'Max offer', value: formatCurrency(maxOffer) })
+  if (rehabEst && p.livingArea > 0) detailItems.push({ label: 'Rehab $/SF', value: formatCurrency(quick.perSf) })
+  if (isAuction && startingCreditBid) detailItems.push({ label: 'Credit bid', value: formatCurrency(startingCreditBid) })
+  if (funnel.titleClear === 'yes') detailItems.push({ label: 'Title', value: 'Clear' })
+  if (funnel.sellerMotivated === 'yes') detailItems.push({ label: 'Seller', value: 'Motivated' })
+  if (p.finishGrade) detailItems.push({ label: 'Finish', value: p.finishGrade })
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="summary-modal" onClick={(e) => e.stopPropagation()}>
+      <div className="summary-modal summary-modal--compact" onClick={(e) => e.stopPropagation()}>
 
-        {home.photoUrl ? (
-          <div className="summary-photo">
-            <img src={home.photoUrl} alt={home.address} />
-            <div className="summary-photo-overlay">
-              <SourceLogo source={home.source} customLabel={customLabel} size={53} />
-              <span className="summary-review-badge" style={{ background: reviewMeta.bg, color: reviewMeta.color }}>
+        {/* ── Hero: thumbnail + identity ── */}
+        <div className="summary-hero">
+          {home.photoUrl ? (
+            <div className="summary-thumb">
+              <img src={home.photoUrl} alt={home.address} />
+            </div>
+          ) : (
+            <div className="summary-thumb summary-thumb--empty">
+              <SourceLogo source={home.source} customLabel={customLabel} size={28} />
+            </div>
+          )}
+          <div className="summary-hero-info">
+            <div className="summary-hero-top">
+              <div>
+                <h2 className="summary-address">{home.address}</h2>
+                <p className="summary-city">{[home.city, home.state, home.zip].filter(Boolean).join(', ')}</p>
+              </div>
+              <StagePicker stage={home.stage} onChange={onStageChange} />
+            </div>
+            <div className="summary-hero-meta">
+              <SourceLogo source={home.source} customLabel={customLabel} size={14} />
+              <span>{getSourceLabel(home)}</span>
+              <span className="summary-hero-dot">·</span>
+              <span className="summary-meta-dot" style={{ background: stageMeta.color }} />
+              <span>{stageMeta.label}</span>
+              <span className="summary-hero-dot">·</span>
+              <span>{formatShortDate(home.createdAt)}</span>
+              <span
+                className="lead-badge summary-hero-badge"
+                style={{ background: reviewMeta.bg, color: reviewMeta.color }}
+              >
                 {reviewMeta.label}
               </span>
             </div>
           </div>
-        ) : (
-          <div className="summary-no-photo-bar">
-            <SourceLogo source={home.source} customLabel={customLabel} size={53} />
-            <span className="lead-badge" style={{ background: reviewMeta.bg, color: reviewMeta.color }}>
-              {reviewMeta.label}
-            </span>
-          </div>
-        )}
-
-        <div className="summary-header">
-          <div className="summary-title-row">
-            <div>
-              <h2 className="summary-address">{home.address}</h2>
-              <p className="summary-city">{[home.city, home.state, home.zip].filter(Boolean).join(', ')}</p>
-            </div>
-            <StagePicker stage={home.stage} onChange={onStageChange} />
-          </div>
-          <div className="summary-meta-row">
-            <span className="summary-meta-item">
-              <span className="summary-meta-dot" style={{ background: stageMeta.color }} />
-              {stageMeta.label}
-            </span>
-            <span className="summary-meta-item">Added {formatShortDate(home.createdAt)}</span>
-            <span className="summary-meta-item">via {getSourceLabel(home)}</span>
-          </div>
         </div>
 
-        {hasDealMath && (
-          <SummarySection title="Behind the Numbers">
-            <div className="summary-deal-math">
-              {arv && <SummaryRow label={arvLabel} value={formatCurrency(arv)} />}
-              {askingPrice && <SummaryRow label={bidLabel} value={formatCurrency(askingPrice)} />}
-              {spread !== null && (
-                <SummaryRow
-                  label="Gross Spread"
-                  value={formatCurrency(spread)}
-                  highlight={spread > 100_000 ? 'positive' : spread > 50_000 ? 'neutral' : 'negative'}
-                />
-              )}
-              {rehabEst && <SummaryRow label="Est. Rehab" value={formatCurrency(rehabEst)} muted />}
-              {netMargin !== null && (
-                <SummaryRow
-                  label="Net Margin"
-                  value={formatCurrency(netMargin)}
-                  highlight={netMargin > 50_000 ? 'positive' : netMargin > 0 ? 'neutral' : 'negative'}
-                />
-              )}
-              {maxOffer && <SummaryRow label="Max Offer" value={formatCurrency(maxOffer)} />}
-              {rehabEst && p.livingArea > 0 && (
-                <SummaryRow label="Rehab $/SF" value={formatCurrency(quick.perSf)} muted />
-              )}
-              {isAuction && auctionType && (
-                <SummaryRow label="Listing Type" value={auctionType === 'bank-owned' ? 'Bank Owned' : 'Auction'} />
-              )}
-              {isAuction && startingCreditBid && (
-                <SummaryRow label="Starting Credit Bid" value={formatCurrency(startingCreditBid)} />
-              )}
-            </div>
-          </SummarySection>
+        {/* ── Key metrics strip ── */}
+        {(arv || askingPrice || spread !== null || netMargin !== null) && (
+          <div className="summary-metrics">
+            {arv && <MetricTile label={arvLabel} value={formatCurrency(arv)} />}
+            {askingPrice && <MetricTile label={bidLabel} value={formatCurrency(askingPrice)} />}
+            {spread !== null && <MetricTile label="Spread" value={formatCurrency(spread)} accent={spreadAccent} />}
+            {netMargin !== null && <MetricTile label="Net margin" value={formatCurrency(netMargin)} accent={netAccent} />}
+          </div>
         )}
 
-        {hasPropertyDetails && (
-          <SummarySection title="Property">
-            <div className="summary-deal-math">
-              {p.livingArea > 0 && <SummaryRow label="Living Area" value={`${p.livingArea.toLocaleString()} SF`} />}
-              {p.bedrooms > 0 && <SummaryRow label="Bedrooms" value={p.bedrooms} />}
-              {bathLabel && <SummaryRow label="Bathrooms" value={bathLabel} />}
-              {funnel.yearBuilt && <SummaryRow label="Year Built" value={funnel.yearBuilt} />}
-              {p.finishGrade && <SummaryRow label="Finish Grade" value={p.finishGrade} />}
-            </div>
-          </SummarySection>
-        )}
-
-        {hasScreening && (
-          <SummarySection title="Screening">
-            <div className="summary-deal-math">
-              {funnel.availableForSale !== null && (
-                <SummaryRow
-                  label="Available for Sale"
-                  value={triLabel(funnel.availableForSale)}
-                  highlight={funnel.availableForSale === 'yes' ? 'positive' : funnel.availableForSale === 'no' ? 'negative' : undefined}
-                />
-              )}
-              {inTargetArea && (
-                <SummaryRow
-                  label="Target Area"
-                  value={inTargetArea.charAt(0).toUpperCase() + inTargetArea.slice(1)}
-                  highlight={inTargetArea === 'yes' ? 'positive' : inTargetArea === 'no' ? 'negative' : 'neutral'}
-                />
-              )}
-              {funnel.titleClear !== null && (
-                <SummaryRow
-                  label="Title Clear"
-                  value={triLabel(funnel.titleClear)}
-                  highlight={funnel.titleClear === 'yes' ? 'positive' : funnel.titleClear === 'no' ? 'negative' : undefined}
-                />
-              )}
-              {funnel.sellerMotivated !== null && (
-                <SummaryRow
-                  label="Seller Motivated"
-                  value={triLabel(funnel.sellerMotivated)}
-                  highlight={funnel.sellerMotivated === 'yes' ? 'positive' : undefined}
-                />
-              )}
-              {occupancy && (
-                <SummaryRow
-                  label="Occupancy"
-                  value={occupancy.charAt(0).toUpperCase() + occupancy.slice(1)}
-                  highlight={occupancy === 'vacant' ? 'positive' : occupancy === 'occupied' ? 'negative' : undefined}
-                />
-              )}
-              {rehabLevel && (
-                <SummaryRow label="Rehab Level" value={rehabLevel} />
-              )}
-            </div>
-            <div className="summary-score-bar">
-              <span className={`screen-chip ${passes ? 'green' : 'red'}`}>
-                {passes ? `✓ Passes screen — ${score} pts` : `✗ Fails screen — ${score} pts`}
-              </span>
-            </div>
-          </SummarySection>
-        )}
-
-        {rehabLines.length > 0 && (
-          <SummarySection title="Rehab Breakdown">
-            <div className="summary-deal-math">
-              {rehabLines.map((line) => (
-                <SummaryRow key={line.name} label={line.name} value={formatCurrency(line.cost)} muted />
+        {/* ── Spec chips + screen score ── */}
+        {(specChips.length > 0 || score > 0) && (
+          <div className="summary-specs">
+            <div className="summary-spec-chips">
+              {specChips.map((c) => (
+                <span key={c.label} className={`screen-chip ${c.cls ?? 'grey'}`}>{c.label}</span>
               ))}
             </div>
-            {rehabEst && (
-              <div className="summary-rehab-total">
-                <span>Total w/ contingency</span>
-                <span>{formatCurrency(rehabEst)}</span>
+            {score > 0 && (
+              <span className={`screen-chip score-chip ${passes ? 'green' : 'red'}`}>
+                {passes ? `✓ ${score} pts` : `✗ ${score} pts`}
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* ── Two-column details ── */}
+        {(detailItems.length > 0 || rehabLines.length > 0) && (
+          <div className="summary-columns">
+            {detailItems.length > 0 && (
+              <div className="summary-col">
+                <span className="summary-col-title">Details</span>
+                {detailItems.map((d) => (
+                  <div key={d.label} className="summary-kv">
+                    <span>{d.label}</span>
+                    <span>{d.value}</span>
+                  </div>
+                ))}
               </div>
             )}
-          </SummarySection>
+            {rehabLines.length > 0 && (
+              <div className="summary-col">
+                <span className="summary-col-title">Top rehab costs</span>
+                {rehabLines.map((line) => (
+                  <div key={line.name} className="summary-kv">
+                    <span>{line.name}</span>
+                    <span>{formatCurrency(line.cost)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         )}
 
-        {(quickNotes || home.notes) && (
-          <SummarySection title="Notes">
-            {quickNotes && <p className="summary-note-block">{quickNotes}</p>}
-            {home.notes && quickNotes !== home.notes && (
-              <p className="summary-note-block">{home.notes}</p>
-            )}
-          </SummarySection>
-        )}
+        {/* ── Notes (always visible) ── */}
+        <div className="summary-notes-block">
+          <span className="summary-col-title">Notes</span>
+          {notesText ? (
+            <p className="summary-note-text">{notesText}</p>
+          ) : (
+            <p className="summary-note-empty">No notes yet — add them when editing this property.</p>
+          )}
+        </div>
 
         {(home.links ?? []).length > 0 && (
-          <SummarySection title="Links">
-            <div className="summary-links">
-              {(home.links ?? []).map((url, i) => (
-                <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="lead-link-chip">
-                  {url.replace(/^https?:\/\/(www\.)?/, '').slice(0, 40)}{(url.length > 40 ? '…' : '')}
-                </a>
-              ))}
-            </div>
-          </SummarySection>
+          <div className="summary-links-row">
+            {(home.links ?? []).slice(0, 2).map((url, i) => (
+              <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="lead-link-chip">
+                Link {i + 1}
+              </a>
+            ))}
+          </div>
         )}
-
-        <div className="summary-source-watermark">
-          <SourceLogo source={home.source} customLabel={customLabel} size={16} />
-          <span>{getSourceLabel(home)}</span>
-          {auctionType && <span>· {auctionType === 'bank-owned' ? 'Bank Owned' : 'Auction'}</span>}
-        </div>
 
         <div className="summary-actions">
           <button type="button" className="btn btn-ghost btn-danger btn-sm" onClick={onDelete}>
@@ -410,7 +357,7 @@ function PropertySummaryModal({
           </button>
           <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
             <button type="button" className="btn btn-ghost" onClick={onClose}>Close</button>
-            <button type="button" className="btn btn-primary" onClick={onEdit}>Edit Property →</button>
+            <button type="button" className="btn btn-primary" onClick={onEdit}>Edit →</button>
           </div>
         </div>
 

@@ -388,8 +388,6 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
             <div>
               {/* ── Primary: auction.com URL paste ── */}
               <div className="intake-url-section">
-                <p className="intake-url-label">Paste an auction.com link to auto-fill</p>
-                <p className="intake-url-hint">We'll pull the address, bid, pricing, and property details for free</p>
                 <div className="intake-url-row">
                   <input
                     type="url"
@@ -403,13 +401,18 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
                   />
                   <button
                     type="button"
-                    className="btn btn-primary"
+                    className="intake-fetch-btn"
                     onClick={() => void handleAuctionFetch()}
                     disabled={!auctionUrl.trim() || fetchState === 'loading'}
+                    title="Fetch listing"
                   >
                     {fetchState === 'loading'
                       ? <span className="intake-spinner" />
-                      : 'Fetch →'}
+                      : (
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+                          <path d="M3.5 9h11M10 4.5l4.5 4.5L10 13.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      )}
                   </button>
                 </div>
 

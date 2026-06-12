@@ -1022,30 +1022,25 @@ textarea { resize: vertical; }
 .address-pill-zip { width: 72px; flex-shrink: 0; }
 
 /* ── Intake step 0 — URL-first layout ─────────────── */
-.intake-url-section {
-  text-align: center;
-  padding: 8px 0 4px;
-}
-.intake-url-label {
-  display: block;
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--text);
-  margin-bottom: 5px;
-  letter-spacing: -0.01em;
-}
-.intake-url-hint {
-  font-size: 0.83rem;
-  color: var(--text-muted);
-  margin-bottom: 14px;
-}
-.intake-url-row {
-  display: flex;
-  gap: 8px;
-  max-width: 480px;
-  margin: 0 auto;
-}
+.intake-url-section { padding: 4px 0 0; }
+.intake-url-row { display: flex; gap: 8px; }
 .intake-url-input { flex: 1; }
+.intake-fetch-btn {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  transition: background .15s, transform .1s;
+  border: none;
+  cursor: pointer;
+}
+.intake-fetch-btn:hover:not(:disabled) { background: var(--accent-hover); }
+.intake-fetch-btn:active:not(:disabled) { transform: scale(.95); }
+.intake-fetch-btn:disabled { opacity: 0.4; cursor: default; }
 .intake-spinner {
   display: inline-block;
   width: 14px;

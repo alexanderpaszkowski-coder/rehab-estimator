@@ -106,12 +106,125 @@ function StagePicker({ stage, onChange }: { stage: FunnelStage; onChange: (s: Fu
   )
 }
 
+// ── Property Summary Modal ───────────────────────────────────────────────────
+
+function PropertySummaryModal({
+  home,
+  onEdit,
+  onClose,
+}: {
+  home: HomeFile
+  onEdit: () => void
+  onClose: () => void
+}) {
+  const isAuction = home.source === 'auction.com'
+  const { arv, askingPrice, occupancy, rehabLevel, inTargetArea, auctionType, quickNotes } = home.funnel
+  const spread = arv && askingPrice ? arv - askingPrice : null
+  const stageMeta = getStageMeta(home.stage)
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="summary-modal" onClick={(e) => e.stopPropagation()}>
+
+        {/* Photo */}
+        {home.photoUrl && (
+          <div className="summary-photo">
+            <img src={home.photoUrl} alt={home.address} />
+          </div>
+        )}
+
+        {/* Header */}
+        <div className="summary-header">
+          <div className="summary-badges">
+            <SourceLogo source={home.source} customLabel={home.source === 'other' ? home.sourceCustom : undefined} />
+            <span className="source-badge">{getSourceLabel(home)}</span>
+            {auctionType && (
+              <span className="lead-badge" style={{ background: '#f0f9ff', color: '#0369a1' }}>
+                {auctionType === 'bank-owned' ? 'Bank Owned' : 'Auction'}
+              </span>
+            )}
+            <span
+              className="summary-stage-pill"
+              style={{ background: stageMeta.color + '18', color: stageMeta.color, borderColor: stageMeta.color + '40' }}
+            >
+              <span style={{ width: 7, height: 7, borderRadius: '50%', background: stageMeta.color, display: 'inline-block', marginRight: 5 }} />
+              {stageMeta.label}
+            </span>
+          </div>
+          <h2 className="summary-address">{home.address}</h2>
+          <p className="summary-city">{[home.city, home.state].filter(Boolean).join(', ')}</p>
+        </div>
+
+        {/* Financials */}
+        {(arv || askingPrice) && (
+          <div className="summary-financials">
+            {arv && (
+              <div className="summary-fin-item">
+                <span className="summary-fin-label">{isAuction ? 'Est. Value' : 'ARV'}</span>
+                <span className="summary-fin-value">{formatCurrency(arv)}</span>
+              </div>
+            )}
+            {askingPrice && (
+              <div className="summary-fin-item">
+                <span className="summary-fin-label">{isAuction ? 'Starting Bid' : 'Asking'}</span>
+                <span className="summary-fin-value">{formatCurrency(askingPrice)}</span>
+              </div>
+            )}
+            {spread !== null && (
+              <div className="summary-fin-item">
+                <span className="summary-fin-label">Spread</span>
+                <span
+                  className="summary-fin-value"
+                  style={{ color: spread > 100_000 ? 'var(--success)' : spread > 50_000 ? 'var(--warning)' : 'var(--danger)' }}
+                >
+                  {formatCurrency(spread)}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Screening chips */}
+        <div className="summary-chips">
+          {occupancy === 'vacant'   && <span className="screen-chip green">Vacant</span>}
+          {occupancy === 'occupied' && <span className="screen-chip red">Occupied</span>}
+          {inTargetArea === 'yes'   && <span className="screen-chip green">In Area</span>}
+          {inTargetArea === 'maybe' && <span className="screen-chip yellow">Maybe Area</span>}
+          {inTargetArea === 'no'    && <span className="screen-chip red">Out of Area</span>}
+          {rehabLevel && (
+            <span className="screen-chip" style={{
+              background: REHAB_BG[rehabLevel],
+              color: REHAB_COLORS[rehabLevel],
+            }}>
+              {rehabLevel} Rehab
+            </span>
+          )}
+          {home.funnel.titleClear === 'yes'       && <span className="screen-chip green">Title Clear</span>}
+          {home.funnel.yearBuilt                  && <span className="screen-chip grey">Built {home.funnel.yearBuilt}</span>}
+        </div>
+
+        {/* Notes */}
+        {quickNotes && (
+          <p className="summary-notes">{quickNotes}</p>
+        )}
+
+        {/* Actions */}
+        <div className="summary-actions">
+          <button type="button" className="btn btn-ghost" onClick={onClose}>Close</button>
+          <button type="button" className="btn btn-primary" onClick={onEdit}>Edit Property →</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Main board ──────────────────────────────────────────────────────────────
 
 export function FunnelBoard({ homes, onSelect, onCreate, onStageChange, onDelete, autoOpenIntake }: Props) {
   const [showIntake, setShowIntake] = useState(() => autoOpenIntake ?? false)
   const [search, setSearch] = useState('')
   const [selectedStage, setSelectedStage] = useState<FunnelStage | null>(null)
+  const [summaryHome, setSummaryHome] = useState<HomeFile | null>(null)
 
   const filtered = useMemo(() => {
     if (!search.trim()) return homes
@@ -155,6 +268,15 @@ export function FunnelBoard({ homes, onSelect, onCreate, onStageChange, onDelete
 
   return (
     <div className="funnel-dashboard">
+
+      {/* ── Summary modal ── */}
+      {summaryHome && (
+        <PropertySummaryModal
+          home={summaryHome}
+          onEdit={() => { setSummaryHome(null); onSelect(summaryHome) }}
+          onClose={() => setSummaryHome(null)}
+        />
+      )}
 
       {/* ── Header ── */}
       <div className="funnel-page-header">
@@ -220,6 +342,7 @@ export function FunnelBoard({ homes, onSelect, onCreate, onStageChange, onDelete
                 key={home.id}
                 home={home}
                 onOpen={() => onSelect(home)}
+                onSummary={() => setSummaryHome(home)}
                 onStageChange={(s) => onStageChange(home.id, s)}
                 onDelete={() => { if (confirm(`Delete ${home.address}?`)) onDelete(home.id) }}
               />
@@ -240,20 +363,35 @@ export function FunnelBoard({ homes, onSelect, onCreate, onStageChange, onDelete
 
 // ── Lead card (large) ───────────────────────────────────────────────────────
 
-function LeadCard({ home, onOpen, onStageChange, onDelete }: {
+function LeadCard({ home, onOpen, onSummary, onStageChange, onDelete }: {
   home: HomeFile
   onOpen: () => void
+  onSummary: () => void
   onStageChange: (s: FunnelStage) => void
   onDelete: () => void
 }) {
+  const [flipping, setFlipping] = useState(false)
   const quick = calcQuickEstimate(home.property, home.quickEstimate)
   const passes = passesQuickScreen(home.funnel)
   const score = screenScore(home.funnel)
   const hasScore = score > 0 || home.funnel.availableForSale !== null
   const reviewMeta = REVIEW_META[home.reviewStatus] ?? REVIEW_META.pending
 
+  const handleCardClick = () => {
+    if (flipping) return
+    setFlipping(true)
+    setTimeout(() => {
+      setFlipping(false)
+      onSummary()
+    }, 320)
+  }
+
   return (
-    <div className="lead-card">
+    <div
+      className={`lead-card ${flipping ? 'lead-card-flipping' : ''}`}
+      onClick={handleCardClick}
+      style={{ cursor: 'pointer' }}
+    >
       {/* property photo */}
       {home.photoUrl && (
         <div className="lead-card-photo" onClick={onOpen}>
@@ -348,8 +486,7 @@ function LeadCard({ home, onOpen, onStageChange, onDelete }: {
         <div className="lead-card-actions" onClick={(e) => e.stopPropagation()}>
           <SourceLogo source={home.source} customLabel={home.source === 'other' ? home.sourceCustom : undefined} />
           <StagePicker stage={home.stage} onChange={onStageChange} />
-          <button className="btn btn-ghost btn-danger btn-sm" style={{ marginLeft: 'auto' }} onClick={onDelete}>Delete</button>
-          <button className="btn btn-primary btn-sm" onClick={onOpen}>Open →</button>
+          <button className="btn btn-ghost btn-danger btn-sm" style={{ marginLeft: 'auto' }} onClick={(e) => { e.stopPropagation(); onDelete() }}>Delete</button>
         </div>
       </div>
     </div>

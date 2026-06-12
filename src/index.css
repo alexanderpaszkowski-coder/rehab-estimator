@@ -643,6 +643,143 @@ textarea { resize: vertical; }
   transform: translateY(-2px);
 }
 
+@keyframes cardFlip {
+  0%   { transform: translateY(-2px) scale(1); }
+  35%  { transform: translateY(0) scale(0.96) rotateY(6deg); }
+  70%  { transform: scale(0.98) rotateY(-2deg); }
+  100% { transform: scale(1) rotateY(0); }
+}
+.lead-card-flipping {
+  animation: cardFlip .32s cubic-bezier(.4,0,.2,1) both;
+  pointer-events: none;
+}
+
+/* ── Summary modal ── */
+@keyframes summaryFlipIn {
+  0%   { opacity: 0; transform: perspective(800px) rotateY(-12deg) scale(0.96); }
+  100% { opacity: 1; transform: perspective(800px) rotateY(0) scale(1); }
+}
+
+.summary-modal {
+  background: var(--surface);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 460px;
+  overflow: hidden;
+  box-shadow: 0 24px 64px rgba(0,0,0,.18);
+  animation: summaryFlipIn .35s cubic-bezier(.34,1.2,.64,1) both;
+  display: flex;
+  flex-direction: column;
+}
+
+.summary-photo {
+  width: 100%;
+  aspect-ratio: 16/8;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.summary-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.summary-header {
+  padding: 20px 24px 16px;
+  border-bottom: 1.5px solid var(--border);
+}
+.summary-badges {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.summary-stage-pill {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.73rem;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 20px;
+  border: 1.5px solid;
+  margin-left: auto;
+}
+.summary-address {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 3px;
+  line-height: 1.2;
+}
+.summary-city {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.summary-financials {
+  display: flex;
+  gap: 0;
+  padding: 16px 24px;
+  border-bottom: 1.5px solid var(--border);
+}
+.summary-fin-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-right: 16px;
+}
+.summary-fin-item + .summary-fin-item {
+  padding-left: 16px;
+  padding-right: 16px;
+  border-left: 1.5px solid var(--border);
+}
+.summary-fin-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--text-muted);
+}
+.summary-fin-value {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.summary-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 14px 24px;
+  border-bottom: 1.5px solid var(--border);
+}
+.screen-chip.grey {
+  background: var(--bg);
+  color: var(--text-muted);
+}
+
+.summary-notes {
+  padding: 12px 24px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  border-bottom: 1.5px solid var(--border);
+  margin: 0;
+  font-style: italic;
+}
+
+.summary-actions {
+  display: flex;
+  gap: 10px;
+  padding: 16px 24px;
+  justify-content: flex-end;
+}
+
 .lead-card-badges {
   display: flex;
   align-items: center;

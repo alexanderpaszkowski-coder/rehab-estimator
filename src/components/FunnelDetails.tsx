@@ -116,9 +116,73 @@ export function FunnelDetails({ home, onChange }: Props) {
       <div className="card">
         <h2>Screening Questions</h2>
         <div className="screen-grid">
-          <ScreenTri label="Available for sale?" value={home.funnel.availableForSale} onChange={(v) => updateFunnel({ availableForSale: v })} />
+          {home.source === 'auction.com' ? (
+            <>
+              {/* Listing type */}
+              <div className="screen-item" style={{ gridColumn: '1 / -1' }}>
+                <label>Listing type</label>
+                <div className="condition-pills">
+                  {(['auction', 'bank-owned'] as const).map((o) => (
+                    <button
+                      key={o}
+                      type="button"
+                      className={`condition-pill ${home.funnel.auctionType === o ? 'active-light' : ''}`}
+                      onClick={() => updateFunnel({
+                        auctionType: home.funnel.auctionType === o ? null : o,
+                        ...(o === 'bank-owned' ? { startingCreditBid: null } : {}),
+                      })}
+                    >
+                      {o === 'auction' ? 'Auction' : 'Bank Owned'}
+                    </button>
+                  ))}
+                </div>
+                {home.funnel.auctionType === 'auction' && (
+                  <div className="field" style={{ marginTop: 10 }}>
+                    <label>Starting credit bid</label>
+                    <input
+                      type="number"
+                      value={home.funnel.startingCreditBid ?? ''}
+                      onChange={(e) => updateFunnel({ startingCreditBid: e.target.value ? parseFloat(e.target.value) : null })}
+                      placeholder="$0"
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="field">
+                <label>Auction.com estimate price</label>
+                <input type="number" value={home.funnel.arv ?? ''} onChange={(e) => updateFunnel({ arv: e.target.value ? parseFloat(e.target.value) : null })} placeholder="$0" />
+              </div>
+              <div className="field">
+                <label>Starting bid</label>
+                <input type="number" value={home.funnel.askingPrice ?? ''} onChange={(e) => updateFunnel({ askingPrice: e.target.value ? parseFloat(e.target.value) : null })} placeholder="$0" />
+              </div>
+              <div className="field">
+                <label>Max offer</label>
+                <input type="number" value={home.funnel.maxOffer ?? ''} onChange={(e) => updateFunnel({ maxOffer: e.target.value ? parseFloat(e.target.value) : null })} />
+              </div>
+            </>
+          ) : (
+            <>
+              <ScreenTri label="Available for sale?" value={home.funnel.availableForSale} onChange={(v) => updateFunnel({ availableForSale: v })} />
+              <ScreenTri label="Seller motivated?" value={home.funnel.sellerMotivated} onChange={(v) => updateFunnel({ sellerMotivated: v })} />
+              <div className="field">
+                <label>Asking price</label>
+                <input type="number" value={home.funnel.askingPrice ?? ''} onChange={(e) => updateFunnel({ askingPrice: e.target.value ? parseFloat(e.target.value) : null })} />
+              </div>
+              <div className="field">
+                <label>ARV</label>
+                <input type="number" value={home.funnel.arv ?? ''} onChange={(e) => updateFunnel({ arv: e.target.value ? parseFloat(e.target.value) : null })} />
+              </div>
+              <div className="field">
+                <label>Max offer</label>
+                <input type="number" value={home.funnel.maxOffer ?? ''} onChange={(e) => updateFunnel({ maxOffer: e.target.value ? parseFloat(e.target.value) : null })} />
+              </div>
+            </>
+          )}
+
+          {/* Shared fields for all sources */}
           <ScreenTri label="Title clear?" value={home.funnel.titleClear} onChange={(v) => updateFunnel({ titleClear: v })} />
-          <ScreenTri label="Seller motivated?" value={home.funnel.sellerMotivated} onChange={(v) => updateFunnel({ sellerMotivated: v })} />
           <div className="screen-item">
             <label>Rehab level</label>
             <div className="condition-pills">
@@ -163,18 +227,6 @@ export function FunnelDetails({ home, onChange }: Props) {
                 </button>
               ))}
             </div>
-          </div>
-          <div className="field">
-            <label>Asking price</label>
-            <input type="number" value={home.funnel.askingPrice ?? ''} onChange={(e) => updateFunnel({ askingPrice: e.target.value ? parseFloat(e.target.value) : null })} />
-          </div>
-          <div className="field">
-            <label>ARV</label>
-            <input type="number" value={home.funnel.arv ?? ''} onChange={(e) => updateFunnel({ arv: e.target.value ? parseFloat(e.target.value) : null })} />
-          </div>
-          <div className="field">
-            <label>Max offer</label>
-            <input type="number" value={home.funnel.maxOffer ?? ''} onChange={(e) => updateFunnel({ maxOffer: e.target.value ? parseFloat(e.target.value) : null })} />
           </div>
           <div className="field">
             <label>Year built</label>

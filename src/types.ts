@@ -37,6 +37,9 @@ export interface FunnelScreen {
   rehabLevel: 'Light' | 'Moderate' | 'Heavy' | null
   sellerMotivated: TriState
   quickNotes: string
+  // auction.com-specific fields
+  auctionType: 'auction' | 'bank-owned' | null
+  startingCreditBid: number | null
 }
 
 export interface PropertyField {

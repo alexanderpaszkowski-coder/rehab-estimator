@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { FunnelScreen, IntakeData, PropertySource, TriState } from '../types'
 import { DEFAULT_FUNNEL, PROPERTY_SOURCES } from '../lib/funnel'
 import { AddressAutocomplete } from './AddressAutocomplete'
+import { scrapeAuctionListing } from '../lib/auctionScraper'
 
 interface Props {
   onSubmit: (data: IntakeData) => void
@@ -36,6 +37,247 @@ function TriToggle({
   )
 }
 
+function OccupancyPills({
+  value,
+  onChange,
+}: {
+  value: FunnelScreen['occupancy']
+  onChange: (v: FunnelScreen['occupancy']) => void
+}) {
+  return (
+    <div className="condition-pills">
+      {(['vacant', 'occupied', 'unknown'] as const).map((o) => (
+        <button
+          key={o}
+          type="button"
+          className={`condition-pill ${value === o ? 'active-light' : ''}`}
+          onClick={() => onChange(value === o ? null : o)}
+        >
+          {o.charAt(0).toUpperCase() + o.slice(1)}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+function TargetAreaPills({
+  value,
+  onChange,
+}: {
+  value: FunnelScreen['inTargetArea']
+  onChange: (v: FunnelScreen['inTargetArea']) => void
+}) {
+  return (
+    <div className="condition-pills">
+      {(['yes', 'maybe', 'no'] as const).map((o) => (
+        <button
+          key={o}
+          type="button"
+          className={`condition-pill ${value === o ? `active-${o === 'yes' ? 'light' : o === 'no' ? 'heavy' : 'moderate'}` : ''}`}
+          onClick={() => onChange(value === o ? null : o)}
+        >
+          {o.charAt(0).toUpperCase() + o.slice(1)}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+function RehabLevelPills({
+  value,
+  onChange,
+}: {
+  value: FunnelScreen['rehabLevel']
+  onChange: (v: FunnelScreen['rehabLevel']) => void
+}) {
+  return (
+    <div className="condition-pills">
+      {(['Light', 'Moderate', 'Heavy'] as const).map((o) => (
+        <button
+          key={o}
+          type="button"
+          className={`condition-pill ${value === o ? `active-${o === 'Light' ? 'light' : o === 'Moderate' ? 'moderate' : 'heavy'}` : ''}`}
+          onClick={() => onChange(value === o ? null : o)}
+        >
+          {o}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+function AuctionScreen({
+  funnel,
+  onChange,
+}: {
+  funnel: FunnelScreen
+  onChange: (patch: Partial<FunnelScreen>) => void
+}) {
+  return (
+    <>
+      {/* Listing type — early, drives what follows */}
+      <div className="screen-item" style={{ gridColumn: '1 / -1' }}>
+        <label>Listing type</label>
+        <div className="condition-pills">
+          <button
+            type="button"
+            className={`condition-pill ${funnel.auctionType === 'auction' ? 'active-light' : ''}`}
+            onClick={() => onChange({ auctionType: funnel.auctionType === 'auction' ? null : 'auction' })}
+          >
+            Auction
+          </button>
+          <button
+            type="button"
+            className={`condition-pill ${funnel.auctionType === 'bank-owned' ? 'active-light' : ''}`}
+            onClick={() => onChange({ auctionType: funnel.auctionType === 'bank-owned' ? null : 'bank-owned', startingCreditBid: null })}
+          >
+            Bank Owned
+          </button>
+        </div>
+
+        {funnel.auctionType === 'auction' && (
+          <div className="auction-credit-bid">
+            <label>Starting credit bid</label>
+            <input
+              type="number"
+              value={funnel.startingCreditBid ?? ''}
+              onChange={(e) => onChange({ startingCreditBid: e.target.value ? parseFloat(e.target.value) : null })}
+              placeholder="$0"
+              autoFocus
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Auction.com estimate price — same data as ARV, different label */}
+      <div className="field" style={{ gridColumn: '1 / -1' }}>
+        <label>Auction.com estimate price</label>
+        <input
+          type="number"
+          value={funnel.arv ?? ''}
+          onChange={(e) => onChange({ arv: e.target.value ? parseFloat(e.target.value) : null })}
+          placeholder="$0"
+        />
+      </div>
+
+      {/* Starting bid — same data as askingPrice, different label */}
+      <div className="field" style={{ gridColumn: '1 / -1' }}>
+        <label>Starting bid</label>
+        <input
+          type="number"
+          value={funnel.askingPrice ?? ''}
+          onChange={(e) => onChange({ askingPrice: e.target.value ? parseFloat(e.target.value) : null })}
+          placeholder="$0"
+        />
+      </div>
+
+      <div className="screen-item">
+        <label>Occupancy</label>
+        <OccupancyPills value={funnel.occupancy} onChange={(v) => onChange({ occupancy: v })} />
+      </div>
+
+      <div className="screen-item">
+        <label>In your target area?</label>
+        <TargetAreaPills value={funnel.inTargetArea} onChange={(v) => onChange({ inTargetArea: v })} />
+      </div>
+
+      <div className="screen-item">
+        <label>Title clear?</label>
+        <TriToggle value={funnel.titleClear} onChange={(v) => onChange({ titleClear: v })} />
+      </div>
+
+      <div className="screen-item">
+        <label>Rehab level</label>
+        <RehabLevelPills value={funnel.rehabLevel} onChange={(v) => onChange({ rehabLevel: v })} />
+      </div>
+
+      <div className="field">
+        <label>Year built</label>
+        <input
+          type="number"
+          value={funnel.yearBuilt ?? ''}
+          onChange={(e) => onChange({ yearBuilt: e.target.value ? parseInt(e.target.value) : null })}
+          placeholder="Optional"
+        />
+      </div>
+    </>
+  )
+}
+
+function StandardScreen({
+  funnel,
+  onChange,
+}: {
+  funnel: FunnelScreen
+  onChange: (patch: Partial<FunnelScreen>) => void
+}) {
+  return (
+    <>
+      <div className="field" style={{ gridColumn: '1 / -1' }}>
+        <label>Estimated Value (ARV)</label>
+        <input
+          type="number"
+          value={funnel.arv ?? ''}
+          onChange={(e) => onChange({ arv: e.target.value ? parseFloat(e.target.value) : null })}
+          placeholder="$0"
+        />
+      </div>
+
+      <div className="screen-item" style={{ gridColumn: '1 / -1' }}>
+        <label>Available for sale?</label>
+        <TriToggle value={funnel.availableForSale} onChange={(v) => onChange({ availableForSale: v })} />
+        {funnel.availableForSale === 'yes' && (
+          <input
+            type="number"
+            style={{ marginTop: 10 }}
+            value={funnel.askingPrice ?? ''}
+            onChange={(e) => onChange({ askingPrice: e.target.value ? parseFloat(e.target.value) : null })}
+            placeholder="Asking price"
+            autoFocus
+          />
+        )}
+      </div>
+
+      <div className="screen-item">
+        <label>In your target area?</label>
+        <TargetAreaPills value={funnel.inTargetArea} onChange={(v) => onChange({ inTargetArea: v })} />
+      </div>
+
+      <div className="screen-item">
+        <label>Title clear?</label>
+        <TriToggle value={funnel.titleClear} onChange={(v) => onChange({ titleClear: v })} />
+      </div>
+
+      <div className="screen-item">
+        <label>Seller motivated?</label>
+        <TriToggle value={funnel.sellerMotivated} onChange={(v) => onChange({ sellerMotivated: v })} />
+      </div>
+
+      <div className="screen-item">
+        <label>Occupancy</label>
+        <OccupancyPills value={funnel.occupancy} onChange={(v) => onChange({ occupancy: v })} />
+      </div>
+
+      <div className="screen-item">
+        <label>Rehab level</label>
+        <RehabLevelPills value={funnel.rehabLevel} onChange={(v) => onChange({ rehabLevel: v })} />
+      </div>
+
+      <div className="field">
+        <label>Year built</label>
+        <input
+          type="number"
+          value={funnel.yearBuilt ?? ''}
+          onChange={(e) => onChange({ yearBuilt: e.target.value ? parseInt(e.target.value) : null })}
+          placeholder="Optional"
+        />
+      </div>
+    </>
+  )
+}
+
+type FetchState = 'idle' | 'loading' | 'success' | 'error'
+
 export function PropertyIntake({ onSubmit, onCancel }: Props) {
   const [step, setStep] = useState(0)
   const [data, setData] = useState<IntakeData>({
@@ -49,9 +291,52 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
     links: [],
   })
   const [linkInput, setLinkInput] = useState('')
+  const [auctionUrl, setAuctionUrl] = useState('')
+  const [fetchState, setFetchState] = useState<FetchState>('idle')
+  const [fetchError, setFetchError] = useState<string | null>(null)
+  const [fetchedFields, setFetchedFields] = useState<string[]>([])
 
   const updateFunnel = (patch: Partial<FunnelScreen>) =>
     setData((d) => ({ ...d, funnel: { ...d.funnel, ...patch } }))
+
+  const handleAuctionFetch = async () => {
+    const url = auctionUrl.trim()
+    if (!url) return
+    setFetchState('loading')
+    setFetchError(null)
+    setFetchedFields([])
+    try {
+      const scraped = await scrapeAuctionListing(url)
+      const filled: string[] = []
+
+      setData((prev) => {
+        const next = { ...prev, source: 'auction.com' as const }
+
+        if (scraped.address) { next.address = scraped.address; filled.push('Address') }
+        if (scraped.city) { next.city = scraped.city; filled.push('City') }
+        if (scraped.state) next.state = scraped.state
+        if (scraped.zip) next.zip = scraped.zip
+
+        next.funnel = { ...prev.funnel }
+        if (scraped.estimatePrice) { next.funnel.arv = scraped.estimatePrice; filled.push('Estimate price') }
+        if (scraped.openingBid) { next.funnel.askingPrice = scraped.openingBid; filled.push('Starting bid') }
+        if (scraped.listingType) { next.funnel.auctionType = scraped.listingType; filled.push('Listing type') }
+        if (scraped.startingCreditBid) { next.funnel.startingCreditBid = scraped.startingCreditBid; filled.push('Credit bid') }
+        if (scraped.occupancy) { next.funnel.occupancy = scraped.occupancy; filled.push('Occupancy') }
+        if (scraped.yearBuilt) { next.funnel.yearBuilt = scraped.yearBuilt; filled.push('Year built') }
+
+        if (!prev.links?.includes(url)) next.links = [...(prev.links ?? []), url]
+
+        return next
+      })
+
+      setFetchedFields(filled)
+      setFetchState('success')
+    } catch (err) {
+      setFetchError(err instanceof Error ? err.message : 'Failed to fetch listing')
+      setFetchState('error')
+    }
+  }
 
   const addLink = () => {
     const trimmed = linkInput.trim()
@@ -64,7 +349,16 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
     setData((d) => ({ ...d, links: (d.links ?? []).filter((_, idx) => idx !== i) }))
   }
 
-  const canNext = step === 0 ? data.address.trim().length > 0 : true
+  const canNext = step === 0 ? (data.address.trim().length > 0 || fetchState === 'success') : true
+
+  // After a URL fetch, skip the source-selection step (source is already set)
+  const handleNext = () => {
+    if (step === 0 && fetchState === 'success') {
+      setStep(2)
+    } else {
+      setStep(step + 1)
+    }
+  }
 
   return (
     <div className="modal-overlay" onClick={onCancel}>
@@ -90,36 +384,85 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
 
         <div className="modal-body">
           {step === 0 && (
-            <div className="field-grid">
-              <div className="field" style={{ gridColumn: '1 / -1' }}>
-                <label>Street Address *</label>
-                <AddressAutocomplete
-                  autoFocus
-                  value={data.address}
-                  onChange={(street) => setData((d) => ({ ...d, address: street }))}
-                  onSelect={(fill) =>
-                    setData((d) => ({
-                      ...d,
-                      address: fill.street || d.address,
-                      city: fill.city || d.city,
-                      state: fill.state || d.state,
-                      zip: fill.zip || d.zip,
-                    }))
-                  }
-                />
-                <p className="field-hint">Start typing — suggestions pull from a national address database</p>
+            <div>
+              {/* ── Primary: auction.com URL paste ── */}
+              <div className="intake-url-section">
+                <p className="intake-url-label">Paste an auction.com link to auto-fill</p>
+                <p className="intake-url-hint">We'll pull the address, bid, pricing, and property details for free</p>
+                <div className="intake-url-row">
+                  <input
+                    type="url"
+                    autoFocus
+                    value={auctionUrl}
+                    onChange={(e) => { setAuctionUrl(e.target.value); setFetchState('idle') }}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void handleAuctionFetch() } }}
+                    placeholder="https://www.auction.com/details/…"
+                    disabled={fetchState === 'loading'}
+                    className="intake-url-input"
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={() => void handleAuctionFetch()}
+                    disabled={!auctionUrl.trim() || fetchState === 'loading'}
+                  >
+                    {fetchState === 'loading'
+                      ? <span className="intake-spinner" />
+                      : 'Fetch →'}
+                  </button>
+                </div>
+
+                {fetchState === 'success' && fetchedFields.length > 0 && (
+                  <div className="auction-autofill-success" style={{ marginTop: 10 }}>
+                    <span>✓ Filled: {fetchedFields.join(', ')}</span>
+                  </div>
+                )}
+                {fetchState === 'success' && fetchedFields.length === 0 && (
+                  <p className="auction-autofill-error" style={{ marginTop: 10 }}>
+                    Fetched, but no data parsed — check the address below and fill manually.
+                  </p>
+                )}
+                {fetchState === 'error' && (
+                  <p className="auction-autofill-error" style={{ marginTop: 10 }}>{fetchError}</p>
+                )}
               </div>
-              <div className="field">
-                <label>City</label>
-                <input value={data.city} onChange={(e) => setData({ ...data, city: e.target.value })} />
+
+              {/* ── OR divider ── */}
+              <div className="intake-or-divider">
+                <span>or enter address manually</span>
               </div>
-              <div className="field">
-                <label>State</label>
-                <input value={data.state} onChange={(e) => setData({ ...data, state: e.target.value })} maxLength={2} placeholder="IL" />
-              </div>
-              <div className="field">
-                <label>ZIP</label>
-                <input value={data.zip} onChange={(e) => setData({ ...data, zip: e.target.value })} placeholder="60601" />
+
+              {/* ── Secondary: manual address entry ── */}
+              <div className="field-grid">
+                <div className="field" style={{ gridColumn: '1 / -1' }}>
+                  <label>Street Address</label>
+                  <AddressAutocomplete
+                    value={data.address}
+                    onChange={(street) => setData((d) => ({ ...d, address: street }))}
+                    onSelect={(fill) =>
+                      setData((d) => ({
+                        ...d,
+                        address: fill.street || d.address,
+                        city: fill.city || d.city,
+                        state: fill.state || d.state,
+                        zip: fill.zip || d.zip,
+                      }))
+                    }
+                  />
+                  <p className="field-hint">Start typing — suggestions pull from a national address database</p>
+                </div>
+                <div className="field">
+                  <label>City</label>
+                  <input value={data.city} onChange={(e) => setData({ ...data, city: e.target.value })} />
+                </div>
+                <div className="field">
+                  <label>State</label>
+                  <input value={data.state} onChange={(e) => setData({ ...data, state: e.target.value })} maxLength={2} placeholder="IL" />
+                </div>
+                <div className="field">
+                  <label>ZIP</label>
+                  <input value={data.zip} onChange={(e) => setData({ ...data, zip: e.target.value })} placeholder="60601" />
+                </div>
               </div>
             </div>
           )}
@@ -187,95 +530,11 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
 
           {step === 3 && (
             <div className="screen-grid">
-
-              <div className="field" style={{ gridColumn: '1 / -1' }}>
-                <label>Estimated Value (ARV)</label>
-                <input
-                  type="number"
-                  value={data.funnel.arv ?? ''}
-                  onChange={(e) => updateFunnel({ arv: e.target.value ? parseFloat(e.target.value) : null })}
-                  placeholder="$0"
-                />
-              </div>
-
-              <div className="screen-item" style={{ gridColumn: '1 / -1' }}>
-                <label>Available for sale?</label>
-                <TriToggle value={data.funnel.availableForSale} onChange={(v) => updateFunnel({ availableForSale: v })} />
-                {data.funnel.availableForSale === 'yes' && (
-                  <input
-                    type="number"
-                    style={{ marginTop: 10 }}
-                    value={data.funnel.askingPrice ?? ''}
-                    onChange={(e) => updateFunnel({ askingPrice: e.target.value ? parseFloat(e.target.value) : null })}
-                    placeholder="Asking price"
-                    autoFocus
-                  />
-                )}
-              </div>
-
-              <div className="screen-item">
-                <label>In your target area?</label>
-                <div className="condition-pills">
-                  {(['yes', 'maybe', 'no'] as const).map((o) => (
-                    <button
-                      key={o}
-                      type="button"
-                      className={`condition-pill ${data.funnel.inTargetArea === o ? `active-${o === 'yes' ? 'light' : o === 'no' ? 'heavy' : 'moderate'}` : ''}`}
-                      onClick={() => updateFunnel({ inTargetArea: data.funnel.inTargetArea === o ? null : o })}
-                    >
-                      {o.charAt(0).toUpperCase() + o.slice(1)}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="screen-item">
-                <label>Title clear?</label>
-                <TriToggle value={data.funnel.titleClear} onChange={(v) => updateFunnel({ titleClear: v })} />
-              </div>
-
-              <div className="screen-item">
-                <label>Seller motivated?</label>
-                <TriToggle value={data.funnel.sellerMotivated} onChange={(v) => updateFunnel({ sellerMotivated: v })} />
-              </div>
-
-              <div className="screen-item">
-                <label>Occupancy</label>
-                <div className="condition-pills">
-                  {(['vacant', 'occupied', 'unknown'] as const).map((o) => (
-                    <button
-                      key={o}
-                      type="button"
-                      className={`condition-pill ${data.funnel.occupancy === o ? 'active-light' : ''}`}
-                      onClick={() => updateFunnel({ occupancy: data.funnel.occupancy === o ? null : o })}
-                    >
-                      {o.charAt(0).toUpperCase() + o.slice(1)}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="screen-item">
-                <label>Rehab level</label>
-                <div className="condition-pills">
-                  {(['Light', 'Moderate', 'Heavy'] as const).map((o) => (
-                    <button
-                      key={o}
-                      type="button"
-                      className={`condition-pill ${data.funnel.rehabLevel === o ? `active-${o === 'Light' ? 'light' : o === 'Moderate' ? 'moderate' : 'heavy'}` : ''}`}
-                      onClick={() => updateFunnel({ rehabLevel: data.funnel.rehabLevel === o ? null : o })}
-                    >
-                      {o}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="field">
-                <label>Year built</label>
-                <input type="number" value={data.funnel.yearBuilt ?? ''} onChange={(e) => updateFunnel({ yearBuilt: e.target.value ? parseInt(e.target.value) : null })} placeholder="Optional" />
-              </div>
-
+              {data.source === 'auction.com' ? (
+                <AuctionScreen funnel={data.funnel} onChange={updateFunnel} />
+              ) : (
+                <StandardScreen funnel={data.funnel} onChange={updateFunnel} />
+              )}
             </div>
           )}
         </div>
@@ -287,7 +546,7 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
             <button type="button" className="btn btn-ghost" onClick={onCancel}>Cancel</button>
           )}
           {step < STEPS.length - 1 ? (
-            <button type="button" className="btn btn-primary" disabled={!canNext} onClick={() => setStep(step + 1)}>
+            <button type="button" className="btn btn-primary" disabled={!canNext} onClick={handleNext}>
               Next →
             </button>
           ) : (

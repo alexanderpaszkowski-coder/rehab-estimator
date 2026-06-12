@@ -998,6 +998,149 @@ textarea { resize: vertical; }
   text-align: center;
 }
 
+/* ── Intake step 0 — URL-first layout ─────────────── */
+.intake-url-section {
+  text-align: center;
+  padding: 8px 0 4px;
+}
+.intake-url-label {
+  display: block;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 5px;
+  letter-spacing: -0.01em;
+}
+.intake-url-hint {
+  font-size: 0.83rem;
+  color: var(--text-muted);
+  margin-bottom: 14px;
+}
+.intake-url-row {
+  display: flex;
+  gap: 8px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+.intake-url-input { flex: 1; }
+.intake-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin .6s linear infinite;
+}
+.intake-or-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 22px 0 18px;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.intake-or-divider::before,
+.intake-or-divider::after {
+  content: '';
+  flex: 1;
+  height: 1.5px;
+  background: var(--border);
+}
+
+/* ── Auction.com auto-fill ─────────────────────────── */
+.auction-autofill-box {
+  margin-top: 20px;
+  padding: 20px;
+  background: var(--accent-soft);
+  border: 2px solid #fed7aa;
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: fadeIn .18s ease;
+}
+.auction-autofill-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.auction-autofill-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+.auction-autofill-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: var(--success-soft);
+  color: var(--success);
+  border: 1.5px solid #86efac;
+}
+.auction-autofill-hint {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin: -2px 0 2px;
+}
+.auction-autofill-row {
+  display: flex;
+  gap: 8px;
+}
+.auction-autofill-row input { flex: 1; background: var(--surface); }
+.auction-autofill-success {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: var(--success-soft);
+  border: 1.5px solid #86efac;
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 0.83rem;
+  font-weight: 600;
+  color: var(--success);
+}
+.auction-autofill-error {
+  font-size: 0.8rem;
+  color: var(--danger);
+  background: #fef2f2;
+  border: 1.5px solid #fca5a5;
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+}
+.auction-autofill-skip {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  align-self: flex-start;
+  padding: 4px 0;
+}
+
+/* ── Auction credit bid callout ────────────────────── */
+.auction-credit-bid {
+  margin-top: 14px;
+  padding: 16px 18px;
+  background: var(--accent-soft);
+  border: 2px solid #fed7aa;
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: fadeIn .15s ease;
+}
+.auction-credit-bid label {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+
 /* ── Auth form ─────────────────────────────────────── */
 .auth-card {
   background: var(--surface);

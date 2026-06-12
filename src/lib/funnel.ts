@@ -39,6 +39,8 @@ export const DEFAULT_FUNNEL: FunnelScreen = {
   rehabLevel: null,
   sellerMotivated: null,
   quickNotes: '',
+  auctionType: null,
+  startingCreditBid: null,
 }
 
 export function getSourceLabel(home: HomeFile): string {

@@ -396,6 +396,7 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
       let photo: string | undefined
       let addressPatch: { address?: string; city?: string; state?: string; zip?: string } = {}
       let funnelPatch: Partial<FunnelScreen> = {}
+      let livingArea: number | undefined
       let source: PropertySource
 
       if (isAuction) {
@@ -418,6 +419,7 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
         if (scraped.estimatePrice) funnelPatch.arv         = scraped.estimatePrice
         if (scraped.occupancy)     funnelPatch.occupancy   = scraped.occupancy
         if (scraped.yearBuilt)     funnelPatch.yearBuilt   = scraped.yearBuilt
+        if (scraped.livingArea)    livingArea              = scraped.livingArea
         if (!scraped.listPrice && !scraped.estimatePrice) {
           setDebugSnippet(scraped.blocked ? 'blocked' : scraped._debug ?? null)
         }
@@ -431,6 +433,7 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
         if (addressPatch.city)    next.city    = addressPatch.city
         if (addressPatch.state)   next.state   = addressPatch.state
         if (addressPatch.zip)     next.zip     = addressPatch.zip
+        if (livingArea)           next.livingArea = livingArea
         next.funnel = { ...prev.funnel, ...funnelPatch }
         return next
       })

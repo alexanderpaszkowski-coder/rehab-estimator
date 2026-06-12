@@ -20,10 +20,10 @@ export type PropertySource =
   | 'other'
 
 export type FunnelStage =
-  | 'lead'
-  | 'screening'
-  | 'walkthrough'
-  | 'offer'
+  | 'lead'              // New Leads — partner uploads listing
+  | 'arv-calculated'    // ARV Calculated
+  | 'rehab-calculated'  // Rehab Calculated
+  | 'solid-candidate'   // Solid Candidate — numbers look good
   | 'under-contract'
   | 'rehab'
   | 'listed'
@@ -164,6 +164,8 @@ export interface IntakeData {
   links?: string[]
   submittedBy?: 'partner' | 'reviewer'
   photoUrl?: string
+  /** Scraped above-grade living area (sq ft) → property.livingArea */
+  livingArea?: number
 }
 
 export interface FunnelFilters {

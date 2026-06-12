@@ -1,5 +1,5 @@
 import templateData from '../data/template.json'
-import { DEFAULT_FUNNEL } from './funnel'
+import { DEFAULT_FUNNEL, normalizeStage } from './funnel'
 import type { FunnelScreen, HomeFile, IntakeData, PropertyInputs, QuickSystem, SowItem } from '../types'
 
 const template = templateData as {
@@ -74,7 +74,10 @@ export function createHomeFile(address: string, intake?: Partial<IntakeData>): H
     funnel: { ...DEFAULT_FUNNEL, ...intake?.funnel },
     createdAt: now,
     updatedAt: now,
-    property: { ...DEFAULT_PROPERTY },
+    property: {
+      ...DEFAULT_PROPERTY,
+      ...(intake?.livingArea ? { livingArea: intake.livingArea } : {}),
+    },
     quickEstimate: createDefaultQuickEstimate(intake?.funnel?.rehabLevel),
     sowLines: createEmptySowLines(),
     notes: '',
@@ -94,7 +97,7 @@ export function migrateHome(raw: Partial<HomeFile> & { address: string }): HomeF
     funnel: { ...DEFAULT_FUNNEL, ...(raw.funnel as FunnelScreen | undefined) },
     source: raw.source ?? 'other',
     sourceCustom: raw.sourceCustom ?? '',
-    stage: raw.stage ?? 'lead',
+    stage: normalizeStage(raw.stage ?? 'lead'),
     property: { ...DEFAULT_PROPERTY, ...raw.property },
     quickEstimate: raw.quickEstimate ?? base.quickEstimate,
     sowLines: { ...base.sowLines, ...raw.sowLines },

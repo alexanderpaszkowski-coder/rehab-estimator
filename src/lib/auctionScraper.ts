@@ -3,6 +3,8 @@
  * and parses the markdown for intake-form fields including occupancy + photo.
  */
 
+import { parseSquareFeet } from './scraperUtils'
+
 export interface AuctionScrapedData {
   address?: string
   city?: string
@@ -17,6 +19,8 @@ export interface AuctionScrapedData {
   listingType?: 'auction' | 'bank-owned'
   occupancy?: 'vacant' | 'occupied' | 'unknown'
   yearBuilt?: number
+  /** Above-grade living area (sq ft) → property.livingArea */
+  livingArea?: number
   photoUrl?: string
 }
 
@@ -200,6 +204,8 @@ export async function scrapeAuctionListing(url: string): Promise<AuctionScrapedD
     text.match(/year\s+built[\s\S]{0,10}?(\d{4})/i) ??
     text.match(/built\s+in\s+(\d{4})/i)
   if (yearMatch) result.yearBuilt = parseInt(yearMatch[1])
+
+  result.livingArea = parseSquareFeet(text)
 
   return result
 }

@@ -44,20 +44,34 @@ export function getBidLabel(source: PropertySource): string {
 }
 
 export const FUNNEL_STAGES: { id: FunnelStage; label: string; color: string }[] = [
-  { id: 'lead', label: 'Lead', color: '#78716c' },
-  { id: 'screening', label: 'Screening', color: '#2563eb' },
-  { id: 'walkthrough', label: 'Walkthrough', color: '#7c3aed' },
-  { id: 'offer', label: 'Offer', color: '#c2410c' },
-  { id: 'under-contract', label: 'Under Contract', color: '#b45309' },
-  { id: 'rehab', label: 'In Rehab', color: '#15803d' },
-  { id: 'listed', label: 'Listed', color: '#0891b2' },
-  { id: 'sold', label: 'Sold', color: '#166534' },
-  { id: 'passed', label: 'Passed', color: '#b91c1c' },
+  { id: 'lead',             label: 'New Leads',        color: '#78716c' },
+  { id: 'arv-calculated',   label: 'ARV Calculated',   color: '#2563eb' },
+  { id: 'rehab-calculated', label: 'Rehab Calculated', color: '#7c3aed' },
+  { id: 'solid-candidate',  label: 'Solid Candidate',  color: '#c2410c' },
+  { id: 'under-contract',   label: 'Under Contract',   color: '#b45309' },
+  { id: 'rehab',            label: 'In Rehab',         color: '#15803d' },
+  { id: 'listed',           label: 'Listed',           color: '#0891b2' },
+  { id: 'sold',             label: 'Sold',             color: '#166534' },
+  { id: 'passed',           label: 'Passed',           color: '#b91c1c' },
 ]
 
+/** Map legacy stage IDs (pre-redesign) to the new funnel. */
+export const LEGACY_STAGE_MAP: Record<string, FunnelStage> = {
+  screening:   'arv-calculated',
+  walkthrough: 'rehab-calculated',
+  offer:       'solid-candidate',
+}
+
 export const ACTIVE_STAGES: FunnelStage[] = [
-  'lead', 'screening', 'walkthrough', 'offer', 'under-contract', 'rehab', 'listed',
+  'lead', 'arv-calculated', 'rehab-calculated', 'solid-candidate',
+  'under-contract', 'rehab', 'listed',
 ]
+
+export function normalizeStage(stage: string): FunnelStage {
+  if (LEGACY_STAGE_MAP[stage]) return LEGACY_STAGE_MAP[stage]
+  const known = FUNNEL_STAGES.find((s) => s.id === stage)
+  return known ? known.id : 'lead'
+}
 
 export const DEFAULT_FUNNEL: FunnelScreen = {
   availableForSale: null,

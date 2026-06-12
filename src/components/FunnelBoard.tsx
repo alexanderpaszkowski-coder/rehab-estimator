@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import type { FunnelStage, HomeFile, IntakeData, PropertySource } from '../types'
+import type { FunnelStage, HomeFile, IntakeData, PropertySource, TriState } from '../types'
 import { formatCurrency, calcQuickEstimate } from '../lib/calculations'
-import { FUNNEL_STAGES, getSourceLabel, getStageMeta, passesQuickScreen, screenScore, getArvLabel, getBidLabel } from '../lib/funnel'
+import { AUCTION_SOURCES, FUNNEL_STAGES, getSourceLabel, getStageMeta, passesQuickScreen, screenScore, getArvLabel, getBidLabel } from '../lib/funnel'
 import { PropertyIntake } from './PropertyIntake'
 
 interface Props {
@@ -128,6 +128,56 @@ function StagePicker({
   )
 }
 
+// ── Summary modal helpers ─────────────────────────────────────────────────────
+
+function triLabel(v: TriState): string {
+  if (v === 'yes') return 'Yes'
+  if (v === 'no') return 'No'
+  if (v === 'unknown') return 'Unknown'
+  return '—'
+}
+
+function SummarySection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="summary-section">
+      <h3 className="summary-section-title">{title}</h3>
+      {children}
+    </div>
+  )
+}
+
+function SummaryRow({
+  label,
+  value,
+  highlight,
+  muted,
+}: {
+  label: string
+  value: React.ReactNode
+  highlight?: 'positive' | 'negative' | 'neutral'
+  muted?: boolean
+}) {
+  const color =
+    highlight === 'positive' ? 'var(--success)'
+    : highlight === 'negative' ? 'var(--danger)'
+    : muted ? 'var(--text-muted)'
+    : undefined
+  return (
+    <div className="summary-row">
+      <span className="summary-row-label">{label}</span>
+      <span className="summary-row-value" style={color ? { color } : undefined}>{value}</span>
+    </div>
+  )
+}
+
+function formatShortDate(iso: string): string {
+  try {
+    return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  } catch {
+    return '—'
+  }
+}
+
 // ── Property summary modal ("back of card") ───────────────────────────────────
 
 function PropertySummaryModal({
@@ -145,18 +195,39 @@ function PropertySummaryModal({
 }) {
   const arvLabel = getArvLabel(home.source)
   const bidLabel = getBidLabel(home.source)
-  const { arv, askingPrice, occupancy, rehabLevel, inTargetArea, auctionType, quickNotes } = home.funnel
-  const spread       = arv && askingPrice ? arv - askingPrice : null
-  const quick        = calcQuickEstimate(home.property, home.quickEstimate)
-  const rehabEst     = quick.withContingency > 0 ? quick.withContingency : null
-  const reviewMeta   = REVIEW_META[home.reviewStatus] ?? REVIEW_META.pending
-  const customLabel  = home.source === 'other' ? home.sourceCustom : undefined
+  const isAuction = AUCTION_SOURCES.includes(home.source)
+  const funnel = home.funnel
+  const { arv, askingPrice, maxOffer, occupancy, rehabLevel, inTargetArea, auctionType, startingCreditBid, quickNotes } = funnel
+  const spread = arv && askingPrice ? arv - askingPrice : null
+  const quick = calcQuickEstimate(home.property, home.quickEstimate)
+  const rehabEst = quick.withContingency > 0 ? quick.withContingency : null
+  const netMargin = spread !== null && rehabEst ? spread - rehabEst : null
+  const passes = passesQuickScreen(funnel)
+  const score = screenScore(funnel)
+  const stageMeta = getStageMeta(home.stage)
+  const reviewMeta = REVIEW_META[home.reviewStatus] ?? REVIEW_META.pending
+  const customLabel = home.source === 'other' ? home.sourceCustom : undefined
+  const p = home.property
+
+  const bathLabel = [
+    p.fullBaths ? `${p.fullBaths} full` : null,
+    p.halfBaths ? `${p.halfBaths} half` : null,
+  ].filter(Boolean).join(', ') || null
+
+  const rehabLines = quick.lineCosts
+    .filter((l) => l.cost > 0)
+    .sort((a, b) => b.cost - a.cost)
+    .slice(0, 5)
+
+  const hasDealMath = !!(arv || askingPrice || rehabEst || maxOffer)
+  const hasPropertyDetails = !!(p.livingArea || p.bedrooms || bathLabel || funnel.yearBuilt || p.finishGrade)
+  const hasScreening = funnel.availableForSale !== null || inTargetArea || funnel.titleClear !== null
+    || funnel.sellerMotivated !== null || occupancy || rehabLevel
 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="summary-modal" onClick={(e) => e.stopPropagation()}>
 
-        {/* ── Photo with source overlay ── */}
         {home.photoUrl ? (
           <div className="summary-photo">
             <img src={home.photoUrl} alt={home.address} />
@@ -168,7 +239,6 @@ function PropertySummaryModal({
             </div>
           </div>
         ) : (
-          /* No-photo header bar */
           <div className="summary-no-photo-bar">
             <SourceLogo source={home.source} customLabel={customLabel} size={53} />
             <span className="lead-badge" style={{ background: reviewMeta.bg, color: reviewMeta.color }}>
@@ -177,7 +247,6 @@ function PropertySummaryModal({
           </div>
         )}
 
-        {/* ── Address + stage ── */}
         <div className="summary-header">
           <div className="summary-title-row">
             <div>
@@ -186,87 +255,157 @@ function PropertySummaryModal({
             </div>
             <StagePicker stage={home.stage} onChange={onStageChange} />
           </div>
-        </div>
-
-        {/* ── Financials ── */}
-        {(arv || askingPrice) && (
-          <div className="summary-financials">
-            {arv && (
-              <div className="summary-fin-item">
-                <span className="summary-fin-label">{arvLabel}</span>
-                <span className="summary-fin-value">{formatCurrency(arv)}</span>
-              </div>
-            )}
-            {askingPrice && (
-              <div className="summary-fin-item">
-                <span className="summary-fin-label">{bidLabel}</span>
-                <span className="summary-fin-value">{formatCurrency(askingPrice)}</span>
-              </div>
-            )}
-            {spread !== null && (
-              <div className="summary-fin-item">
-                <span className="summary-fin-label">Spread</span>
-                <span
-                  className="summary-fin-value summary-fin-spread"
-                  style={{
-                    color: spread > 100_000
-                      ? 'var(--success)'
-                      : spread > 50_000
-                        ? 'var(--warning)'
-                        : 'var(--danger)',
-                  }}
-                >
-                  {formatCurrency(spread)}
-                </span>
-              </div>
-            )}
-            {rehabEst && (
-              <div className="summary-fin-item">
-                <span className="summary-fin-label">Est. Rehab</span>
-                <span className="summary-fin-value" style={{ color: 'var(--text-muted)' }}>
-                  {formatCurrency(rehabEst)}
-                </span>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ── Screening chips ── */}
-        <div className="summary-chips">
-          {occupancy === 'vacant'    && <span className="screen-chip green">Vacant</span>}
-          {occupancy === 'occupied'  && <span className="screen-chip red">Occupied</span>}
-          {inTargetArea === 'yes'    && <span className="screen-chip green">In Area</span>}
-          {inTargetArea === 'maybe'  && <span className="screen-chip yellow">Maybe Area</span>}
-          {inTargetArea === 'no'     && <span className="screen-chip red">Out of Area</span>}
-          {rehabLevel && (
-            <span className="screen-chip" style={{ background: REHAB_BG[rehabLevel], color: REHAB_COLORS[rehabLevel] }}>
-              {rehabLevel} Rehab
+          <div className="summary-meta-row">
+            <span className="summary-meta-item">
+              <span className="summary-meta-dot" style={{ background: stageMeta.color }} />
+              {stageMeta.label}
             </span>
-          )}
-          {home.funnel.titleClear === 'yes' && <span className="screen-chip green">Title Clear</span>}
-          {home.funnel.yearBuilt && <span className="screen-chip grey">Built {home.funnel.yearBuilt}</span>}
-          {home.funnel.sellerMotivated === 'yes' && <span className="screen-chip green">Motivated Seller</span>}
+            <span className="summary-meta-item">Added {formatShortDate(home.createdAt)}</span>
+            <span className="summary-meta-item">via {getSourceLabel(home)}</span>
+          </div>
         </div>
 
-        {/* ── Notes ── */}
-        {quickNotes && (
-          <p className="summary-notes">{quickNotes}</p>
+        {hasDealMath && (
+          <SummarySection title="Behind the Numbers">
+            <div className="summary-deal-math">
+              {arv && <SummaryRow label={arvLabel} value={formatCurrency(arv)} />}
+              {askingPrice && <SummaryRow label={bidLabel} value={formatCurrency(askingPrice)} />}
+              {spread !== null && (
+                <SummaryRow
+                  label="Gross Spread"
+                  value={formatCurrency(spread)}
+                  highlight={spread > 100_000 ? 'positive' : spread > 50_000 ? 'neutral' : 'negative'}
+                />
+              )}
+              {rehabEst && <SummaryRow label="Est. Rehab" value={formatCurrency(rehabEst)} muted />}
+              {netMargin !== null && (
+                <SummaryRow
+                  label="Net Margin"
+                  value={formatCurrency(netMargin)}
+                  highlight={netMargin > 50_000 ? 'positive' : netMargin > 0 ? 'neutral' : 'negative'}
+                />
+              )}
+              {maxOffer && <SummaryRow label="Max Offer" value={formatCurrency(maxOffer)} />}
+              {rehabEst && p.livingArea > 0 && (
+                <SummaryRow label="Rehab $/SF" value={formatCurrency(quick.perSf)} muted />
+              )}
+              {isAuction && auctionType && (
+                <SummaryRow label="Listing Type" value={auctionType === 'bank-owned' ? 'Bank Owned' : 'Auction'} />
+              )}
+              {isAuction && startingCreditBid && (
+                <SummaryRow label="Starting Credit Bid" value={formatCurrency(startingCreditBid)} />
+              )}
+            </div>
+          </SummarySection>
         )}
 
-        {/* ── Source watermark ── */}
+        {hasPropertyDetails && (
+          <SummarySection title="Property">
+            <div className="summary-deal-math">
+              {p.livingArea > 0 && <SummaryRow label="Living Area" value={`${p.livingArea.toLocaleString()} SF`} />}
+              {p.bedrooms > 0 && <SummaryRow label="Bedrooms" value={p.bedrooms} />}
+              {bathLabel && <SummaryRow label="Bathrooms" value={bathLabel} />}
+              {funnel.yearBuilt && <SummaryRow label="Year Built" value={funnel.yearBuilt} />}
+              {p.finishGrade && <SummaryRow label="Finish Grade" value={p.finishGrade} />}
+            </div>
+          </SummarySection>
+        )}
+
+        {hasScreening && (
+          <SummarySection title="Screening">
+            <div className="summary-deal-math">
+              {funnel.availableForSale !== null && (
+                <SummaryRow
+                  label="Available for Sale"
+                  value={triLabel(funnel.availableForSale)}
+                  highlight={funnel.availableForSale === 'yes' ? 'positive' : funnel.availableForSale === 'no' ? 'negative' : undefined}
+                />
+              )}
+              {inTargetArea && (
+                <SummaryRow
+                  label="Target Area"
+                  value={inTargetArea.charAt(0).toUpperCase() + inTargetArea.slice(1)}
+                  highlight={inTargetArea === 'yes' ? 'positive' : inTargetArea === 'no' ? 'negative' : 'neutral'}
+                />
+              )}
+              {funnel.titleClear !== null && (
+                <SummaryRow
+                  label="Title Clear"
+                  value={triLabel(funnel.titleClear)}
+                  highlight={funnel.titleClear === 'yes' ? 'positive' : funnel.titleClear === 'no' ? 'negative' : undefined}
+                />
+              )}
+              {funnel.sellerMotivated !== null && (
+                <SummaryRow
+                  label="Seller Motivated"
+                  value={triLabel(funnel.sellerMotivated)}
+                  highlight={funnel.sellerMotivated === 'yes' ? 'positive' : undefined}
+                />
+              )}
+              {occupancy && (
+                <SummaryRow
+                  label="Occupancy"
+                  value={occupancy.charAt(0).toUpperCase() + occupancy.slice(1)}
+                  highlight={occupancy === 'vacant' ? 'positive' : occupancy === 'occupied' ? 'negative' : undefined}
+                />
+              )}
+              {rehabLevel && (
+                <SummaryRow label="Rehab Level" value={rehabLevel} />
+              )}
+            </div>
+            <div className="summary-score-bar">
+              <span className={`screen-chip ${passes ? 'green' : 'red'}`}>
+                {passes ? `✓ Passes screen — ${score} pts` : `✗ Fails screen — ${score} pts`}
+              </span>
+            </div>
+          </SummarySection>
+        )}
+
+        {rehabLines.length > 0 && (
+          <SummarySection title="Rehab Breakdown">
+            <div className="summary-deal-math">
+              {rehabLines.map((line) => (
+                <SummaryRow key={line.name} label={line.name} value={formatCurrency(line.cost)} muted />
+              ))}
+            </div>
+            {rehabEst && (
+              <div className="summary-rehab-total">
+                <span>Total w/ contingency</span>
+                <span>{formatCurrency(rehabEst)}</span>
+              </div>
+            )}
+          </SummarySection>
+        )}
+
+        {(quickNotes || home.notes) && (
+          <SummarySection title="Notes">
+            {quickNotes && <p className="summary-note-block">{quickNotes}</p>}
+            {home.notes && quickNotes !== home.notes && (
+              <p className="summary-note-block">{home.notes}</p>
+            )}
+          </SummarySection>
+        )}
+
+        {(home.links ?? []).length > 0 && (
+          <SummarySection title="Links">
+            <div className="summary-links">
+              {(home.links ?? []).map((url, i) => (
+                <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="lead-link-chip">
+                  {url.replace(/^https?:\/\/(www\.)?/, '').slice(0, 40)}{(url.length > 40 ? '…' : '')}
+                </a>
+              ))}
+            </div>
+          </SummarySection>
+        )}
+
         <div className="summary-source-watermark">
           <SourceLogo source={home.source} customLabel={customLabel} size={16} />
           <span>{getSourceLabel(home)}</span>
           {auctionType && <span>· {auctionType === 'bank-owned' ? 'Bank Owned' : 'Auction'}</span>}
         </div>
 
-        {/* ── Actions ── */}
         <div className="summary-actions">
-          <button
-            type="button"
-            className="btn btn-ghost btn-danger btn-sm"
-            onClick={onDelete}
-          >
+          <button type="button" className="btn btn-ghost btn-danger btn-sm" onClick={onDelete}>
             Delete
           </button>
           <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
@@ -309,8 +448,7 @@ export function FunnelBoard({ homes, onSelect, onCreate, onStageChange, onDelete
     return map
   }, [filtered])
 
-  const pipelineStages = FUNNEL_STAGES.filter((s) => s.id !== 'lead')
-  const pendingCount   = homes.filter((h) => h.reviewStatus === 'pending').length
+  const pipelineStages = FUNNEL_STAGES
 
   // Keep summaryHome in sync with latest home data (e.g. after stage change)
   const liveSummaryHome = summaryHome
@@ -351,13 +489,42 @@ export function FunnelBoard({ homes, onSelect, onCreate, onStageChange, onDelete
         />
       )}
 
+      {/* ── Pipeline (top) ── */}
+      <section className="pipeline-section">
+        <div className="pipeline-track">
+          {pipelineStages.map((stage, i) => {
+            const count = byStage.get(stage.id)?.length ?? 0
+            return (
+              <div key={stage.id} className="pipeline-step">
+                <button
+                  type="button"
+                  className={`pipeline-card${count > 0 ? ' pipeline-card--active' : ''}`}
+                  onClick={() => setSelectedStage(stage.id)}
+                  style={{ '--stage-color': stage.color } as React.CSSProperties}
+                >
+                  <span className="pipeline-dot" />
+                  <span className="pipeline-count">{count}</span>
+                  <span className="pipeline-label">{stage.label}</span>
+                </button>
+                {i < pipelineStages.length - 1 && (
+                  <span className="pipeline-connector" aria-hidden="true">
+                    <svg width="8" height="12" viewBox="0 0 8 12" fill="none">
+                      <path d="M1.5 1l4.5 5-4.5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </span>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </section>
+
       {/* ── Header ── */}
       <div className="funnel-page-header">
         <div>
           <h1>Property Funnel</h1>
           <p>
             {homes.length} {homes.length === 1 ? 'property' : 'properties'}
-            {pendingCount > 0 && <span className="needs-review-tag">{pendingCount} need review</span>}
           </p>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -372,41 +539,17 @@ export function FunnelBoard({ homes, onSelect, onCreate, onStageChange, onDelete
         </div>
       </div>
 
-      {/* ── Pipeline ── */}
-      <section className="pipeline-section">
-        <div className="leads-section-header">
-          <h2>Pipeline</h2>
-          <p>Click a stage to see all properties in it</p>
-        </div>
-        <div className="pipeline-grid">
-          {pipelineStages.map((stage) => {
-            const count = byStage.get(stage.id)?.length ?? 0
-            return (
-              <button
-                key={stage.id}
-                className="pipeline-card"
-                onClick={() => setSelectedStage(stage.id)}
-                style={{ '--stage-color': stage.color } as React.CSSProperties}
-              >
-                <div className="pipeline-count">{count}</div>
-                <div className="pipeline-label">{stage.label}</div>
-              </button>
-            )
-          })}
-        </div>
-      </section>
-
       {/* ── Leads ── */}
       <section className="leads-section">
         <div className="leads-section-header">
-          <h2>Leads <span className="section-count">{leads.length}</span></h2>
-          <p>New properties awaiting your review</p>
+          <h2>New Leads <span className="section-count">{leads.length}</span></h2>
+          <p>Fresh listings uploaded — start by calculating ARV</p>
         </div>
 
         {leads.length === 0 ? (
           <div className="empty-state card" style={{ padding: '40px 24px' }}>
-            <h3>No leads yet</h3>
-            <p>Add a property to get started — it will appear here as a lead.</p>
+            <h3>No new leads yet</h3>
+            <p>Add a property to get started — it will land here as a new lead.</p>
           </div>
         ) : (
           <div className="leads-grid">

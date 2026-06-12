@@ -123,16 +123,21 @@ export async function scrapeAuctionListing(url: string): Promise<AuctionScrapedD
     ])
   }
 
-  // Occupancy — match explicit label or the specific auction.com "Occupied: Do not disturb" notice
+  // Occupancy detection — several patterns auction.com uses
   if (
-    /\boccupied\s*:\s*do\s+not\s+disturb/i.test(text) ||
-    /^occupied[\s:]/im.test(text)
+    /do\s+not\s+disturb\s+occupants/i.test(text) ||        // "Do not disturb occupants" notice
+    /occupied\s*:\s*do\s+not\s+disturb/i.test(text) ||     // "Occupied: Do not disturb..."
+    /^occupied[\s:]/im.test(text)                           // "Occupied" as a line-start label
   ) {
     result.occupancy = 'occupied'
-  } else if (/^vacant[\s:]/im.test(text) || /^property\s+is\s+vacant/im.test(text)) {
+  } else if (
+    /^vacant[\s:]/im.test(text) ||
+    /property\s+is\s+vacant/i.test(text) ||
+    /occupancy\s*[:\-]\s*vacant/i.test(text)
+  ) {
     result.occupancy = 'vacant'
   } else {
-    // Fall back to explicit "occupancy: <value>" field label
+    // Fall back to explicit "occupancy: <value>" field
     const occupancyField = text.match(/occupancy(?:\s+status)?\s*[:\-]\s*(\w+)/i)
     if (occupancyField) {
       const val = occupancyField[1].toLowerCase()

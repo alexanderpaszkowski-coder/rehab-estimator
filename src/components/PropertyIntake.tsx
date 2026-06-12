@@ -317,8 +317,8 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
         return next
       })
 
-      // Go straight to Notes (last step) — source + screen already populated
-      setStep(STEPS.length - 1)
+      // Jump to Screen so the user can review what was auto-filled
+      setStep(2)
     } catch (err) {
       setFetchError(err instanceof Error ? err.message : 'Failed to fetch listing')
     } finally {

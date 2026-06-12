@@ -37,31 +37,41 @@ function firstMoney(text: string, patterns: RegExp[]): number | undefined {
 }
 
 function parseAddress(text: string): Pick<AuctionScrapedData, 'address' | 'city' | 'state' | 'zip'> {
-  // Firecrawl renders the full page title as a heading, e.g.:
-  // "# 39747 N State Park Rd    Spring Grove, IL 60081, McHenry County"
-  // Also try the metadata title line
+  // Firecrawl heading: "# 39747 N State Park Rd    Spring Grove, IL 60081, McHenry County"
+  // (multiple spaces between street and city — no comma)
+  // Also try the Jina-style metadata title line as fallback.
   const candidates = [
     text.match(/^#\s+(.+)$/m)?.[1],
     text.match(/^Title:\s*(.+)$/m)?.[1],
   ].filter(Boolean) as string[]
 
   for (const raw of candidates) {
-    // Normalise whitespace and strip " | auction.com" suffix
-    const clean = raw.replace(/\s+/g, ' ').replace(/\s*\|\s*auction\.com.*/i, '').trim()
+    // Strip trailing site name suffix, but keep internal whitespace intact for now
+    const stripped = raw.replace(/\s*\|\s*auction\.com.*/i, '').trim()
 
-    // "Street    City, ST ZIP, County" (Firecrawl uses multiple spaces between street and city)
-    const multispace = clean.match(/^(.+?)\s{2,}(.+?),\s*([A-Z]{2})\s+(\d{5}(?:-\d{4})?)/)
+    // ── Pattern 1: multi-space separator (Firecrawl heading format) ──
+    // "Street   City, ST ZIP"  (2+ spaces between street and city, no comma)
+    // Must run on the raw string BEFORE whitespace normalisation
+    const multispace = stripped.match(/^(.+?)\s{2,}(.+?),\s*([A-Z]{2})\s+(\d{5}(?:-\d{4})?)/)
     if (multispace) {
-      return { address: multispace[1].trim(), city: multispace[2].trim(), state: multispace[3], zip: multispace[4] }
+      return {
+        address: multispace[1].trim(),
+        city: multispace[2].trim(),
+        state: multispace[3],
+        zip: multispace[4],
+      }
     }
 
-    // "Street, City, ST ZIP" — trailing county or other text is fine
+    // Normalise for remaining patterns
+    const clean = stripped.replace(/\s+/g, ' ')
+
+    // ── Pattern 2: comma-separated "Street, City, ST ZIP" ──
     const withZip = clean.match(/^(.+?),\s*(.+?),\s*([A-Z]{2})\s+(\d{5}(?:-\d{4})?)/)
     if (withZip) {
       return { address: withZip[1].trim(), city: withZip[2].trim(), state: withZip[3], zip: withZip[4] }
     }
 
-    // Without zip
+    // ── Pattern 3: no zip ──
     const noZip = clean.match(/^(.+?),\s*(.+?),\s*([A-Z]{2})(?:[,\s]|$)/)
     if (noZip) {
       return { address: noZip[1].trim(), city: noZip[2].trim(), state: noZip[3] }

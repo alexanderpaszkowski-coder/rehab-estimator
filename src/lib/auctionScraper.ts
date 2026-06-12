@@ -1,8 +1,6 @@
 /**
- * Fetches a listing URL via Jina AI Reader (free, no API key, CORS-enabled)
- * and parses the markdown for intake-form fields.
- *
- * Tested against real auction.com listing format (Jina output).
+ * Fetches a listing URL via Firecrawl (JS-rendered, free tier 500/mo)
+ * and parses the markdown for intake-form fields including occupancy + photo.
  */
 
 export interface AuctionScrapedData {
@@ -19,6 +17,7 @@ export interface AuctionScrapedData {
   listingType?: 'auction' | 'bank-owned'
   occupancy?: 'vacant' | 'occupied' | 'unknown'
   yearBuilt?: number
+  photoUrl?: string
 }
 
 function parseMoney(s: string): number | undefined {
@@ -38,48 +37,88 @@ function firstMoney(text: string, patterns: RegExp[]): number | undefined {
 }
 
 function parseAddress(text: string): Pick<AuctionScrapedData, 'address' | 'city' | 'state' | 'zip'> {
-  // Jina returns: "Title: 123 Main St, Chicago, IL 60601, Cook County"
-  const titleLine = text.match(/^Title:\s*(.+)$/m)?.[1] ?? ''
-  const clean = titleLine.replace(/\s*\|\s*auction\.com.*/i, '').trim()
+  // Firecrawl renders the full page title as a heading, e.g.:
+  // "# 39747 N State Park Rd    Spring Grove, IL 60081, McHenry County"
+  // Also try the metadata title line
+  const candidates = [
+    text.match(/^#\s+(.+)$/m)?.[1],
+    text.match(/^Title:\s*(.+)$/m)?.[1],
+  ].filter(Boolean) as string[]
 
-  // Match "Street, City, ST ZIP" — trailing county or other text is fine (no $ anchor)
-  const withZip = clean.match(/^(.+?),\s*(.+?),\s*([A-Z]{2})\s+(\d{5}(?:-\d{4})?)/)
-  if (withZip) {
-    return { address: withZip[1].trim(), city: withZip[2].trim(), state: withZip[3], zip: withZip[4] }
-  }
+  for (const raw of candidates) {
+    // Normalise whitespace and strip " | auction.com" suffix
+    const clean = raw.replace(/\s+/g, ' ').replace(/\s*\|\s*auction\.com.*/i, '').trim()
 
-  // Without zip
-  const noZip = clean.match(/^(.+?),\s*(.+?),\s*([A-Z]{2})(?:[,\s]|$)/)
-  if (noZip) {
-    return { address: noZip[1].trim(), city: noZip[2].trim(), state: noZip[3] }
+    // "Street    City, ST ZIP, County" (Firecrawl uses multiple spaces between street and city)
+    const multispace = clean.match(/^(.+?)\s{2,}(.+?),\s*([A-Z]{2})\s+(\d{5}(?:-\d{4})?)/)
+    if (multispace) {
+      return { address: multispace[1].trim(), city: multispace[2].trim(), state: multispace[3], zip: multispace[4] }
+    }
+
+    // "Street, City, ST ZIP" — trailing county or other text is fine
+    const withZip = clean.match(/^(.+?),\s*(.+?),\s*([A-Z]{2})\s+(\d{5}(?:-\d{4})?)/)
+    if (withZip) {
+      return { address: withZip[1].trim(), city: withZip[2].trim(), state: withZip[3], zip: withZip[4] }
+    }
+
+    // Without zip
+    const noZip = clean.match(/^(.+?),\s*(.+?),\s*([A-Z]{2})(?:[,\s]|$)/)
+    if (noZip) {
+      return { address: noZip[1].trim(), city: noZip[2].trim(), state: noZip[3] }
+    }
   }
 
   return {}
 }
 
 function parseListingType(text: string): AuctionScrapedData['listingType'] {
-  // "Bank Owned" badge appears near top of auction.com pages
   if (/\b(reo|bank[\s-]owned|real estate owned)\b/i.test(text)) return 'bank-owned'
   if (/\b(foreclosure auction|live auction|online auction)\b/i.test(text)) return 'auction'
-  // If "Auction" appears prominently but not alongside bank-owned
-  const top300 = text.slice(0, 300)
-  if (/\bauction\b/i.test(top300) && !/\bbank[\s-]owned\b|\breo\b/i.test(top300)) return 'auction'
+  const top500 = text.slice(0, 500)
+  if (/\bauction\b/i.test(top500) && !/\bbank[\s-]owned\b|\breo\b/i.test(top500)) return 'auction'
+  return undefined
+}
+
+function parsePhoto(text: string): string | undefined {
+  // Firecrawl renders property images as markdown image links with real CDN URLs
+  // e.g. ![39747 N State Park Rd ...](https://adc-tenbox-prod.imgix.net/resi/propertyImages/...)
+  const patterns = [
+    // imgix CDN (auction.com primary)
+    /!\[[^\]]*\]\((https:\/\/adc-tenbox-prod\.imgix\.net\/[^)]+)\)/,
+    // Any other https image in the listing content (jpg/jpeg/webp/png)
+    /!\[[^\]]*\]\((https:\/\/(?!cdn\.auction\.com\/details\/page-assets)[^\s)]+\.(?:jpe?g|webp|png)[^)]*)\)/,
+  ]
+  for (const re of patterns) {
+    const m = text.match(re)
+    if (m?.[1]) return m[1]
+  }
   return undefined
 }
 
 export async function scrapeAuctionListing(url: string): Promise<AuctionScrapedData> {
-  const jinaUrl = `https://r.jina.ai/${url}`
+  const apiKey = import.meta.env.VITE_FIRECRAWL_KEY as string | undefined
+  if (!apiKey) throw new Error('Firecrawl API key not configured (VITE_FIRECRAWL_KEY)')
 
-  const res = await fetch(jinaUrl, {
-    headers: { Accept: 'text/plain' },
-    signal: AbortSignal.timeout(20_000),
+  const res = await fetch('https://api.firecrawl.dev/v1/scrape', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ url, formats: ['markdown'] }),
+    signal: AbortSignal.timeout(30_000),
   })
 
-  if (!res.ok) throw new Error(`Could not fetch listing (HTTP ${res.status})`)
+  if (!res.ok) throw new Error(`Firecrawl error (HTTP ${res.status})`)
 
-  const text = await res.text()
+  const json = await res.json() as { success: boolean; data?: { markdown?: string }; error?: string }
+  if (!json.success || !json.data?.markdown) {
+    throw new Error(json.error ?? 'Firecrawl returned no content')
+  }
 
-  // Guard: must look like a single property page, not a search results page
+  const text = json.data.markdown
+
+  // Guard: must look like a single property page
   const isListingPage =
     /opening\s+bid|starting\s+bid/i.test(text) ||
     /est\.?\s+market\s+value|bpo|broker.?price/i.test(text) ||
@@ -88,13 +127,14 @@ export async function scrapeAuctionListing(url: string): Promise<AuctionScrapedD
   if (!isListingPage) {
     throw new Error(
       `This doesn't look like a property detail page. ` +
-        `Make sure you're linking directly to the listing (not a search result).`,
+      `Make sure you're linking directly to the listing (not a search result).`
     )
   }
 
   const result: AuctionScrapedData = {
     ...parseAddress(text),
     listingType: parseListingType(text),
+    photoUrl: parsePhoto(text),
   }
 
   // Opening bid / Starting bid
@@ -105,11 +145,11 @@ export async function scrapeAuctionListing(url: string): Promise<AuctionScrapedD
     /current\s+bid[\s\S]{0,10}?(\$[\d,]+)/im,
   ])
 
-  // Estimate price — auction.com uses "Est. Market Value" or "Est. Retail Value"
+  // Estimate price
   result.estimatePrice = firstMoney(text, [
-    /est\.?\s+market\s+value[\s\S]{0,10}?(\$[\d,]+)/im,
-    /est\.?\s+retail\s+value[\s\S]{0,10}?(\$[\d,]+)/im,
-    /estimated?\s+value[\s\S]{0,10}?(\$[\d,]+)/im,
+    /est\.?\s+market\s+value[\s\S]{0,15}?(\$[\d,]+)/im,
+    /est\.?\s+retail\s+value[\s\S]{0,15}?(\$[\d,]+)/im,
+    /estimated?\s+value[\s\S]{0,15}?(\$[\d,]+)/im,
     /\bbpo[\s\S]{0,10}?(\$[\d,]+)/im,
     /broker.?price.?opinion[\s\S]{0,10}?(\$[\d,]+)/im,
     /home\s+value[\s\S]{0,10}?(\$[\d,]+)/im,
@@ -123,21 +163,20 @@ export async function scrapeAuctionListing(url: string): Promise<AuctionScrapedD
     ])
   }
 
-  // Occupancy detection — several patterns auction.com uses
+  // Occupancy — Firecrawl renders the full page so we can see the actual notice
+  // Patterns: "**Occupied:** Do not disturb..." or "**Vacant:**..."
   if (
-    /do\s+not\s+disturb\s+occupants/i.test(text) ||        // "Do not disturb occupants" notice
-    /occupied\s*:\s*do\s+not\s+disturb/i.test(text) ||     // "Occupied: Do not disturb..."
-    /^occupied[\s:]/im.test(text)                           // "Occupied" as a line-start label
+    /\*\*Occupied\*\*:/i.test(text) ||
+    /do\s+not\s+disturb\s+occupants/i.test(text)
   ) {
     result.occupancy = 'occupied'
   } else if (
-    /^vacant[\s:]/im.test(text) ||
+    /\*\*Vacant\*\*:/i.test(text) ||
     /property\s+is\s+vacant/i.test(text) ||
     /occupancy\s*[:\-]\s*vacant/i.test(text)
   ) {
     result.occupancy = 'vacant'
   } else {
-    // Fall back to explicit "occupancy: <value>" field
     const occupancyField = text.match(/occupancy(?:\s+status)?\s*[:\-]\s*(\w+)/i)
     if (occupancyField) {
       const val = occupancyField[1].toLowerCase()

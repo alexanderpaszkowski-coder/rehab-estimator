@@ -134,6 +134,7 @@ export interface HomeFile {
   reviewStatus: ReviewStatus
   reviewNotes: string
   links: string[]
+  photoUrl?: string
 }
 
 export interface CategorySummary {
@@ -154,6 +155,7 @@ export interface IntakeData {
   funnel: FunnelScreen
   links?: string[]
   submittedBy?: 'partner' | 'reviewer'
+  photoUrl?: string
 }
 
 export interface FunnelFilters {

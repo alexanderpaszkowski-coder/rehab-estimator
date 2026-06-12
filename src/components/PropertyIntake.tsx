@@ -289,6 +289,7 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
   const [fetching, setFetching] = useState(false)
   const [fetchError, setFetchError] = useState<string | null>(null)
   const [addressBlurred, setAddressBlurred] = useState(false)
+  const [photoUrl, setPhotoUrl] = useState<string | undefined>(undefined)
 
   const updateFunnel = (patch: Partial<FunnelScreen>) =>
     setData((d) => ({ ...d, funnel: { ...d.funnel, ...patch } }))
@@ -300,6 +301,9 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
     setFetchError(null)
     try {
       const scraped = await scrapeAuctionListing(url)
+
+      if (scraped.photoUrl) setPhotoUrl(scraped.photoUrl)
+      if (scraped.address || scraped.city) setAddressBlurred(true)
 
       setData((prev) => {
         const next = { ...prev, source: 'auction.com' as const }
@@ -505,7 +509,7 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
               Next →
             </button>
           ) : (
-            <button type="button" className="btn btn-primary" onClick={() => onSubmit(data)}>
+            <button type="button" className="btn btn-primary" onClick={() => onSubmit({ ...data, photoUrl })}>
               Create Property File
             </button>
           )}

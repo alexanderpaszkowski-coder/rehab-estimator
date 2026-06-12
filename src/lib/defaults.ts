@@ -82,6 +82,7 @@ export function createHomeFile(address: string, intake?: Partial<IntakeData>): H
     reviewStatus: 'pending',
     reviewNotes: '',
     links: intake?.links ?? [],
+    photoUrl: intake?.photoUrl,
   }
 }
 

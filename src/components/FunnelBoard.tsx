@@ -179,94 +179,104 @@ function LeadCard({ home, onOpen, onStageChange, onDelete }: {
 
   return (
     <div className="lead-card">
-      {/* badges row */}
-      <div className="lead-card-badges">
-        <span className="source-badge">{getSourceLabel(home)}</span>
-        {home.funnel.rehabLevel && (
-          <span className="lead-badge" style={{ background: REHAB_BG[home.funnel.rehabLevel], color: REHAB_COLORS[home.funnel.rehabLevel] }}>
-            {home.funnel.rehabLevel} rehab
-          </span>
-        )}
-        <span className="lead-badge" style={{ background: reviewMeta.bg, color: reviewMeta.color, marginLeft: 'auto' }}>
-          {reviewMeta.label}
-        </span>
-      </div>
-
-      {/* address */}
-      <div className="lead-card-address" onClick={onOpen}>
-        <h3>{home.address}</h3>
-        <p>{[home.city, home.state].filter(Boolean).join(', ') || <em>No location</em>}</p>
-      </div>
-
-      {/* financials */}
-      {(home.funnel.arv || home.funnel.askingPrice) && (
-        <div className="lead-card-financials">
-          {home.funnel.arv && (
-            <div className="lead-fin-item">
-              <span className="lead-fin-label">ARV</span>
-              <span className="lead-fin-value">{formatCurrency(home.funnel.arv)}</span>
-            </div>
-          )}
-          {home.funnel.askingPrice && (
-            <div className="lead-fin-item">
-              <span className="lead-fin-label">Asking</span>
-              <span className="lead-fin-value">{formatCurrency(home.funnel.askingPrice)}</span>
-            </div>
-          )}
-          {quick.withContingency > 0 && (
-            <div className="lead-fin-item">
-              <span className="lead-fin-label">Est. rehab</span>
-              <span className="lead-fin-value">{formatCurrency(quick.withContingency)}</span>
-            </div>
-          )}
+      {/* property photo */}
+      {home.photoUrl && (
+        <div className="lead-card-photo" onClick={onOpen}>
+          <img src={home.photoUrl} alt={home.address} loading="lazy" />
         </div>
       )}
 
-      {/* screening chips */}
-      {hasScore && (
-        <div className="lead-card-screen">
-          {home.funnel.inTargetArea === 'yes' && <span className="screen-chip green">In area</span>}
-          {home.funnel.inTargetArea === 'maybe' && <span className="screen-chip yellow">Maybe area</span>}
-          {home.funnel.inTargetArea === 'no' && <span className="screen-chip red">Out of area</span>}
-          {home.funnel.availableForSale === 'yes' && <span className="screen-chip green">For sale</span>}
-          {home.funnel.availableForSale === 'no' && <span className="screen-chip red">Not for sale</span>}
-          {home.funnel.titleClear === 'yes' && <span className="screen-chip green">Title clear</span>}
-          {home.funnel.sellerMotivated === 'yes' && <span className="screen-chip green">Motivated seller</span>}
-          {home.funnel.occupancy === 'vacant' && <span className="screen-chip green">Vacant</span>}
-          {hasScore && (
-            <span className={`screen-chip ${passes ? 'green' : 'red'}`} style={{ marginLeft: 'auto' }}>
-              {passes ? `✓ ${score} pts` : `✗ ${score} pts`}
+      <div className="lead-card-inner">
+        {/* badges row */}
+        <div className="lead-card-badges">
+          <span className="source-badge">{getSourceLabel(home)}</span>
+          {home.funnel.rehabLevel && (
+            <span className="lead-badge" style={{ background: REHAB_BG[home.funnel.rehabLevel], color: REHAB_COLORS[home.funnel.rehabLevel] }}>
+              {home.funnel.rehabLevel} rehab
             </span>
           )}
+          <span className="lead-badge" style={{ background: reviewMeta.bg, color: reviewMeta.color, marginLeft: 'auto' }}>
+            {reviewMeta.label}
+          </span>
         </div>
-      )}
 
-      {/* notes snippet */}
-      {home.funnel.quickNotes && (
-        <p className="lead-card-notes">{home.funnel.quickNotes}</p>
-      )}
-
-      {/* links */}
-      {(home.links ?? []).length > 0 && (
-        <div className="lead-card-links" onClick={(e) => e.stopPropagation()}>
-          {(home.links ?? []).slice(0, 3).map((url, i) => (
-            <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="lead-link-chip">
-              Link {i + 1}
-            </a>
-          ))}
-          {(home.links ?? []).length > 3 && (
-            <span className="lead-link-chip muted">+{(home.links ?? []).length - 3} more</span>
-          )}
+        {/* address */}
+        <div className="lead-card-address" onClick={onOpen}>
+          <h3>{home.address}</h3>
+          <p>{[home.city, home.state].filter(Boolean).join(', ') || <em>No location</em>}</p>
         </div>
-      )}
 
-      {/* actions */}
-      <div className="lead-card-actions" onClick={(e) => e.stopPropagation()}>
-        <select value={home.stage} onChange={(e) => onStageChange(e.target.value as FunnelStage)}>
-          {FUNNEL_STAGES.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
-        </select>
-        <button className="btn btn-ghost btn-danger btn-sm" onClick={onDelete}>Delete</button>
-        <button className="btn btn-primary btn-sm" style={{ marginLeft: 'auto' }} onClick={onOpen}>Open →</button>
+        {/* financials */}
+        {(home.funnel.arv || home.funnel.askingPrice) && (
+          <div className="lead-card-financials">
+            {home.funnel.arv && (
+              <div className="lead-fin-item">
+                <span className="lead-fin-label">ARV</span>
+                <span className="lead-fin-value">{formatCurrency(home.funnel.arv)}</span>
+              </div>
+            )}
+            {home.funnel.askingPrice && (
+              <div className="lead-fin-item">
+                <span className="lead-fin-label">Asking</span>
+                <span className="lead-fin-value">{formatCurrency(home.funnel.askingPrice)}</span>
+              </div>
+            )}
+            {quick.withContingency > 0 && (
+              <div className="lead-fin-item">
+                <span className="lead-fin-label">Est. rehab</span>
+                <span className="lead-fin-value">{formatCurrency(quick.withContingency)}</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* screening chips */}
+        {hasScore && (
+          <div className="lead-card-screen">
+            {home.funnel.inTargetArea === 'yes' && <span className="screen-chip green">In area</span>}
+            {home.funnel.inTargetArea === 'maybe' && <span className="screen-chip yellow">Maybe area</span>}
+            {home.funnel.inTargetArea === 'no' && <span className="screen-chip red">Out of area</span>}
+            {home.funnel.availableForSale === 'yes' && <span className="screen-chip green">For sale</span>}
+            {home.funnel.availableForSale === 'no' && <span className="screen-chip red">Not for sale</span>}
+            {home.funnel.titleClear === 'yes' && <span className="screen-chip green">Title clear</span>}
+            {home.funnel.sellerMotivated === 'yes' && <span className="screen-chip green">Motivated seller</span>}
+            {home.funnel.occupancy === 'vacant' && <span className="screen-chip green">Vacant</span>}
+            {home.funnel.occupancy === 'occupied' && <span className="screen-chip red">Occupied</span>}
+            {hasScore && (
+              <span className={`screen-chip ${passes ? 'green' : 'red'}`} style={{ marginLeft: 'auto' }}>
+                {passes ? `✓ ${score} pts` : `✗ ${score} pts`}
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* notes snippet */}
+        {home.funnel.quickNotes && (
+          <p className="lead-card-notes">{home.funnel.quickNotes}</p>
+        )}
+
+        {/* links */}
+        {(home.links ?? []).length > 0 && (
+          <div className="lead-card-links" onClick={(e) => e.stopPropagation()}>
+            {(home.links ?? []).slice(0, 3).map((url, i) => (
+              <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="lead-link-chip">
+                Link {i + 1}
+              </a>
+            ))}
+            {(home.links ?? []).length > 3 && (
+              <span className="lead-link-chip muted">+{(home.links ?? []).length - 3} more</span>
+            )}
+          </div>
+        )}
+
+        {/* actions */}
+        <div className="lead-card-actions" onClick={(e) => e.stopPropagation()}>
+          <select value={home.stage} onChange={(e) => onStageChange(e.target.value as FunnelStage)}>
+            {FUNNEL_STAGES.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
+          </select>
+          <button className="btn btn-ghost btn-danger btn-sm" onClick={onDelete}>Delete</button>
+          <button className="btn btn-primary btn-sm" style={{ marginLeft: 'auto' }} onClick={onOpen}>Open →</button>
+        </div>
       </div>
     </div>
   )

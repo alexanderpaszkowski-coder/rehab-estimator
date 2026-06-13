@@ -166,6 +166,10 @@ export interface IntakeData {
   photoUrl?: string
   /** Scraped above-grade living area (sq ft) → property.livingArea */
   livingArea?: number
+  /** Scraped bedroom count → property.bedrooms */
+  beds?: number
+  /** Scraped bathroom count (can be fractional: 2.5 = 2 full + 1 half) → property.fullBaths / halfBaths */
+  baths?: number
 }
 
 export interface FunnelFilters {

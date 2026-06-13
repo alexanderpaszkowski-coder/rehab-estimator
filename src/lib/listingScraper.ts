@@ -10,7 +10,7 @@
  */
 
 import type { PropertySource } from '../types'
-import { parseSquareFeet } from './scraperUtils'
+import { parseSquareFeet, parseBedsBaths } from './scraperUtils'
 
 export type ScrapableSite = Exclude<
   PropertySource,
@@ -31,6 +31,10 @@ export interface ListingScrapedData {
   yearBuilt?: number
   /** Above-grade living area (sq ft) → property.livingArea */
   livingArea?: number
+  /** Bedroom count → property.bedrooms */
+  beds?: number
+  /** Bathroom count (can be fractional: 2.5 = 2 full + 1 half) → property.fullBaths / halfBaths */
+  baths?: number
   photoUrl?: string
   /** true when the site returned a bot-block page */
   blocked?: boolean
@@ -439,6 +443,7 @@ export async function scrapeListingUrl(url: string): Promise<ListingScrapedData>
     occupancy: parseOccupancy(text),
     yearBuilt: parseYearBuilt(text),
     livingArea: parseSquareFeet(text),
+    ...parseBedsBaths(text),
   }
 
   result.listPrice     = firstMoney(text, config.pricePatterns)

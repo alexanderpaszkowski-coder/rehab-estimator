@@ -77,6 +77,12 @@ export function createHomeFile(address: string, intake?: Partial<IntakeData>): H
     property: {
       ...DEFAULT_PROPERTY,
       ...(intake?.livingArea ? { livingArea: intake.livingArea } : {}),
+      ...(intake?.beds       ? { bedrooms:   intake.beds }       : {}),
+      // baths can be fractional (2.5 = 2 full + 1 half)
+      ...(intake?.baths != null ? {
+        fullBaths: Math.floor(intake.baths),
+        halfBaths: intake.baths % 1 >= 0.5 ? 1 : 0,
+      } : {}),
     },
     quickEstimate: createDefaultQuickEstimate(intake?.funnel?.rehabLevel),
     sowLines: createEmptySowLines(),

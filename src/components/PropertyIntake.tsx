@@ -397,6 +397,8 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
       let addressPatch: { address?: string; city?: string; state?: string; zip?: string } = {}
       let funnelPatch: Partial<FunnelScreen> = {}
       let livingArea: number | undefined
+      let beds: number | undefined
+      let baths: number | undefined
       let source: PropertySource
 
       if (isAuction) {
@@ -410,6 +412,9 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
         if (scraped.startingCreditBid) funnelPatch.startingCreditBid = scraped.startingCreditBid
         if (scraped.occupancy)         funnelPatch.occupancy         = scraped.occupancy
         if (scraped.yearBuilt)         funnelPatch.yearBuilt         = scraped.yearBuilt
+        if (scraped.livingArea)        livingArea                    = scraped.livingArea
+        if (scraped.beds)              beds                          = scraped.beds
+        if (scraped.baths)             baths                         = scraped.baths
       } else {
         const scraped = await scrapeListingUrl(url)
         source = scraped.source
@@ -420,6 +425,8 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
         if (scraped.occupancy)     funnelPatch.occupancy   = scraped.occupancy
         if (scraped.yearBuilt)     funnelPatch.yearBuilt   = scraped.yearBuilt
         if (scraped.livingArea)    livingArea              = scraped.livingArea
+        if (scraped.beds)          beds                    = scraped.beds
+        if (scraped.baths)         baths                   = scraped.baths
         if (!scraped.listPrice && !scraped.estimatePrice) {
           setDebugSnippet(scraped.blocked ? 'blocked' : scraped._debug ?? null)
         }
@@ -429,11 +436,13 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
       if (photo) setPhotoUrl(photo)
       setData((prev) => {
         const next = { ...prev, source }
-        if (addressPatch.address) next.address = addressPatch.address
-        if (addressPatch.city)    next.city    = addressPatch.city
-        if (addressPatch.state)   next.state   = addressPatch.state
-        if (addressPatch.zip)     next.zip     = addressPatch.zip
+        if (addressPatch.address) next.address    = addressPatch.address
+        if (addressPatch.city)    next.city       = addressPatch.city
+        if (addressPatch.state)   next.state      = addressPatch.state
+        if (addressPatch.zip)     next.zip        = addressPatch.zip
         if (livingArea)           next.livingArea = livingArea
+        if (beds)                 next.beds       = beds
+        if (baths)                next.baths      = baths
         next.funnel = { ...prev.funnel, ...funnelPatch }
         return next
       })

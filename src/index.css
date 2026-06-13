@@ -1028,13 +1028,36 @@ textarea { resize: vertical; }
   color: var(--border-strong);
   font-size: 0.5rem;
 }
+.summary-hero-addr-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.summary-hero-addr-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
 .summary-hero-badge {
-  margin-left: auto;
   font-size: 0.6rem !important;
   padding: 2px 7px !important;
   border-radius: 4px !important;
   font-weight: 700 !important;
   letter-spacing: 0.02em !important;
+  flex-shrink: 0;
+}
+.summary-stage-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.62rem;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 20px;
+  flex-shrink: 0;
+  letter-spacing: 0.01em;
 }
 
 .summary-metrics {

@@ -522,8 +522,18 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
         <div className="summary-hero summary-hero--sticky">
           <div className="summary-hero-info">
             <div className="summary-hero-top">
-              <div>
-                <h2 className="summary-address">{home.address}</h2>
+              <div className="summary-hero-addr-block">
+                <div className="summary-hero-addr-row">
+                  <h2 className="summary-address">{home.address}</h2>
+                  <span className="lead-badge summary-hero-badge"
+                    style={{ background: reviewMeta.bg, color: reviewMeta.color }}>
+                    {reviewMeta.label}
+                  </span>
+                  <span className="summary-stage-pill" style={{ background: 'var(--surface-2)', color: stageMeta.color }}>
+                    <span className="summary-meta-dot" style={{ background: stageMeta.color }} />
+                    {stageMeta.label}
+                  </span>
+                </div>
                 <p className="summary-city">{[home.city, home.state, home.zip].filter(Boolean).join(', ')}</p>
               </div>
               <StagePicker stage={home.stage} onChange={onStageChange} />
@@ -532,14 +542,7 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
               <SourceLogo source={home.source} customLabel={customLabel} size={14} />
               <span>{getSourceLabel(home)}</span>
               <span className="summary-hero-dot">·</span>
-              <span className="summary-meta-dot" style={{ background: stageMeta.color }} />
-              <span>{stageMeta.label}</span>
-              <span className="summary-hero-dot">·</span>
               <span>{formatShortDate(home.createdAt)}</span>
-              <span className="lead-badge summary-hero-badge"
-                style={{ background: reviewMeta.bg, color: reviewMeta.color }}>
-                {reviewMeta.label}
-              </span>
             </div>
           </div>
         </div>

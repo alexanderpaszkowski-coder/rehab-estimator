@@ -48,6 +48,14 @@ export interface FunnelScreen {
   // auction.com-specific fields
   auctionType: 'auction' | 'bank-owned' | null
   startingCreditBid: number | null
+  /** In-person vs online auction format */
+  auctionFormat: 'in-person' | 'online' | null
+  /** ISO timestamp — auction bidding opens */
+  auctionStartAt: string | null
+  /** ISO timestamp — auction bidding closes */
+  auctionEndAt: string | null
+  /** True when auction.com shows "Coming Soon" with no dates */
+  auctionComingSoon: boolean
 }
 
 export interface PropertyField {
@@ -143,6 +151,10 @@ export interface HomeFile {
   reviewNotes: string
   links: string[]
   photoUrl?: string
+  /** Original listing URL used to import this property */
+  listingUrl?: string
+  /** Last time listing data was refreshed from source */
+  lastScrapedAt?: string
 }
 
 export interface CategorySummary {
@@ -170,6 +182,8 @@ export interface IntakeData {
   beds?: number
   /** Scraped bathroom count (can be fractional: 2.5 = 2 full + 1 half) → property.fullBaths / halfBaths */
   baths?: number
+  /** Original listing URL pasted during intake */
+  listingUrl?: string
 }
 
 export interface FunnelFilters {

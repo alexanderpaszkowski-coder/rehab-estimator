@@ -90,8 +90,10 @@ export function createHomeFile(address: string, intake?: Partial<IntakeData>): H
     submittedBy: intake?.submittedBy ?? 'reviewer',
     reviewStatus: 'pending',
     reviewNotes: '',
-    links: intake?.links ?? [],
+    links: intake?.links ?? (intake?.listingUrl ? [intake.listingUrl] : []),
     photoUrl: intake?.photoUrl,
+    listingUrl: intake?.listingUrl,
+    lastScrapedAt: intake?.listingUrl ? now : undefined,
   }
 }
 
@@ -111,6 +113,8 @@ export function migrateHome(raw: Partial<HomeFile> & { address: string }): HomeF
     reviewStatus: raw.reviewStatus ?? 'pending',
     reviewNotes: raw.reviewNotes ?? '',
     links: raw.links ?? [],
+    listingUrl: raw.listingUrl ?? raw.links?.[0],
+    lastScrapedAt: raw.lastScrapedAt,
   }
   return merged
 }

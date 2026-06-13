@@ -2881,6 +2881,120 @@ textarea { resize: vertical; }
 }
 .dcard-action:hover { filter: brightness(.93); }
 
+/* Listing link + refresh actions */
+.dcard-actions {
+  display: flex;
+  gap: 6px;
+  padding: 0 2px 2px;
+}
+.dcard-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background .12s, color .12s, border-color .12s;
+}
+.dcard-action-btn:hover:not(:disabled) {
+  background: var(--surface-3);
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+.dcard-action-btn--loading { opacity: 0.65; cursor: wait; }
+
+/* Auction countdown on cards + modal */
+.auction-countdown {
+  padding: 8px 10px;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--border);
+  background: linear-gradient(135deg, var(--surface-2) 0%, var(--surface) 100%);
+}
+.auction-countdown--compact {
+  padding: 7px 9px;
+}
+.auction-countdown--upcoming {
+  border-color: #bfdbfe;
+  background: linear-gradient(135deg, #eff6ff 0%, #f8fafc 100%);
+}
+.auction-countdown--live {
+  border-color: #fed7aa;
+  background: linear-gradient(135deg, #fff7ed 0%, #fffbeb 100%);
+}
+.auction-countdown--coming-soon {
+  border-color: var(--border);
+  background: var(--surface-2);
+}
+.auction-countdown--ended {
+  opacity: 0.7;
+}
+.auction-countdown-top,
+.auction-countdown-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.auction-countdown-format {
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+.auction-countdown-phase {
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: #2563eb;
+}
+.auction-countdown--live .auction-countdown-phase { color: #c2410c; }
+.auction-countdown-badge {
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.auction-countdown-badge--upcoming { background: #dbeafe; color: #1d4ed8; }
+.auction-countdown-badge--live { background: #ffedd5; color: #c2410c; }
+.auction-countdown-badge--coming-soon { background: var(--surface-3); color: var(--text-muted); }
+.auction-countdown-badge--ended { background: #f3f4f6; color: #6b7280; }
+.auction-countdown-timer {
+  font-size: 1.05rem;
+  font-weight: 800;
+  font-family: var(--mono);
+  letter-spacing: -0.03em;
+  color: var(--text);
+  line-height: 1.1;
+}
+.auction-countdown--live .auction-countdown-timer { color: #c2410c; }
+.auction-countdown-date {
+  margin-top: 3px;
+  font-size: 0.62rem;
+  color: var(--text-subtle);
+  line-height: 1.35;
+}
+.summary-auction-block {
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.summary-auction-block .dcard-actions {
+  display: none;
+}
+.summary-auction-block + .dcard-actions {
+  padding: 8px 20px 0;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 10px;
+}
+
 /* ── Structured tag chips (card) ────────────────────────────────────── */
 .dcard-chips {
   display: flex;

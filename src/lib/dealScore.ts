@@ -86,6 +86,10 @@ function computeStructuredTags(home: HomeFile, analysis: {
   if (f.occupancy === null) risk.push(t('Occupancy Unknown', 'risk', 6))
   if (f.inTargetArea === 'no') risk.push(t('Out of Area', 'risk', 7))
   if (isAuction) risk.push(t('Auction', 'risk', 8))
+  if (isAuction && f.auctionStartAt) {
+    const hoursUntil = (new Date(f.auctionStartAt).getTime() - Date.now()) / 3600_000
+    if (hoursUntil > 0 && hoursUntil <= 48) risk.push(t('Deadline Soon', 'risk', 1))
+  }
 
   // ── Opportunity tags ─────────────────────────────────
   const opportunity: Tag[] = []

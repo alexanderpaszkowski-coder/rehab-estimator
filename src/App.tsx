@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import type { FunnelStage, HomeFile, IntakeData, PropertyInputs, QuickSystem, Tab } from './types'
 import { FunnelBoard } from './components/FunnelBoard'
@@ -12,6 +12,7 @@ import { createHomeFile } from './lib/defaults'
 import { migrateHome } from './lib/defaults'
 import { exportHomeFile } from './lib/storage'
 import { supabase } from './lib/supabase'
+import { refreshListingHome, shouldAutoRefresh } from './lib/listingRefresh'
 import { calcQuickEstimate, calcSowTotals, formatCurrency } from './lib/calculations'
 import { SOW_TEMPLATE } from './lib/defaults'
 import { exportHomePdf } from './lib/pdf'
@@ -153,6 +154,44 @@ export default function App() {
     void dbDelete(id)
   }
 
+  const handleRefreshHome = useCallback(
+    async (home: HomeFile) => {
+      const updated = await refreshListingHome(home)
+      updateHome(updated)
+    },
+    [updateHome],
+  )
+
+  // Daily auto-refresh for listings with saved URLs (once per browser day)
+  const autoRefreshStarted = useRef(false)
+  useEffect(() => {
+    if (!session || homes.length === 0 || autoRefreshStarted.current) return
+    const dayKey = `listing-auto-refresh-${new Date().toDateString()}`
+    if (sessionStorage.getItem(dayKey)) return
+
+    const stale = homes.filter(shouldAutoRefresh)
+    if (stale.length === 0) return
+
+    autoRefreshStarted.current = true
+    sessionStorage.setItem(dayKey, '1')
+
+    let cancelled = false
+    ;(async () => {
+      for (const home of stale) {
+        if (cancelled) break
+        try {
+          const updated = await refreshListingHome(home)
+          if (!cancelled) updateHome(updated)
+        } catch (err) {
+          console.warn('Auto-refresh failed:', home.address, err)
+        }
+        await new Promise((r) => setTimeout(r, 1500))
+      }
+    })()
+
+    return () => { cancelled = true }
+  }, [session, homes, updateHome])
+
   const handleLogout = async () => {
     await supabase.auth.signOut()
     setHomes([])
@@ -264,6 +303,7 @@ export default function App() {
             onCreate={handleCreate}
             onStageChange={handleStageChange}
             onDelete={handleDelete}
+            onRefreshHome={handleRefreshHome}
           />
         )}
         {tab === 'lead' && current && <FunnelDetails home={current} onChange={updateCurrent} />}

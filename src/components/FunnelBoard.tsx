@@ -8,6 +8,8 @@ import {
 import { analyzeDeal } from '../lib/dealScore'
 import type { DealAnalysis, Tag } from '../lib/dealScore'
 import { PropertyIntake } from './PropertyIntake'
+import { AuctionCountdown } from './AuctionCountdown'
+import { getListingUrl, isRefreshable } from '../lib/listingRefresh'
 
 interface Props {
   homes: HomeFile[]
@@ -15,6 +17,7 @@ interface Props {
   onCreate: (data: IntakeData) => void
   onStageChange: (id: string, stage: FunnelStage) => void
   onDelete: (id: string) => void
+  onRefreshHome?: (home: HomeFile) => Promise<void>
   autoOpenIntake?: boolean
 }
 
@@ -265,14 +268,63 @@ function TagGroups({ home }: { home: HomeFile }) {
   )
 }
 
+function ListingCardActions({
+  home,
+  onRefresh,
+  refreshing,
+}: {
+  home: HomeFile
+  onRefresh?: (home: HomeFile) => Promise<void>
+  refreshing?: boolean
+}) {
+  const url = getListingUrl(home)
+  if (!url && !isRefreshable(home)) return null
+
+  return (
+    <div className="dcard-actions" onClick={(e) => e.stopPropagation()}>
+      {url && (
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="dcard-action-btn"
+          title="Open listing"
+        >
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+            <path d="M4.5 2H2.5A1 1 0 001.5 3.5v7A1 1 0 002.5 11.5h7a1 1 0 001-1V9" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+            <path d="M7 1.5h4.5V6M11 2L5.5 7.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          Listing
+        </a>
+      )}
+      {isRefreshable(home) && onRefresh && (
+        <button
+          type="button"
+          className={`dcard-action-btn${refreshing ? ' dcard-action-btn--loading' : ''}`}
+          title="Refresh listing data"
+          disabled={refreshing}
+          onClick={() => void onRefresh(home)}
+        >
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+            <path d="M11 6.5A4.5 4.5 0 102.8 4.2M2.8 4.2V1.5M2.8 4.2H5.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          {refreshing ? 'Refreshing…' : 'Refresh'}
+        </button>
+      )}
+    </div>
+  )
+}
+
 // ── Property summary modal ("back of card") ───────────────────────────────────
 
-function PropertySummaryModal({ home, onEdit, onClose, onStageChange, onDelete }: {
+function PropertySummaryModal({ home, onEdit, onClose, onStageChange, onDelete, onRefresh, refreshing }: {
   home: HomeFile
   onEdit: () => void
   onClose: () => void
   onStageChange: (s: FunnelStage) => void
   onDelete: () => void
+  onRefresh?: (home: HomeFile) => Promise<void>
+  refreshing?: boolean
 }) {
   const arvLabel = getArvLabel(home.source)
   const bidLabel = getBidLabel(home.source)
@@ -382,6 +434,14 @@ function PropertySummaryModal({ home, onEdit, onClose, onStageChange, onDelete }
           </div>
         )}
 
+        {home.source === 'auction.com' && (
+          <div className="summary-auction-block">
+            <AuctionCountdown home={home} />
+          </div>
+        )}
+
+        <ListingCardActions home={home} onRefresh={onRefresh} refreshing={refreshing} />
+
         {(specChips.length > 0 || score > 0) && (
           <div className="summary-specs">
             <div className="summary-spec-chips">
@@ -438,7 +498,7 @@ function PropertySummaryModal({ home, onEdit, onClose, onStageChange, onDelete }
           <div className="summary-links-row">
             {(home.links ?? []).slice(0, 2).map((url, i) => (
               <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="lead-link-chip">
-                Link {i + 1}
+                {i === 0 && getListingUrl(home) === url ? 'View listing' : `Link ${i + 1}`}
               </a>
             ))}
           </div>
@@ -474,10 +534,14 @@ function DealCard({
   home,
   analysis,
   onSummary,
+  onRefresh,
+  refreshing,
 }: {
   home: HomeFile
   analysis: DealAnalysis
   onSummary: () => void
+  onRefresh?: (home: HomeFile) => Promise<void>
+  refreshing?: boolean
 }) {
   const [flipping, setFlipping] = useState(false)
   const arvLabel = getArvLabel(home.source)
@@ -554,6 +618,12 @@ function DealCard({
           <div className="dcard-street">{home.address}</div>
           <div className="dcard-city">{[home.city, home.state].filter(Boolean).join(', ') || <em>No location</em>}</div>
         </div>
+
+        {home.source === 'auction.com' && (
+          <AuctionCountdown home={home} compact />
+        )}
+
+        <ListingCardActions home={home} onRefresh={onRefresh} refreshing={refreshing} />
 
         {/* Financials */}
         {(home.funnel.arv || home.funnel.askingPrice) && (
@@ -803,11 +873,15 @@ function PriorityGroup({
   homes,
   analyses,
   onSummary,
+  onRefresh,
+  refreshingIds,
 }: {
   groupKey: string
   homes: HomeFile[]
   analyses: Map<string, DealAnalysis>
   onSummary: (h: HomeFile) => void
+  onRefresh?: (home: HomeFile) => Promise<void>
+  refreshingIds: Set<string>
 }) {
   const meta = PRIORITY_META[groupKey]
   if (homes.length === 0) return null
@@ -829,6 +903,8 @@ function PriorityGroup({
             home={h}
             analysis={analyses.get(h.id)!}
             onSummary={() => onSummary(h)}
+            onRefresh={onRefresh}
+            refreshing={refreshingIds.has(h.id)}
           />
         ))}
       </div>
@@ -838,7 +914,7 @@ function PriorityGroup({
 
 // ── Main board ────────────────────────────────────────────────────────────────
 
-export function FunnelBoard({ homes, onSelect, onCreate, onStageChange, onDelete, autoOpenIntake }: Props) {
+export function FunnelBoard({ homes, onSelect, onCreate, onStageChange, onDelete, onRefreshHome, autoOpenIntake }: Props) {
   const [showIntake,    setShowIntake]    = useState(() => autoOpenIntake ?? false)
   const [search,        setSearch]        = useState('')
   const [sourceFilter,  setSourceFilter]  = useState<PropertySource | 'all'>('all')
@@ -847,6 +923,21 @@ export function FunnelBoard({ homes, onSelect, onCreate, onStageChange, onDelete
   const [pipelineStage, setPipelineStage] = useState<FunnelStage>('lead')
   const [summaryHome,   setSummaryHome]   = useState<HomeFile | null>(null)
   const [queueFilter,   setQueueFilter]   = useState<QueueFilter>(null)
+  const [refreshingIds, setRefreshingIds] = useState<Set<string>>(new Set())
+
+  const handleRefresh = async (home: HomeFile) => {
+    if (!onRefreshHome || refreshingIds.has(home.id)) return
+    setRefreshingIds((prev) => new Set(prev).add(home.id))
+    try {
+      await onRefreshHome(home)
+    } finally {
+      setRefreshingIds((prev) => {
+        const next = new Set(prev)
+        next.delete(home.id)
+        return next
+      })
+    }
+  }
 
   // Compute all analyses
   const analyses = useMemo(() => {
@@ -990,6 +1081,8 @@ export function FunnelBoard({ homes, onSelect, onCreate, onStageChange, onDelete
               setSummaryHome(null)
             }
           }}
+          onRefresh={onRefreshHome ? handleRefresh : undefined}
+          refreshing={refreshingIds.has(liveSummaryHome.id)}
         />
       )}
 
@@ -1048,6 +1141,8 @@ export function FunnelBoard({ homes, onSelect, onCreate, onStageChange, onDelete
               homes={priorityGroups[gk]}
               analyses={analyses}
               onSummary={setSummaryHome}
+              onRefresh={onRefreshHome ? handleRefresh : undefined}
+              refreshingIds={refreshingIds}
             />
           ))}
           {filtered.length === 0 && (
@@ -1075,7 +1170,14 @@ export function FunnelBoard({ homes, onSelect, onCreate, onStageChange, onDelete
               </div>
               <div className="deals-grid">
                 {filtered.map((h) => (
-                  <DealCard key={h.id} home={h} analysis={analyses.get(h.id)!} onSummary={() => setSummaryHome(h)} />
+                  <DealCard
+                    key={h.id}
+                    home={h}
+                    analysis={analyses.get(h.id)!}
+                    onSummary={() => setSummaryHome(h)}
+                    onRefresh={onRefreshHome ? handleRefresh : undefined}
+                    refreshing={refreshingIds.has(h.id)}
+                  />
                 ))}
               </div>
             </>
@@ -1124,6 +1226,8 @@ export function FunnelBoard({ homes, onSelect, onCreate, onStageChange, onDelete
                       home={h}
                       analysis={analyses.get(h.id)!}
                       onSummary={() => setSummaryHome(h)}
+                      onRefresh={onRefreshHome ? handleRefresh : undefined}
+                      refreshing={refreshingIds.has(h.id)}
                     />
                   ))}
                 </div>

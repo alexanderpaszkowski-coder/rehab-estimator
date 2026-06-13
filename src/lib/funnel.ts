@@ -88,6 +88,10 @@ export const DEFAULT_FUNNEL: FunnelScreen = {
   quickNotes: '',
   auctionType: null,
   startingCreditBid: null,
+  auctionFormat: null,
+  auctionStartAt: null,
+  auctionEndAt: null,
+  auctionComingSoon: false,
 }
 
 export function getSourceLabel(home: HomeFile): string {

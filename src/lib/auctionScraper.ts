@@ -4,6 +4,8 @@
  */
 
 import { parseSquareFeet, parseBedsBaths } from './scraperUtils'
+import { parseAuctionSchedule } from './auctionSchedule'
+import type { AuctionFormat } from './auctionSchedule'
 
 export interface AuctionScrapedData {
   address?: string
@@ -26,6 +28,10 @@ export interface AuctionScrapedData {
   /** Bathroom count (can be fractional: 2.5 = 2 full + 1 half) → property.fullBaths / halfBaths */
   baths?: number
   photoUrl?: string
+  auctionFormat?: AuctionFormat
+  auctionStartAt?: string
+  auctionEndAt?: string
+  auctionComingSoon?: boolean
 }
 
 function parseMoney(s: string): number | undefined {
@@ -214,6 +220,12 @@ export async function scrapeAuctionListing(url: string): Promise<AuctionScrapedD
   const { beds, baths } = parseBedsBaths(text)
   if (beds)  result.beds  = beds
   if (baths) result.baths = baths
+
+  const schedule = parseAuctionSchedule(text)
+  if (schedule.format)       result.auctionFormat    = schedule.format
+  if (schedule.startAt)      result.auctionStartAt   = schedule.startAt
+  if (schedule.endAt)        result.auctionEndAt     = schedule.endAt
+  if (schedule.comingSoon)   result.auctionComingSoon = true
 
   return result
 }

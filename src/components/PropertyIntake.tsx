@@ -400,6 +400,7 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
       let beds: number | undefined
       let baths: number | undefined
       let source: PropertySource
+      const listingUrlToSave = url
 
       if (isAuction) {
         source = 'auction.com'
@@ -415,6 +416,10 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
         if (scraped.livingArea)        livingArea                    = scraped.livingArea
         if (scraped.beds)              beds                          = scraped.beds
         if (scraped.baths)             baths                         = scraped.baths
+        if (scraped.auctionFormat)     funnelPatch.auctionFormat    = scraped.auctionFormat
+        if (scraped.auctionStartAt)    funnelPatch.auctionStartAt   = scraped.auctionStartAt
+        if (scraped.auctionEndAt)      funnelPatch.auctionEndAt     = scraped.auctionEndAt
+        if (scraped.auctionComingSoon) funnelPatch.auctionComingSoon = true
       } else {
         const scraped = await scrapeListingUrl(url)
         source = scraped.source
@@ -435,7 +440,12 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
       // Populate data immediately and advance to Screen step
       if (photo) setPhotoUrl(photo)
       setData((prev) => {
-        const next = { ...prev, source }
+        const next = {
+          ...prev,
+          source,
+          listingUrl: listingUrlToSave,
+          links: [listingUrlToSave],
+        }
         if (addressPatch.address) next.address    = addressPatch.address
         if (addressPatch.city)    next.city       = addressPatch.city
         if (addressPatch.state)   next.state      = addressPatch.state

@@ -1,6 +1,25 @@
+/** auction.com compact row: "4Beds2Baths2,544Sq. Ft." */
+export function parseCompactPropertyRow(text: string): { beds?: number; baths?: number; livingArea?: number } {
+  const m = text.match(/(\d{1,2})Beds(\d(?:\.\d)?)Baths([\d,]+)Sq\.?\s*Ft\.?/i)
+  if (!m) return {}
+  const beds = parseInt(m[1], 10)
+  const baths = parseFloat(m[2])
+  const livingArea = parseInt(m[3].replace(/,/g, ''), 10)
+  return {
+    beds: !isNaN(beds) && beds >= 1 && beds <= 20 ? beds : undefined,
+    baths: !isNaN(baths) && baths >= 0.5 && baths <= 20 ? baths : undefined,
+    livingArea: !isNaN(livingArea) && livingArea >= 300 && livingArea <= 50_000 ? livingArea : undefined,
+  }
+}
+
 /** Parse above-grade living area (sq ft) from scraped markdown. */
 export function parseSquareFeet(text: string): number | undefined {
+  const compact = parseCompactPropertyRow(text)
+  if (compact.livingArea) return compact.livingArea
+
   const patterns: RegExp[] = [
+    // Attached format: "2,544Sq. Ft."
+    /([\d,]{3,5})Sq\.?\s*Ft\.?\b/i,
     // Label-before-number: "Living Area: 1,234 sq ft"
     /living\s+area[\s\S]{0,25}?([\d,]+)\s*(?:sq\.?\s*ft\.?|sqft|sf|square\s+feet)/i,
     /(?:above[\s-]?grade|finished)\s+(?:living\s+)?area[\s\S]{0,25}?([\d,]+)\s*(?:sq\.?\s*ft\.?|sqft|sf)/i,
@@ -33,8 +52,9 @@ export function parseSquareFeet(text: string): number | undefined {
  * Baths can be fractional (2.5 = 2 full + 1 half).
  */
 export function parseBedsBaths(text: string): { beds?: number; baths?: number } {
-  let beds: number | undefined
-  let baths: number | undefined
+  const compact = parseCompactPropertyRow(text)
+  let beds: number | undefined = compact.beds
+  let baths: number | undefined = compact.baths
 
   // ── Beds ──────────────────────────────────────────────────────────────────
   const bedPatterns: RegExp[] = [
@@ -48,11 +68,13 @@ export function parseBedsBaths(text: string): { beds?: number; baths?: number } 
     /\b(\d+)\s*(?:br|bd)\b/i,
   ]
 
-  for (const re of bedPatterns) {
-    const m = text.match(re)
-    if (m?.[1]) {
-      const n = parseInt(m[1], 10)
-      if (!isNaN(n) && n >= 1 && n <= 20) { beds = n; break }
+  if (!beds) {
+    for (const re of bedPatterns) {
+      const m = text.match(re)
+      if (m?.[1]) {
+        const n = parseInt(m[1], 10)
+        if (!isNaN(n) && n >= 1 && n <= 20) { beds = n; break }
+      }
     }
   }
 
@@ -72,11 +94,13 @@ export function parseBedsBaths(text: string): { beds?: number; baths?: number } 
     /\|\s*bath(?:room)?s?\s*\|\s*([\d]+(?:\.5)?)/i,
   ]
 
-  for (const re of bathPatterns) {
-    const m = text.match(re)
-    if (m?.[1]) {
-      const n = parseFloat(m[1])
-      if (!isNaN(n) && n >= 0.5 && n <= 20) { baths = n; break }
+  if (!baths) {
+    for (const re of bathPatterns) {
+      const m = text.match(re)
+      if (m?.[1]) {
+        const n = parseFloat(m[1])
+        if (!isNaN(n) && n >= 0.5 && n <= 20) { baths = n; break }
+      }
     }
   }
 

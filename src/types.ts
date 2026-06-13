@@ -153,6 +153,8 @@ export interface HomeFile {
   photoUrl?: string
   /** Original listing URL used to import this property */
   listingUrl?: string
+  /** Manually pasted PropStream search/property URL */
+  propstreamUrl?: string
   /** Last time listing data was refreshed from source */
   lastScrapedAt?: string
 }

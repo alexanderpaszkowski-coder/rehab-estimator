@@ -304,6 +304,7 @@ export default function App() {
             onStageChange={handleStageChange}
             onDelete={handleDelete}
             onRefreshHome={handleRefreshHome}
+            onUpdateHome={updateHome}
           />
         )}
         {tab === 'lead' && current && <FunnelDetails home={current} onChange={updateCurrent} />}

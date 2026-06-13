@@ -114,6 +114,7 @@ export function migrateHome(raw: Partial<HomeFile> & { address: string }): HomeF
     reviewNotes: raw.reviewNotes ?? '',
     links: raw.links ?? [],
     listingUrl: raw.listingUrl ?? raw.links?.[0],
+    propstreamUrl: raw.propstreamUrl,
     lastScrapedAt: raw.lastScrapedAt,
   }
   return merged

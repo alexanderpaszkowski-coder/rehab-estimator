@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import type { FunnelStage, HomeFile, IntakeData, PropertySource } from '../types'
+import type { FunnelStage, HomeFile, IntakeData, PropertyInputs as PropertyInputsType, PropertySource, QuickSystem } from '../types'
 import { formatCurrency, calcQuickEstimate } from '../lib/calculations'
 import {
   AUCTION_SOURCES, FUNNEL_STAGES, getSourceLabel, getStageMeta,
@@ -10,6 +10,11 @@ import type { DealAnalysis, Tag } from '../lib/dealScore'
 import { PropertyIntake } from './PropertyIntake'
 import { AuctionCountdown } from './AuctionCountdown'
 import { getListingUrl, isRefreshable } from '../lib/listingRefresh'
+import { FunnelDetails } from './FunnelDetails'
+import { PropertyInputs as PropertyInputsView } from './PropertyInputs'
+import { QuickEstimate } from './QuickEstimate'
+import { ScopeOfWork } from './ScopeOfWork'
+import { Summary as BudgetSummary } from './Summary'
 
 interface Props {
   homes: HomeFile[]
@@ -18,6 +23,7 @@ interface Props {
   onStageChange: (id: string, stage: FunnelStage) => void
   onDelete: (id: string) => void
   onRefreshHome?: (home: HomeFile) => Promise<void>
+  onUpdateHome?: (home: HomeFile) => void
   autoOpenIntake?: boolean
 }
 
@@ -268,64 +274,198 @@ function TagGroups({ home }: { home: HomeFile }) {
   )
 }
 
-function ListingCardActions({
+function isPropstreamUrl(url: string): boolean {
+  try {
+    return /propstream\.com/i.test(new URL(url).hostname)
+  } catch {
+    return /propstream\.com/i.test(url)
+  }
+}
+
+/** Front of card — PropStream only when saved (no refresh). */
+function DealCardFrontLinks({ home }: { home: HomeFile }) {
+  if (!home.propstreamUrl) return null
+
+  return (
+    <div className="dcard-actions dcard-actions--front" onClick={(e) => e.stopPropagation()}>
+      <a
+        href={home.propstreamUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="dcard-action-btn dcard-action-btn--propstream"
+        title="Open in PropStream"
+      >
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+          <rect x="1.5" y="2" width="10" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
+          <path d="M4 5h5M4 7.5h3.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+        </svg>
+        PropStream
+      </a>
+    </div>
+  )
+}
+
+/** Summary modal — listing, refresh, propstream editor. */
+function SummaryLinkActions({
   home,
   onRefresh,
   refreshing,
+  onUpdateHome,
 }: {
   home: HomeFile
   onRefresh?: (home: HomeFile) => Promise<void>
   refreshing?: boolean
+  onUpdateHome?: (home: HomeFile) => void
 }) {
-  const url = getListingUrl(home)
-  if (!url && !isRefreshable(home)) return null
+  const [showPropInput, setShowPropInput] = useState(false)
+  const [propDraft, setPropDraft] = useState(home.propstreamUrl ?? '')
+  const [propError, setPropError] = useState<string | null>(null)
+
+  const listingUrl = getListingUrl(home)
+  const hasActions = listingUrl || isRefreshable(home) || onUpdateHome
+
+  useEffect(() => {
+    setPropDraft(home.propstreamUrl ?? '')
+  }, [home.propstreamUrl, home.id])
+
+  const savePropstream = () => {
+    const trimmed = propDraft.trim()
+    if (!trimmed) {
+      setPropError('Paste a PropStream URL')
+      return
+    }
+    if (!isPropstreamUrl(trimmed)) {
+      setPropError('URL must be from propstream.com')
+      return
+    }
+    onUpdateHome?.({ ...home, propstreamUrl: trimmed })
+    setPropError(null)
+    setShowPropInput(false)
+  }
+
+  const removePropstream = () => {
+    onUpdateHome?.({ ...home, propstreamUrl: undefined })
+    setPropDraft('')
+    setPropError(null)
+    setShowPropInput(false)
+  }
+
+  if (!hasActions) return null
 
   return (
-    <div className="dcard-actions" onClick={(e) => e.stopPropagation()}>
-      {url && (
-        <a
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="dcard-action-btn"
-          title="Open listing"
-        >
-          <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
-            <path d="M4.5 2H2.5A1 1 0 001.5 3.5v7A1 1 0 002.5 11.5h7a1 1 0 001-1V9" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-            <path d="M7 1.5h4.5V6M11 2L5.5 7.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          Listing
-        </a>
+    <div className="summary-link-actions" onClick={(e) => e.stopPropagation()}>
+      <div className="dcard-actions">
+        {listingUrl && (
+          <a
+            href={listingUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="dcard-action-btn"
+            title="Open listing"
+          >
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+              <path d="M4.5 2H2.5A1 1 0 001.5 3.5v7A1 1 0 002.5 11.5h7a1 1 0 001-1V9" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+              <path d="M7 1.5h4.5V6M11 2L5.5 7.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            Listing
+          </a>
+        )}
+        {isRefreshable(home) && onRefresh && (
+          <button
+            type="button"
+            className={`dcard-action-btn${refreshing ? ' dcard-action-btn--loading' : ''}`}
+            title="Refresh listing data"
+            disabled={refreshing}
+            onClick={() => void onRefresh(home)}
+          >
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+              <path d="M11 6.5A4.5 4.5 0 102.8 4.2M2.8 4.2V1.5M2.8 4.2H5.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            {refreshing ? 'Refreshing…' : 'Refresh'}
+          </button>
+        )}
+        {home.propstreamUrl && !showPropInput && (
+          <a
+            href={home.propstreamUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="dcard-action-btn dcard-action-btn--propstream"
+            title="Open in PropStream"
+          >
+            PropStream
+          </a>
+        )}
+        {onUpdateHome && (
+          <button
+            type="button"
+            className="dcard-action-btn dcard-action-btn--add"
+            onClick={() => {
+              setShowPropInput((v) => !v)
+              setPropError(null)
+            }}
+          >
+            {home.propstreamUrl ? 'Edit PropStream' : 'Add PropStream link'}
+          </button>
+        )}
+      </div>
+
+      {showPropInput && onUpdateHome && (
+        <div className="propstream-input-row">
+          <input
+            type="url"
+            className="propstream-input"
+            placeholder="https://app.propstream.com/search/…"
+            value={propDraft}
+            onChange={(e) => { setPropDraft(e.target.value); setPropError(null) }}
+            onKeyDown={(e) => { if (e.key === 'Enter') savePropstream() }}
+          />
+          <button type="button" className="btn btn-primary btn-sm" onClick={savePropstream}>Save</button>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => {
+            setShowPropInput(false)
+            setPropDraft(home.propstreamUrl ?? '')
+            setPropError(null)
+          }}>Cancel</button>
+          {home.propstreamUrl && (
+            <button type="button" className="btn btn-ghost btn-sm btn-danger" onClick={removePropstream}>Remove</button>
+          )}
+        </div>
       )}
-      {isRefreshable(home) && onRefresh && (
-        <button
-          type="button"
-          className={`dcard-action-btn${refreshing ? ' dcard-action-btn--loading' : ''}`}
-          title="Refresh listing data"
-          disabled={refreshing}
-          onClick={() => void onRefresh(home)}
-        >
-          <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
-            <path d="M11 6.5A4.5 4.5 0 102.8 4.2M2.8 4.2V1.5M2.8 4.2H5.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          {refreshing ? 'Refreshing…' : 'Refresh'}
-        </button>
-      )}
+      {propError && <p className="propstream-input-error">{propError}</p>}
     </div>
   )
 }
 
 // ── Property summary modal ("back of card") ───────────────────────────────────
 
-function PropertySummaryModal({ home, onEdit, onClose, onStageChange, onDelete, onRefresh, refreshing }: {
+type EditTab = 'overview' | 'screen' | 'property' | 'estimate' | 'sow' | 'budget'
+
+const EDIT_TABS: { id: EditTab; label: string }[] = [
+  { id: 'overview',  label: 'Overview'  },
+  { id: 'screen',    label: 'Screen'    },
+  { id: 'property',  label: 'Property'  },
+  { id: 'estimate',  label: 'Estimate'  },
+  { id: 'sow',       label: 'SOW'       },
+  { id: 'budget',    label: 'Budget'    },
+]
+
+function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefresh, refreshing, onUpdateHome }: {
   home: HomeFile
-  onEdit: () => void
   onClose: () => void
   onStageChange: (s: FunnelStage) => void
   onDelete: () => void
   onRefresh?: (home: HomeFile) => Promise<void>
   refreshing?: boolean
+  onUpdateHome?: (home: HomeFile) => void
 }) {
+  const [editTab, setEditTab] = useState<EditTab>('overview')
+
+  // Reset to overview whenever a different property is opened
+  const prevIdRef = useRef(home.id)
+  if (prevIdRef.current !== home.id) {
+    prevIdRef.current = home.id
+    if (editTab !== 'overview') setEditTab('overview')
+  }
+
   const arvLabel = getArvLabel(home.source)
   const bidLabel = getBidLabel(home.source)
   const isAuction = AUCTION_SOURCES.includes(home.source)
@@ -387,16 +527,24 @@ function PropertySummaryModal({ home, onEdit, onClose, onStageChange, onDelete, 
   if (funnel.sellerMotivated === 'yes') detailItems.push({ label: 'Seller', value: 'Motivated' })
   if (p.finishGrade) detailItems.push({ label: 'Finish', value: p.finishGrade })
 
+  const handleChange = (patch: Partial<HomeFile>) => {
+    onUpdateHome?.({ ...home, ...patch, updatedAt: new Date().toISOString() })
+  }
+
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="summary-modal summary-modal--compact" onClick={(e) => e.stopPropagation()}>
+      <div className="summary-modal summary-modal--mls" onClick={(e) => e.stopPropagation()}>
 
-        <div className="summary-hero">
-          {home.photoUrl ? (
-            <div className="summary-thumb">
-              <img src={home.photoUrl} alt={home.address} />
-            </div>
-          ) : (
+        {/* ── Photo banner (overview only) ── */}
+        {home.photoUrl && editTab === 'overview' && (
+          <div className="summary-mls-photo">
+            <img src={home.photoUrl} alt={home.address} />
+          </div>
+        )}
+
+        {/* ── Sticky hero ── */}
+        <div className={`summary-hero${home.photoUrl && editTab === 'overview' ? ' summary-hero--mls' : ''} summary-hero--sticky`}>
+          {!home.photoUrl && editTab === 'overview' && (
             <div className="summary-thumb summary-thumb--empty">
               <SourceLogo source={home.source} customLabel={customLabel} size={28} />
             </div>
@@ -425,90 +573,169 @@ function PropertySummaryModal({ home, onEdit, onClose, onStageChange, onDelete, 
           </div>
         </div>
 
-        {(arv || askingPrice || spread !== null || netMargin !== null) && (
-          <div className="summary-metrics">
-            {arv && <MetricTile label={arvLabel} value={formatCurrency(arv)} />}
-            {askingPrice && <MetricTile label={bidLabel} value={formatCurrency(askingPrice)} />}
-            {spread !== null && <MetricTile label="Spread" value={formatCurrency(spread)} accent={spreadAccent} />}
-            {netMargin !== null && <MetricTile label="Net margin" value={formatCurrency(netMargin)} accent={netAccent} />}
-          </div>
-        )}
-
-        {home.source === 'auction.com' && (
-          <div className="summary-auction-block">
-            <AuctionCountdown home={home} />
-          </div>
-        )}
-
-        <ListingCardActions home={home} onRefresh={onRefresh} refreshing={refreshing} />
-
-        {(specChips.length > 0 || score > 0) && (
-          <div className="summary-specs">
-            <div className="summary-spec-chips">
-              {specChips.map((c) => (
-                <span key={c.label} className={`screen-chip ${c.cls ?? 'grey'}`}>{c.label}</span>
-              ))}
-            </div>
-            {score > 0 && (
-              <span className={`screen-chip score-chip ${passes ? 'green' : 'red'}`}>
-                {passes ? `✓ ${score} pts` : `✗ ${score} pts`}
-              </span>
-            )}
-          </div>
-        )}
-
-        {/* ── Structured tags (grouped) ── */}
-        <TagGroups home={home} />
-
-        {(detailItems.length > 0 || rehabLines.length > 0) && (
-          <div className="summary-columns">
-            {detailItems.length > 0 && (
-              <div className="summary-col">
-                <span className="summary-col-title">Details</span>
-                {detailItems.map((d) => (
-                  <div key={d.label} className="summary-kv">
-                    <span>{d.label}</span><span>{d.value}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-            {rehabLines.length > 0 && (
-              <div className="summary-col">
-                <span className="summary-col-title">Top rehab costs</span>
-                {rehabLines.map((line) => (
-                  <div key={line.name} className="summary-kv">
-                    <span>{line.name}</span><span>{formatCurrency(line.cost)}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        <div className="summary-notes-block">
-          <span className="summary-col-title">Notes</span>
-          {notesText ? (
-            <p className="summary-note-text">{notesText}</p>
-          ) : (
-            <p className="summary-note-empty">No notes yet — add them when editing this property.</p>
-          )}
+        {/* ── Tab strip ── */}
+        <div className="modal-tab-strip">
+          {EDIT_TABS.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              className={`modal-tab${editTab === t.id ? ' modal-tab--active' : ''}`}
+              onClick={() => setEditTab(t.id)}
+            >
+              {t.label}
+            </button>
+          ))}
         </div>
 
-        {(home.links ?? []).length > 0 && (
-          <div className="summary-links-row">
-            {(home.links ?? []).slice(0, 2).map((url, i) => (
-              <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="lead-link-chip">
-                {i === 0 && getListingUrl(home) === url ? 'View listing' : `Link ${i + 1}`}
-              </a>
-            ))}
-          </div>
-        )}
+        {/* ── Tab content ── */}
+        <div className="modal-tab-body">
 
+          {editTab === 'overview' && (
+            <>
+              {(arv || askingPrice || spread !== null || netMargin !== null) && (
+                <div className="summary-metrics">
+                  {arv && <MetricTile label={arvLabel} value={formatCurrency(arv)} />}
+                  {askingPrice && <MetricTile label={bidLabel} value={formatCurrency(askingPrice)} />}
+                  {spread !== null && <MetricTile label="Spread" value={formatCurrency(spread)} accent={spreadAccent} />}
+                  {netMargin !== null && <MetricTile label="Net margin" value={formatCurrency(netMargin)} accent={netAccent} />}
+                </div>
+              )}
+
+              {home.source === 'auction.com' && (
+                <div className="summary-auction-block">
+                  <AuctionCountdown home={home} />
+                </div>
+              )}
+
+              <SummaryLinkActions
+                home={home}
+                onRefresh={onRefresh}
+                refreshing={refreshing}
+                onUpdateHome={onUpdateHome}
+              />
+
+              {(specChips.length > 0 || score > 0) && (
+                <div className="summary-specs">
+                  <div className="summary-spec-chips">
+                    {specChips.map((c) => (
+                      <span key={c.label} className={`screen-chip ${c.cls ?? 'grey'}`}>{c.label}</span>
+                    ))}
+                  </div>
+                  {score > 0 && (
+                    <span className={`screen-chip score-chip ${passes ? 'green' : 'red'}`}>
+                      {passes ? `✓ ${score} pts` : `✗ ${score} pts`}
+                    </span>
+                  )}
+                </div>
+              )}
+
+              <TagGroups home={home} />
+
+              {(detailItems.length > 0 || rehabLines.length > 0) && (
+                <div className="summary-columns">
+                  {detailItems.length > 0 && (
+                    <div className="summary-col">
+                      <span className="summary-col-title">Details</span>
+                      {detailItems.map((d) => (
+                        <div key={d.label} className="summary-kv">
+                          <span>{d.label}</span><span>{d.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {rehabLines.length > 0 && (
+                    <div className="summary-col">
+                      <span className="summary-col-title">Top rehab costs</span>
+                      {rehabLines.map((line) => (
+                        <div key={line.name} className="summary-kv">
+                          <span>{line.name}</span><span>{formatCurrency(line.cost)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="summary-notes-block">
+                <span className="summary-col-title">Notes</span>
+                {notesText ? (
+                  <p className="summary-note-text">{notesText}</p>
+                ) : (
+                  <p className="summary-note-empty">No notes yet — switch to Screen tab to add notes.</p>
+                )}
+              </div>
+
+              {(home.links ?? []).length > 0 && (
+                <div className="summary-links-row">
+                  {(home.links ?? []).slice(0, 2).map((url, i) => (
+                    <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="lead-link-chip">
+                      {i === 0 && getListingUrl(home) === url ? 'View listing' : `Link ${i + 1}`}
+                    </a>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+
+          {editTab === 'screen' && onUpdateHome && (
+            <div className="modal-edit-panel">
+              <FunnelDetails
+                home={home}
+                onChange={(patch) => handleChange(patch)}
+              />
+            </div>
+          )}
+
+          {editTab === 'property' && onUpdateHome && (
+            <div className="modal-edit-panel">
+              <PropertyInputsView
+                home={home}
+                onChange={(property: PropertyInputsType) => handleChange({ property })}
+              />
+            </div>
+          )}
+
+          {editTab === 'estimate' && onUpdateHome && (
+            <div className="modal-edit-panel modal-edit-panel--estimate">
+              <QuickEstimate
+                home={home}
+                onChange={(quickEstimate: QuickSystem[]) => handleChange({ quickEstimate })}
+              />
+            </div>
+          )}
+
+          {editTab === 'sow' && onUpdateHome && (
+            <div className="modal-edit-panel modal-edit-panel--sow">
+              <ScopeOfWork
+                home={home}
+                onChange={(sowLines) => handleChange({ sowLines })}
+              />
+            </div>
+          )}
+
+          {editTab === 'budget' && (
+            <div className="modal-edit-panel">
+              <BudgetSummary home={home} />
+            </div>
+          )}
+
+        </div>
+
+        {/* ── Footer ── */}
         <div className="summary-actions">
           <button type="button" className="btn btn-ghost btn-danger btn-sm" onClick={onDelete}>Delete</button>
           <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+            {editTab !== 'overview' && (
+              <button type="button" className="btn btn-ghost btn-sm" onClick={() => setEditTab('overview')}>
+                ← Overview
+              </button>
+            )}
             <button type="button" className="btn btn-ghost" onClick={onClose}>Close</button>
-            <button type="button" className="btn btn-primary" onClick={onEdit}>Edit →</button>
+            {editTab === 'overview' && (
+              <button type="button" className="btn btn-primary" onClick={() => setEditTab('screen')}>
+                Edit →
+              </button>
+            )}
           </div>
         </div>
 
@@ -534,14 +761,10 @@ function DealCard({
   home,
   analysis,
   onSummary,
-  onRefresh,
-  refreshing,
 }: {
   home: HomeFile
   analysis: DealAnalysis
   onSummary: () => void
-  onRefresh?: (home: HomeFile) => Promise<void>
-  refreshing?: boolean
 }) {
   const [flipping, setFlipping] = useState(false)
   const arvLabel = getArvLabel(home.source)
@@ -623,7 +846,7 @@ function DealCard({
           <AuctionCountdown home={home} compact />
         )}
 
-        <ListingCardActions home={home} onRefresh={onRefresh} refreshing={refreshing} />
+        <DealCardFrontLinks home={home} />
 
         {/* Financials */}
         {(home.funnel.arv || home.funnel.askingPrice) && (
@@ -873,15 +1096,11 @@ function PriorityGroup({
   homes,
   analyses,
   onSummary,
-  onRefresh,
-  refreshingIds,
 }: {
   groupKey: string
   homes: HomeFile[]
   analyses: Map<string, DealAnalysis>
   onSummary: (h: HomeFile) => void
-  onRefresh?: (home: HomeFile) => Promise<void>
-  refreshingIds: Set<string>
 }) {
   const meta = PRIORITY_META[groupKey]
   if (homes.length === 0) return null
@@ -903,8 +1122,6 @@ function PriorityGroup({
             home={h}
             analysis={analyses.get(h.id)!}
             onSummary={() => onSummary(h)}
-            onRefresh={onRefresh}
-            refreshing={refreshingIds.has(h.id)}
           />
         ))}
       </div>
@@ -914,7 +1131,7 @@ function PriorityGroup({
 
 // ── Main board ────────────────────────────────────────────────────────────────
 
-export function FunnelBoard({ homes, onSelect, onCreate, onStageChange, onDelete, onRefreshHome, autoOpenIntake }: Props) {
+export function FunnelBoard({ homes, onSelect: _onSelect, onCreate, onStageChange, onDelete, onRefreshHome, onUpdateHome, autoOpenIntake }: Props) {
   const [showIntake,    setShowIntake]    = useState(() => autoOpenIntake ?? false)
   const [search,        setSearch]        = useState('')
   const [sourceFilter,  setSourceFilter]  = useState<PropertySource | 'all'>('all')
@@ -1072,7 +1289,6 @@ export function FunnelBoard({ homes, onSelect, onCreate, onStageChange, onDelete
       {liveSummaryHome && (
         <PropertySummaryModal
           home={liveSummaryHome}
-          onEdit={() => { setSummaryHome(null); onSelect(liveSummaryHome) }}
           onClose={() => setSummaryHome(null)}
           onStageChange={(s) => onStageChange(liveSummaryHome.id, s)}
           onDelete={() => {
@@ -1083,6 +1299,7 @@ export function FunnelBoard({ homes, onSelect, onCreate, onStageChange, onDelete
           }}
           onRefresh={onRefreshHome ? handleRefresh : undefined}
           refreshing={refreshingIds.has(liveSummaryHome.id)}
+          onUpdateHome={onUpdateHome}
         />
       )}
 
@@ -1141,8 +1358,6 @@ export function FunnelBoard({ homes, onSelect, onCreate, onStageChange, onDelete
               homes={priorityGroups[gk]}
               analyses={analyses}
               onSummary={setSummaryHome}
-              onRefresh={onRefreshHome ? handleRefresh : undefined}
-              refreshingIds={refreshingIds}
             />
           ))}
           {filtered.length === 0 && (
@@ -1175,8 +1390,6 @@ export function FunnelBoard({ homes, onSelect, onCreate, onStageChange, onDelete
                     home={h}
                     analysis={analyses.get(h.id)!}
                     onSummary={() => setSummaryHome(h)}
-                    onRefresh={onRefreshHome ? handleRefresh : undefined}
-                    refreshing={refreshingIds.has(h.id)}
                   />
                 ))}
               </div>
@@ -1226,8 +1439,6 @@ export function FunnelBoard({ homes, onSelect, onCreate, onStageChange, onDelete
                       home={h}
                       analysis={analyses.get(h.id)!}
                       onSummary={() => setSummaryHome(h)}
-                      onRefresh={onRefreshHome ? handleRefresh : undefined}
-                      refreshing={refreshingIds.has(h.id)}
                     />
                   ))}
                 </div>

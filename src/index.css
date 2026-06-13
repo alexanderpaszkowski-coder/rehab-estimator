@@ -937,20 +937,34 @@ textarea { resize: vertical; }
   background: var(--surface);
   border-radius: 16px;
   width: 100%;
-  max-width: 480px;
+  max-width: 520px;
   overflow: hidden;
   box-shadow: 0 24px 60px rgba(22,17,14,.22), 0 4px 16px rgba(22,17,14,.1);
   animation: summaryFlipIn .32s cubic-bezier(.34,1.2,.64,1) both;
   display: flex;
   flex-direction: column;
   max-height: 90vh;
-  overflow-y: auto;
   border: 1px solid rgba(22,17,14,.08);
 }
 
-/* ── Compact layout ── */
-.summary-modal--compact {
-  max-width: 448px;
+/* MLS-style wide listing panel */
+.summary-modal--mls {
+  max-width: 680px;
+}
+
+.summary-mls-photo {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: 240px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--surface-3);
+}
+.summary-mls-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .summary-hero {
@@ -959,6 +973,9 @@ textarea { resize: vertical; }
   padding: 16px 20px 14px;
   border-bottom: 1px solid var(--border);
   background: var(--surface);
+}
+.summary-hero--mls {
+  padding: 18px 24px 16px;
 }
 .summary-thumb {
   width: 70px;
@@ -1044,6 +1061,9 @@ textarea { resize: vertical; }
   padding: 12px 8px;
   text-align: center;
 }
+.summary-modal--mls .summary-metric {
+  padding: 14px 12px;
+}
 .summary-metric-value {
   font-size: 1rem;
   font-weight: 800;
@@ -1051,6 +1071,9 @@ textarea { resize: vertical; }
   letter-spacing: -0.03em;
   color: var(--text);
   line-height: 1;
+}
+.summary-modal--mls .summary-metric-value {
+  font-size: 1.12rem;
 }
 .summary-metric-label {
   font-size: 0.56rem;
@@ -1069,6 +1092,10 @@ textarea { resize: vertical; }
   padding: 10px 20px;
   border-bottom: 1px solid var(--border);
   background: var(--surface-2);
+}
+.summary-modal--mls .summary-specs {
+  padding: 12px 24px;
+  gap: 6px;
 }
 .summary-spec-chips {
   display: flex;
@@ -1090,6 +1117,13 @@ textarea { resize: vertical; }
   display: flex;
   flex-direction: column;
   gap: 7px;
+}
+.summary-modal--mls .summary-col {
+  padding: 14px 20px;
+}
+.summary-modal--mls .summary-columns {
+  gap: 0;
+  background: var(--border);
 }
 .summary-col-title {
   font-size: 0.58rem;
@@ -1235,11 +1269,18 @@ textarea { resize: vertical; }
   line-height: 1.2;
   letter-spacing: -0.025em;
 }
+.summary-modal--mls .summary-address {
+  font-size: 1.28rem;
+  letter-spacing: -0.03em;
+}
 .summary-city {
   font-size: 0.8rem;
   color: var(--text-muted);
   margin: 0;
   letter-spacing: 0.005em;
+}
+.summary-modal--mls .summary-city {
+  font-size: 0.88rem;
 }
 
 .summary-meta-row {
@@ -2986,13 +3027,69 @@ textarea { resize: vertical; }
   padding: 10px 20px;
   border-bottom: 1px solid var(--border);
 }
-.summary-auction-block .dcard-actions {
-  display: none;
+.summary-modal--mls .summary-auction-block {
+  padding: 12px 24px;
 }
-.summary-auction-block + .dcard-actions {
-  padding: 8px 20px 0;
+.summary-link-actions {
+  padding: 8px 20px 10px;
   border-bottom: 1px solid var(--border);
-  padding-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.summary-modal--mls .summary-link-actions {
+  padding: 10px 24px 12px;
+}
+.summary-modal--mls .summary-tag-groups {
+  padding: 12px 24px 14px;
+}
+.summary-modal--mls .summary-notes-block {
+  padding: 14px 24px;
+}
+.summary-modal--mls .summary-actions {
+  padding: 12px 24px 14px;
+}
+.propstream-input-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.propstream-input {
+  flex: 1;
+  min-width: 180px;
+  height: var(--ctrl-h);
+  padding: 0 10px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-xs);
+  font-size: 0.78rem;
+  background: var(--surface);
+  color: var(--text);
+}
+.propstream-input:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
+}
+.propstream-input-error {
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--danger);
+}
+.dcard-action-btn--propstream {
+  border-color: #c4b5fd;
+  background: #f5f3ff;
+  color: #5b21b6;
+}
+.dcard-action-btn--propstream:hover:not(:disabled) {
+  background: #ede9fe;
+  border-color: #a78bfa;
+  color: #4c1d95;
+}
+.dcard-action-btn--add {
+  border-style: dashed;
+}
+.dcard-actions--front {
+  padding-top: 2px;
 }
 
 /* ── Structured tag chips (card) ────────────────────────────────────── */
@@ -3097,6 +3194,160 @@ textarea { resize: vertical; }
   text-align: center;
   color: var(--text-muted);
   font-size: 0.84rem;
+}
+
+/* ── Modal tab strip ────────────────────────────────────────────────── */
+.modal-tab-strip {
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-bottom: 1.5px solid var(--border);
+  background: var(--surface);
+  padding: 0 20px;
+  gap: 0;
+  flex-shrink: 0;
+}
+.modal-tab-strip::-webkit-scrollbar { display: none; }
+
+.modal-tab {
+  flex-shrink: 0;
+  padding: 8px 14px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text-2);
+  background: none;
+  border: none;
+  border-bottom: 2.5px solid transparent;
+  margin-bottom: -1.5px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+.modal-tab:hover { color: var(--text); }
+.modal-tab--active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* ── Modal tab body ─────────────────────────────────────────────────── */
+.modal-tab-body {
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+  max-height: 62vh;
+}
+
+/* ── Sticky hero in modal ───────────────────────────────────────────── */
+.summary-hero--sticky {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+/* ── Modal edit panel — compact overrides ───────────────────────────── */
+.modal-edit-panel {
+  padding: 0 4px 16px;
+}
+
+/* Remove the big page-header inside modal edit panels */
+.modal-edit-panel .page-header,
+.modal-edit-panel .page-header-row,
+.modal-edit-panel .page-header h1,
+.modal-edit-panel .page-header p {
+  display: none;
+}
+
+/* Compact card gaps */
+.modal-edit-panel .screen-grid {
+  gap: 10px;
+  grid-template-columns: 1fr 1fr;
+}
+.modal-edit-panel .screen-card {
+  padding: 12px 14px;
+}
+.modal-edit-panel .screen-card-title {
+  font-size: 0.72rem;
+  margin-bottom: 8px;
+}
+.modal-edit-panel .screen-field-label,
+.modal-edit-panel label {
+  font-size: 0.72rem;
+}
+.modal-edit-panel .screen-chip,
+.modal-edit-panel .chip {
+  font-size: 0.7rem;
+  padding: 3px 8px;
+}
+.modal-edit-panel .field-group {
+  gap: 6px;
+}
+.modal-edit-panel input[type="text"],
+.modal-edit-panel input[type="number"],
+.modal-edit-panel textarea,
+.modal-edit-panel select {
+  font-size: 0.78rem;
+  padding: 5px 8px;
+}
+.modal-edit-panel textarea {
+  min-height: 60px;
+  resize: vertical;
+}
+
+/* Copy button row — hide in modal to save space */
+.modal-edit-panel .copy-btn-row {
+  display: none;
+}
+
+/* Property inputs section headers */
+.modal-edit-panel .inputs-section {
+  margin-bottom: 12px;
+}
+.modal-edit-panel .inputs-section-title {
+  font-size: 0.72rem;
+}
+.modal-edit-panel .inputs-grid {
+  gap: 8px;
+}
+
+/* Quick Estimate table */
+.modal-edit-panel--estimate {
+  overflow-x: auto;
+}
+.modal-edit-panel--estimate table {
+  font-size: 0.72rem;
+  min-width: 560px;
+}
+.modal-edit-panel--estimate th,
+.modal-edit-panel--estimate td {
+  padding: 3px 6px;
+}
+.modal-edit-panel--estimate .condition-pill {
+  font-size: 0.67rem;
+  padding: 2px 6px;
+}
+
+/* SOW — horizontal scroll, compact grid */
+.modal-edit-panel--sow {
+  padding-bottom: 0;
+}
+.modal-edit-panel--sow .sow-scroll {
+  overflow-x: auto;
+  max-height: 50vh;
+}
+/* Compact 7-column grid (hide Actual col 8 and Notes col 9) */
+.modal-edit-panel--sow .sow-header,
+.modal-edit-panel--sow .sow-line {
+  font-size: 0.7rem;
+  grid-template-columns: 1.6fr 1.4fr 48px 72px 62px 80px 80px;
+}
+/* Hide Actual and Notes cells (col 8 and 9) via nth-child */
+.modal-edit-panel--sow .sow-header > *:nth-child(8),
+.modal-edit-panel--sow .sow-header > *:nth-child(9),
+.modal-edit-panel--sow .sow-line > *:nth-child(8),
+.modal-edit-panel--sow .sow-line > *:nth-child(9) {
+  display: none;
 }
 
 /* ── funnel-dashboard overrides ─────────────────────────────────────── */

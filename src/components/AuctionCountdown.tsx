@@ -5,9 +5,10 @@ import { getAuctionCountdown } from '../lib/auctionSchedule'
 interface Props {
   home: HomeFile
   compact?: boolean
+  mini?: boolean
 }
 
-export function AuctionCountdown({ home, compact = false }: Props) {
+export function AuctionCountdown({ home, compact = false, mini = false }: Props) {
   const { auctionFormat, auctionStartAt, auctionEndAt, auctionComingSoon } = home.funnel
   const [tick, setTick] = useState(0)
 
@@ -29,6 +30,17 @@ export function AuctionCountdown({ home, compact = false }: Props) {
   if (!state) return null
 
   const phaseCls = `auction-countdown--${state.phase}`
+
+  if (mini) {
+    const timerText = state.countdown || state.label
+    return (
+      <div className={`auction-countdown auction-countdown--mini ${phaseCls}`}>
+        <span className="auc-mini-format">{state.formatLabel}</span>
+        <span className="auc-mini-timer">{timerText}</span>
+        <span className="auc-mini-phase">{state.label}</span>
+      </div>
+    )
+  }
 
   if (compact) {
     return (

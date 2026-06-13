@@ -832,15 +832,16 @@ function DealCard({
           {analysis.isThinMargin && <span className="dcard-warn-chip">Thin Margin</span>}
         </div>
 
-        {/* Address */}
-        <div className="dcard-address">
-          <div className="dcard-street">{home.address}</div>
-          <div className="dcard-city">{[home.city, home.state].filter(Boolean).join(', ') || <em>No location</em>}</div>
+        {/* Address + auction mini badge */}
+        <div className="dcard-addr-row">
+          <div className="dcard-address">
+            <div className="dcard-street">{home.address}</div>
+            <div className="dcard-city">{[home.city, home.state].filter(Boolean).join(', ') || <em>No location</em>}</div>
+          </div>
+          {home.source === 'auction.com' && (
+            <AuctionCountdown home={home} mini />
+          )}
         </div>
-
-        {home.source === 'auction.com' && (
-          <AuctionCountdown home={home} compact />
-        )}
 
         <DealCardFrontLinks home={home} />
 

@@ -2842,6 +2842,14 @@ textarea { resize: vertical; }
   white-space: nowrap;
 }
 
+/* Address + inline auction mini badge */
+.dcard-addr-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.dcard-addr-row .dcard-address { flex: 1; min-width: 0; }
+
 /* Address */
 .dcard-address { line-height: 1.35; }
 .dcard-street {
@@ -2960,6 +2968,43 @@ textarea { resize: vertical; }
 .auction-countdown--compact {
   padding: 7px 9px;
 }
+.auction-countdown--mini {
+  flex-shrink: 0;
+  width: 68px;
+  padding: 5px 6px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  border-radius: 8px;
+}
+.auc-mini-format {
+  font-size: 0.54rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  line-height: 1.2;
+}
+.auc-mini-timer {
+  font-size: 0.7rem;
+  font-weight: 800;
+  font-family: var(--mono);
+  letter-spacing: -0.02em;
+  color: var(--text);
+  line-height: 1.15;
+  word-break: break-all;
+}
+.auc-mini-phase {
+  font-size: 0.57rem;
+  font-weight: 600;
+  color: #2563eb;
+  line-height: 1.2;
+}
+.auction-countdown--live .auc-mini-timer { color: #c2410c; }
+.auction-countdown--live .auc-mini-phase { color: #c2410c; }
+.auction-countdown--coming-soon .auc-mini-phase { color: var(--text-muted); }
 .auction-countdown--upcoming {
   border-color: #bfdbfe;
   background: linear-gradient(135deg, #eff6ff 0%, #f8fafc 100%);

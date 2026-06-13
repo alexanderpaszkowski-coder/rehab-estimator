@@ -3523,21 +3523,58 @@ textarea { resize: vertical; }
   gap: 8px;
 }
 
-/* Quick Estimate table */
-.modal-edit-panel--estimate {
-  overflow-x: auto;
+/* Quick Estimate — compact summary strip + table */
+.modal-edit-panel--estimate .summary-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+  padding: 10px 14px 8px;
+  border-bottom: 1px solid var(--border);
 }
-.modal-edit-panel--estimate table {
-  font-size: 0.72rem;
-  min-width: 560px;
+.modal-edit-panel--estimate .summary-tile {
+  flex: 1;
+  min-width: 100px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  border-width: 1.5px;
 }
-.modal-edit-panel--estimate th,
-.modal-edit-panel--estimate td {
-  padding: 3px 6px;
+.modal-edit-panel--estimate .summary-tile .label {
+  font-size: 0.6rem;
+  margin-bottom: 3px;
+}
+.modal-edit-panel--estimate .summary-tile .value {
+  font-size: 0.88rem;
+}
+.modal-edit-panel--estimate .card {
+  border-radius: 0;
+  border: none;
+  border-top: 1px solid var(--border);
+  box-shadow: none;
+  margin: 0;
+}
+.modal-edit-panel--estimate .qe-table th {
+  font-size: 0.62rem;
+  padding: 5px 8px;
+}
+.modal-edit-panel--estimate .qe-table td {
+  padding: 6px 8px;
+  font-size: 0.74rem;
+}
+.modal-edit-panel--estimate .system-name {
+  font-size: 0.78rem !important;
+}
+.modal-edit-panel--estimate .system-desc {
+  font-size: 0.67rem !important;
 }
 .modal-edit-panel--estimate .condition-pill {
-  font-size: 0.67rem;
-  padding: 2px 6px;
+  font-size: 0.65rem;
+  padding: 2px 7px;
+}
+.modal-edit-panel--estimate .qe-table input[type="number"] {
+  width: 60px;
+  padding: 3px 5px;
+  font-size: 0.74rem;
 }
 
 /* SOW panel — uses accordion, no old table */

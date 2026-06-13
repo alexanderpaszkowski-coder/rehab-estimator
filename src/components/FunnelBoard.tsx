@@ -217,23 +217,6 @@ function FilterPill({
 
 // ── Summary modal helpers ─────────────────────────────────────────────────────
 
-function MetricTile({ label, value, accent }: {
-  label: string
-  value: string
-  accent?: 'positive' | 'negative' | 'neutral' | 'muted'
-}) {
-  const color =
-    accent === 'positive' ? 'var(--success)'
-    : accent === 'negative' ? 'var(--danger)'
-    : accent === 'muted' ? 'var(--text-muted)'
-    : undefined
-  return (
-    <div className="summary-metric">
-      <span className="summary-metric-value" style={color ? { color } : undefined}>{value}</span>
-      <span className="summary-metric-label">{label}</span>
-    </div>
-  )
-}
 
 function formatShortDate(iso: string): string {
   try {
@@ -535,20 +518,8 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
     <div className="modal-overlay" onClick={onClose}>
       <div className="summary-modal summary-modal--mls" onClick={(e) => e.stopPropagation()}>
 
-        {/* ── Photo banner (overview only) ── */}
-        {home.photoUrl && editTab === 'overview' && (
-          <div className="summary-mls-photo">
-            <img src={home.photoUrl} alt={home.address} />
-          </div>
-        )}
-
-        {/* ── Sticky hero ── */}
-        <div className={`summary-hero${home.photoUrl && editTab === 'overview' ? ' summary-hero--mls' : ''} summary-hero--sticky`}>
-          {!home.photoUrl && editTab === 'overview' && (
-            <div className="summary-thumb summary-thumb--empty">
-              <SourceLogo source={home.source} customLabel={customLabel} size={28} />
-            </div>
-          )}
+        {/* ── Sticky hero (address + stage + meta) ── */}
+        <div className="summary-hero summary-hero--sticky">
           <div className="summary-hero-info">
             <div className="summary-hero-top">
               <div>
@@ -588,25 +559,71 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
         </div>
 
         {/* ── Tab content ── */}
-        <div className="modal-tab-body">
+        <div className={`modal-tab-body${editTab === 'overview' ? ' modal-tab-body--overview' : ''}`}>
 
           {editTab === 'overview' && (
-            <>
-              {(arv || askingPrice || spread !== null || netMargin !== null) && (
-                <div className="summary-metrics">
-                  {arv && <MetricTile label={arvLabel} value={formatCurrency(arv)} />}
-                  {askingPrice && <MetricTile label={bidLabel} value={formatCurrency(askingPrice)} />}
-                  {spread !== null && <MetricTile label="Spread" value={formatCurrency(spread)} accent={spreadAccent} />}
-                  {netMargin !== null && <MetricTile label="Net margin" value={formatCurrency(netMargin)} accent={netAccent} />}
-                </div>
-              )}
+            <div className="ov-layout">
 
+              {/* ── Photo left + metrics right ── */}
+              <div className="ov-top">
+                {home.photoUrl ? (
+                  <div className="ov-photo">
+                    <img src={home.photoUrl} alt={home.address} />
+                  </div>
+                ) : (
+                  <div className="ov-photo ov-photo--empty">
+                    <SourceLogo source={home.source} customLabel={customLabel} size={36} />
+                  </div>
+                )}
+
+                <div className="ov-metrics">
+                  {arv && (
+                    <div className="ov-metric">
+                      <span className="ov-metric-label">{arvLabel}</span>
+                      <span className="ov-metric-value">{formatCurrency(arv)}</span>
+                    </div>
+                  )}
+                  {askingPrice && (
+                    <div className="ov-metric">
+                      <span className="ov-metric-label">{bidLabel}</span>
+                      <span className="ov-metric-value">{formatCurrency(askingPrice)}</span>
+                    </div>
+                  )}
+                  {spread !== null && (
+                    <div className="ov-metric">
+                      <span className="ov-metric-label">Spread</span>
+                      <span className={`ov-metric-value${spreadAccent ? ` accent-${spreadAccent}` : ''}`}>{formatCurrency(spread)}</span>
+                    </div>
+                  )}
+                  {netMargin !== null && (
+                    <div className="ov-metric">
+                      <span className="ov-metric-label">Net margin</span>
+                      <span className={`ov-metric-value${netAccent ? ` accent-${netAccent}` : ''}`}>{formatCurrency(netMargin)}</span>
+                    </div>
+                  )}
+                  {(specChips.length > 0 || score > 0) && (
+                    <div className="ov-spec-chips">
+                      {specChips.map((c) => (
+                        <span key={c.label} className={`screen-chip ${c.cls ?? 'grey'}`}>{c.label}</span>
+                      ))}
+                      {score > 0 && (
+                        <span className={`screen-chip score-chip ${passes ? 'green' : 'red'}`}>
+                          {passes ? `✓ ${score} pts` : `✗ ${score} pts`}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* ── Auction countdown ── */}
               {home.source === 'auction.com' && (
-                <div className="summary-auction-block">
-                  <AuctionCountdown home={home} />
+                <div className="ov-auction-row">
+                  <AuctionCountdown home={home} compact />
                 </div>
               )}
 
+              {/* ── Listing links ── */}
               <SummaryLinkActions
                 home={home}
                 onRefresh={onRefresh}
@@ -614,67 +631,50 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
                 onUpdateHome={onUpdateHome}
               />
 
-              {(specChips.length > 0 || score > 0) && (
-                <div className="summary-specs">
-                  <div className="summary-spec-chips">
-                    {specChips.map((c) => (
-                      <span key={c.label} className={`screen-chip ${c.cls ?? 'grey'}`}>{c.label}</span>
-                    ))}
-                  </div>
-                  {score > 0 && (
-                    <span className={`screen-chip score-chip ${passes ? 'green' : 'red'}`}>
-                      {passes ? `✓ ${score} pts` : `✗ ${score} pts`}
-                    </span>
-                  )}
+              {/* ── Body: tags | details + notes ── */}
+              <div className="ov-body">
+                <div className="ov-body-left">
+                  <TagGroups home={home} />
                 </div>
-              )}
-
-              <TagGroups home={home} />
-
-              {(detailItems.length > 0 || rehabLines.length > 0) && (
-                <div className="summary-columns">
-                  {detailItems.length > 0 && (
-                    <div className="summary-col">
-                      <span className="summary-col-title">Details</span>
+                <div className="ov-body-right">
+                  {(detailItems.length > 0 || rehabLines.length > 0) && (
+                    <div className="ov-details">
                       {detailItems.map((d) => (
-                        <div key={d.label} className="summary-kv">
+                        <div key={d.label} className="ov-kv">
                           <span>{d.label}</span><span>{d.value}</span>
                         </div>
                       ))}
+                      {rehabLines.length > 0 && (
+                        <>
+                          <span className="ov-section-title">Top rehab</span>
+                          {rehabLines.map((line) => (
+                            <div key={line.name} className="ov-kv">
+                              <span>{line.name}</span><span>{formatCurrency(line.cost)}</span>
+                            </div>
+                          ))}
+                        </>
+                      )}
                     </div>
                   )}
-                  {rehabLines.length > 0 && (
-                    <div className="summary-col">
-                      <span className="summary-col-title">Top rehab costs</span>
-                      {rehabLines.map((line) => (
-                        <div key={line.name} className="summary-kv">
-                          <span>{line.name}</span><span>{formatCurrency(line.cost)}</span>
-                        </div>
+                  <div className="ov-notes">
+                    {notesText
+                      ? <p>{notesText}</p>
+                      : <p className="ov-notes-empty">No notes — add them in the Screen tab.</p>
+                    }
+                  </div>
+                  {(home.links ?? []).length > 0 && (
+                    <div className="ov-extra-links">
+                      {(home.links ?? []).slice(0, 2).map((url, i) => (
+                        <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="lead-link-chip">
+                          {i === 0 && getListingUrl(home) === url ? 'View listing' : `Link ${i + 1}`}
+                        </a>
                       ))}
                     </div>
                   )}
                 </div>
-              )}
-
-              <div className="summary-notes-block">
-                <span className="summary-col-title">Notes</span>
-                {notesText ? (
-                  <p className="summary-note-text">{notesText}</p>
-                ) : (
-                  <p className="summary-note-empty">No notes yet — switch to Screen tab to add notes.</p>
-                )}
               </div>
 
-              {(home.links ?? []).length > 0 && (
-                <div className="summary-links-row">
-                  {(home.links ?? []).slice(0, 2).map((url, i) => (
-                    <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="lead-link-chip">
-                      {i === 0 && getListingUrl(home) === url ? 'View listing' : `Link ${i + 1}`}
-                    </a>
-                  ))}
-                </div>
-              )}
-            </>
+            </div>
           )}
 
           {editTab === 'screen' && onUpdateHome && (
@@ -739,10 +739,6 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
           </div>
         </div>
 
-        <div className="summary-source-watermark">
-          <SourceLogo source={home.source} customLabel={customLabel} size={16} />
-          <span>{getSourceLabel(home)}</span>
-        </div>
       </div>
     </div>
   )

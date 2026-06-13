@@ -3196,6 +3196,176 @@ textarea { resize: vertical; }
   font-size: 0.84rem;
 }
 
+/* ── Overview tab: no-scroll compact layout ─────────────────────────── */
+.ov-layout {
+  display: flex;
+  flex-direction: column;
+}
+
+.ov-top {
+  display: flex;
+  gap: 16px;
+  padding: 14px 20px 12px;
+  border-bottom: 1px solid var(--border);
+  align-items: flex-start;
+}
+
+.ov-photo {
+  width: 210px;
+  height: 158px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+}
+.ov-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.ov-photo--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ov-metrics {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.ov-metric {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--border);
+  gap: 8px;
+}
+.ov-metric:last-of-type { border-bottom: none; }
+
+.ov-metric-label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  flex-shrink: 0;
+}
+.ov-metric-value {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text);
+  text-align: right;
+}
+.ov-metric-value.accent-positive { color: #15803d; }
+.ov-metric-value.accent-negative { color: #b91c1c; }
+.ov-metric-value.accent-neutral  { color: #b45309; }
+
+.ov-spec-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding-top: 8px;
+}
+.ov-spec-chips .screen-chip {
+  font-size: 0.67rem;
+  padding: 2px 7px;
+}
+
+.ov-auction-row {
+  padding: 7px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Two-column body */
+.ov-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  flex: 1;
+  min-height: 0;
+}
+.ov-body-left {
+  padding: 10px 16px 12px;
+  border-right: 1px solid var(--border);
+  overflow: hidden;
+}
+.ov-body-right {
+  padding: 10px 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow: hidden;
+}
+
+.ov-details { display: flex; flex-direction: column; gap: 0; }
+.ov-kv {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 0.74rem;
+  padding: 3px 0;
+  border-bottom: 1px solid transparent;
+  gap: 8px;
+}
+.ov-kv:last-child { border-bottom: none; }
+.ov-kv span:first-child { color: var(--text-muted); }
+.ov-kv span:last-child { font-weight: 600; text-align: right; }
+
+.ov-section-title {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-top: 8px;
+  display: block;
+}
+
+.ov-notes {
+  font-size: 0.74rem;
+  color: var(--text-2);
+  border-top: 1px solid var(--border);
+  padding-top: 7px;
+}
+.ov-notes p { margin: 0; line-height: 1.5; }
+.ov-notes-empty { color: var(--text-muted) !important; font-style: italic; }
+
+.ov-extra-links {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+/* TagGroups compact inside ov-body-left */
+.ov-body-left .summary-tag-groups {
+  padding: 0;
+  border-bottom: none;
+  gap: 8px;
+}
+.ov-body-left .summary-tag-group {
+  margin-bottom: 6px;
+}
+.ov-body-left .summary-tag-group-label {
+  font-size: 0.62rem;
+  margin-bottom: 3px;
+}
+.ov-body-left .stag {
+  font-size: 0.67rem;
+  padding: 2px 7px;
+}
+
+/* Overview tab body: no forced scroll — let content flow naturally */
+.modal-tab-body--overview {
+  overflow-y: visible;
+  max-height: none;
+  flex: none;
+}
+
 /* ── Modal tab strip ────────────────────────────────────────────────── */
 .modal-tab-strip {
   display: flex;
@@ -3234,7 +3404,6 @@ textarea { resize: vertical; }
   overflow-y: auto;
   flex: 1;
   min-height: 0;
-  max-height: 62vh;
 }
 
 /* ── Sticky hero in modal ───────────────────────────────────────────── */

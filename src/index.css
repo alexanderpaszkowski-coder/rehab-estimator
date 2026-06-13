@@ -951,6 +951,10 @@ textarea { resize: vertical; }
 .summary-modal--mls {
   max-width: 680px;
 }
+/* Wider in edit mode to fit forms comfortably */
+.summary-modal--editing {
+  max-width: 780px;
+}
 
 .summary-mls-photo {
   width: 100%;
@@ -3542,26 +3546,161 @@ textarea { resize: vertical; }
   padding: 2px 6px;
 }
 
-/* SOW — horizontal scroll, compact grid */
+/* SOW panel — uses accordion, no old table */
 .modal-edit-panel--sow {
-  padding-bottom: 0;
+  padding: 0;
 }
-.modal-edit-panel--sow .sow-scroll {
-  overflow-x: auto;
-  max-height: 50vh;
+
+/* ── SOW Accordion ─────────────────────────────────────────────────── */
+.sow-accordion {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 }
-/* Compact 7-column grid (hide Actual col 8 and Notes col 9) */
-.modal-edit-panel--sow .sow-header,
-.modal-edit-panel--sow .sow-line {
-  font-size: 0.7rem;
-  grid-template-columns: 1.6fr 1.4fr 48px 72px 62px 80px 80px;
+
+.sow-micro-card {
+  border-bottom: 1px solid var(--border);
 }
-/* Hide Actual and Notes cells (col 8 and 9) via nth-child */
-.modal-edit-panel--sow .sow-header > *:nth-child(8),
-.modal-edit-panel--sow .sow-header > *:nth-child(9),
-.modal-edit-panel--sow .sow-line > *:nth-child(8),
-.modal-edit-panel--sow .sow-line > *:nth-child(9) {
-  display: none;
+.sow-micro-card:first-child { border-top: 1px solid var(--border); }
+
+.sow-micro-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 10px 18px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  gap: 12px;
+  transition: background 0.1s;
+}
+.sow-micro-header:hover { background: var(--surface-2); }
+.sow-micro-card--open .sow-micro-header {
+  background: var(--surface-2);
+}
+
+.sow-micro-name {
+  flex: 1;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sow-micro-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.sow-micro-badge {
+  font-size: 0.62rem;
+  font-weight: 700;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 10px;
+  padding: 1px 7px;
+  min-width: 20px;
+  text-align: center;
+}
+
+.sow-micro-total {
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-family: var(--mono);
+  color: var(--text-muted);
+  letter-spacing: -0.01em;
+  min-width: 64px;
+  text-align: right;
+}
+.sow-micro-total--active { color: var(--text); }
+
+.sow-micro-chevron {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  width: 14px;
+  text-align: center;
+}
+
+/* Expanded body */
+.sow-micro-body {
+  padding: 0 0 8px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+}
+
+.sow-micro-col-header {
+  display: grid;
+  grid-template-columns: 1fr 56px 56px 72px 72px;
+  gap: 6px;
+  padding: 5px 18px;
+  background: var(--surface-2);
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+}
+
+.sow-micro-row {
+  display: grid;
+  grid-template-columns: 1fr 56px 56px 72px 72px;
+  gap: 6px;
+  padding: 5px 18px;
+  align-items: center;
+  border-bottom: 1px solid transparent;
+}
+.sow-micro-row:hover { background: var(--surface-2); }
+.sow-micro-row--active { background: #fffdf8; }
+.sow-micro-row--active:hover { background: #fffbf0; }
+
+.sow-micro-item-name {
+  font-size: 0.74rem;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: default;
+}
+
+.sow-micro-unit-cost {
+  font-size: 0.72rem;
+  font-family: var(--mono);
+  color: var(--text-muted);
+  text-align: right;
+}
+
+.sow-micro-input {
+  width: 100%;
+  padding: 3px 6px;
+  font-size: 0.74rem;
+  border: 1.5px solid var(--border);
+  border-radius: 5px;
+  background: var(--surface);
+  color: var(--text);
+  text-align: center;
+  font-family: var(--mono);
+}
+.sow-micro-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: #fff;
+}
+
+.sow-micro-est {
+  font-size: 0.74rem;
+  font-family: var(--mono);
+  font-weight: 600;
+  color: var(--text);
+  text-align: right;
 }
 
 /* ── funnel-dashboard overrides ─────────────────────────────────────── */

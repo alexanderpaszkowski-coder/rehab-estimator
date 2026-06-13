@@ -516,7 +516,7 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="summary-modal summary-modal--mls" onClick={(e) => e.stopPropagation()}>
+      <div className={`summary-modal summary-modal--mls${editTab !== 'overview' ? ' summary-modal--editing' : ''}`} onClick={(e) => e.stopPropagation()}>
 
         {/* ── Sticky hero (address + stage + meta) ── */}
         <div className="summary-hero summary-hero--sticky">
@@ -709,6 +709,7 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
               <ScopeOfWork
                 home={home}
                 onChange={(sowLines) => handleChange({ sowLines })}
+                compact
               />
             </div>
           )}

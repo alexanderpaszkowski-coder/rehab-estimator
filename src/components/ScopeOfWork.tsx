@@ -8,9 +8,120 @@ import { copyScopeOfWork } from '../lib/copyContent'
 interface Props {
   home: HomeFile
   onChange: (sowLines: HomeFile['sowLines']) => void
+  compact?: boolean
 }
 
-export function ScopeOfWork({ home, onChange }: Props) {
+// ── Compact accordion view (used inside the modal) ─────────────────────────
+
+const SKIP_CATS = new Set(['DETAILED SCOPE OF WORK'])
+
+function buildCategories() {
+  const cats: { name: string; category: string; lines: SowLine[] }[] = []
+  let current: { name: string; category: string; lines: SowLine[] } | null = null
+  for (const item of SOW_TEMPLATE) {
+    if (item.type === 'category') {
+      if (current && !SKIP_CATS.has(current.category)) cats.push(current)
+      current = { name: item.name, category: item.category, lines: [] }
+    } else if (item.type === 'line' && current && item.id) {
+      current.lines.push(item as SowLine)
+    }
+  }
+  if (current && !SKIP_CATS.has(current.category)) cats.push(current)
+  return cats
+}
+
+function SowAccordion({ home, onChange }: { home: HomeFile; onChange: Props['onChange'] }) {
+  const [open, setOpen] = useState<Set<string>>(new Set())
+  const cats = buildCategories()
+
+  const toggle = (cat: string) => setOpen((prev) => {
+    const next = new Set(prev)
+    next.has(cat) ? next.delete(cat) : next.add(cat)
+    return next
+  })
+
+  const updateLine = (id: string, field: 'qty' | 'bid', value: string) => {
+    const current = home.sowLines[id] ?? { qty: '', bid: '', actual: '', notes: '' }
+    const parsed = value === '' ? '' : parseFloat(value)
+    onChange({ ...home.sowLines, [id]: { ...current, [field]: parsed } })
+  }
+
+  return (
+    <div className="sow-accordion">
+      {cats.map((cat) => {
+        const isOpen = open.has(cat.category)
+        const totalEst = cat.lines.reduce((s, l) => {
+          const d = home.sowLines[l.id]
+          return s + calcLineEstimate(l.unitCost, d?.qty ?? '', l.category, home.property)
+        }, 0)
+        const activeCount = cat.lines.filter((l) => num(home.sowLines[l.id]?.qty) > 0).length
+
+        return (
+          <div key={cat.category} className={`sow-micro-card${isOpen ? ' sow-micro-card--open' : ''}`}>
+            <button
+              type="button"
+              className="sow-micro-header"
+              onClick={() => toggle(cat.category)}
+            >
+              <span className="sow-micro-name">{cat.name}</span>
+              <div className="sow-micro-meta">
+                {activeCount > 0 && (
+                  <span className="sow-micro-badge">{activeCount}</span>
+                )}
+                <span className={`sow-micro-total${totalEst > 0 ? ' sow-micro-total--active' : ''}`}>
+                  {totalEst > 0 ? formatCurrency(totalEst) : '—'}
+                </span>
+                <span className="sow-micro-chevron">{isOpen ? '▾' : '▸'}</span>
+              </div>
+            </button>
+
+            {isOpen && (
+              <div className="sow-micro-body">
+                <div className="sow-micro-col-header">
+                  <span>Item</span>
+                  <span>$/unit</span>
+                  <span>Qty</span>
+                  <span>Est.</span>
+                  <span>Bid</span>
+                </div>
+                {cat.lines.map((line) => {
+                  const data = home.sowLines[line.id] ?? { qty: '', bid: '', actual: '', notes: '' }
+                  const estimate = calcLineEstimate(line.unitCost, data.qty, line.category, home.property)
+                  const hasQty = num(data.qty) > 0
+                  return (
+                    <div key={line.id} className={`sow-micro-row${hasQty ? ' sow-micro-row--active' : ''}`}>
+                      <span className="sow-micro-item-name" title={line.spec ?? undefined}>{line.name}</span>
+                      <span className="sow-micro-unit-cost">${line.unitCost}</span>
+                      <input
+                        type="number"
+                        className="sow-micro-input"
+                        value={data.qty === '' ? '' : data.qty}
+                        placeholder="0"
+                        onChange={(e) => updateLine(line.id, 'qty', e.target.value)}
+                      />
+                      <span className="sow-micro-est">{estimate > 0 ? formatCurrency(estimate) : '—'}</span>
+                      <input
+                        type="number"
+                        className="sow-micro-input"
+                        value={data.bid === '' ? '' : data.bid}
+                        placeholder="—"
+                        onChange={(e) => updateLine(line.id, 'bid', e.target.value)}
+                      />
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+// ── Full table view (standalone page) ─────────────────────────────────────
+
+export function ScopeOfWork({ home, onChange, compact = false }: Props) {
   const [hideZero, setHideZero] = useState(false)
   const [search, setSearch] = useState('')
 
@@ -21,6 +132,10 @@ export function ScopeOfWork({ home, onChange }: Props) {
       ...home.sowLines,
       [id]: { ...current, [field]: parsed },
     })
+  }
+
+  if (compact) {
+    return <SowAccordion home={home} onChange={onChange} />
   }
 
   const visibleItems = SOW_TEMPLATE.filter((item) => {
@@ -97,10 +212,7 @@ export function ScopeOfWork({ home, onChange }: Props) {
             return (
               <div key={`sub-${idx}`} className="sow-line" style={{ background: 'var(--surface-2)', fontWeight: 600 }}>
                 <span className="line-name">{item.name}</span>
-                <span />
-                <span />
-                <span />
-                <span />
+                <span /><span /><span /><span />
                 <span className="mono">{formatCurrency(est)}</span>
                 <span className="mono">{formatCurrency(bid)}</span>
                 <span className="mono">{formatCurrency(actual)}</span>

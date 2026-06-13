@@ -864,18 +864,6 @@ function DealCard({
           </div>
         )}
 
-        {/* Structured chips (max 4 across groups, +X overflow) */}
-        {(analysis.tags.cardChips.length > 0 || analysis.tags.overflow > 0) && (
-          <div className="dcard-chips">
-            {analysis.tags.cardChips.map((chip) => (
-              <span key={chip.label} className={`dcard-tag dcard-tag--${chip.group}`}>{chip.label}</span>
-            ))}
-            {analysis.tags.overflow > 0 && (
-              <span className="dcard-tag dcard-tag--overflow">+{analysis.tags.overflow}</span>
-            )}
-          </div>
-        )}
-
         {/* Next action CTA */}
         <div
           className="dcard-action"

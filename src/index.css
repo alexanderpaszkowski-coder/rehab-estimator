@@ -2781,10 +2781,15 @@ textarea { resize: vertical; }
     rgba(22,17,14,.1) 50%,
     transparent 100%
   );
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
+  display: grid;
+  grid-template-areas:
+    "score  .     ."
+    ".      .     ."
+    "logo   .  stage";
+  grid-template-rows: auto 1fr auto;
+  grid-template-columns: auto 1fr auto;
   padding: 8px 10px;
+  gap: 0;
 }
 
 /* No-photo state — intentional, not empty */
@@ -2799,8 +2804,28 @@ textarea { resize: vertical; }
   flex-shrink: 0;
 }
 
+/* Score badge on photo — top left corner */
+.dcard-score--photo {
+  grid-area: score;
+  align-self: start;
+  border-color: rgba(255,255,255,.25) !important;
+  backdrop-filter: blur(6px);
+  background: rgba(255,255,255,.88) !important;
+  box-shadow: 0 2px 8px rgba(22,17,14,.22);
+}
+
+/* Score badge on no-photo bar */
+.dcard-score--nophoto {
+  flex-shrink: 0;
+}
+
+/* Source logo in overlay — bottom left */
+.dcard-photo-overlay .source-logo { grid-area: logo; align-self: end; }
+
 /* Stage chip on photo overlay and no-photo bar */
 .dcard-stage-chip {
+  grid-area: stage;
+  align-self: end;
   font-size: 0.59rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -2827,13 +2852,6 @@ textarea { resize: vertical; }
   flex: 1;
 }
 
-/* Score row */
-.dcard-score-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 22px;
-}
 .dcard-score {
   display: inline-flex;
   align-items: baseline;

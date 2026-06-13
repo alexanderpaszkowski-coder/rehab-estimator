@@ -266,27 +266,6 @@ function isPropstreamUrl(url: string): boolean {
 }
 
 /** Front of card — PropStream only when saved (no refresh). */
-function DealCardFrontLinks({ home }: { home: HomeFile }) {
-  if (!home.propstreamUrl) return null
-
-  return (
-    <div className="dcard-actions dcard-actions--front" onClick={(e) => e.stopPropagation()}>
-      <a
-        href={home.propstreamUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="dcard-action-btn dcard-action-btn--propstream"
-        title="Open in PropStream"
-      >
-        <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
-          <rect x="1.5" y="2" width="10" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
-          <path d="M4 5h5M4 7.5h3.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-        </svg>
-        PropStream
-      </a>
-    </div>
-  )
-}
 
 /** Summary modal — listing, refresh, propstream editor. */
 function SummaryLinkActions({
@@ -810,12 +789,27 @@ function DealCard({
         <div className="dcard-photo">
           <img src={home.photoUrl} alt={home.address} loading="lazy" />
           <div className="dcard-photo-overlay">
+            {/* Score badge — top left over photo */}
+            <div
+              className="dcard-score dcard-score--photo"
+              style={{ color: sm.color, background: sm.bg, borderColor: sm.border }}
+            >
+              <span className="dcard-score-num">{analysis.score}</span>
+              <span className="dcard-score-label">{analysis.scoreLabel}</span>
+            </div>
             <SourceLogo source={home.source} customLabel={customLabel} size={26} />
             <span className="dcard-stage-chip" style={{ background: stageMeta.color }}>{stageMeta.label}</span>
           </div>
         </div>
       ) : (
         <div className="dcard-no-photo">
+          <div
+            className="dcard-score dcard-score--nophoto"
+            style={{ color: sm.color, background: sm.bg, borderColor: sm.border }}
+          >
+            <span className="dcard-score-num">{analysis.score}</span>
+            <span className="dcard-score-label">{analysis.scoreLabel}</span>
+          </div>
           <SourceLogo source={home.source} customLabel={customLabel} size={26} />
           <span className="dcard-stage-chip" style={{ background: stageMeta.color }}>{stageMeta.label}</span>
         </div>
@@ -823,18 +817,6 @@ function DealCard({
 
       {/* Body */}
       <div className="dcard-body">
-
-        {/* Score row */}
-        <div className="dcard-score-row">
-          <div
-            className="dcard-score"
-            style={{ color: sm.color, background: sm.bg, borderColor: sm.border }}
-          >
-            <span className="dcard-score-num">{analysis.score}</span>
-            <span className="dcard-score-label">{analysis.scoreLabel}</span>
-          </div>
-          {analysis.isThinMargin && <span className="dcard-warn-chip">Thin Margin</span>}
-        </div>
 
         {/* Address + auction mini badge */}
         <div className="dcard-addr-row">
@@ -847,7 +829,7 @@ function DealCard({
           )}
         </div>
 
-        <DealCardFrontLinks home={home} />
+        {analysis.isThinMargin && <span className="dcard-warn-chip">Thin Margin</span>}
 
         {/* Financials */}
         {(home.funnel.arv || home.funnel.askingPrice) && (

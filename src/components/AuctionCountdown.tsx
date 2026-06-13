@@ -32,12 +32,12 @@ export function AuctionCountdown({ home, compact = false, mini = false }: Props)
   const phaseCls = `auction-countdown--${state.phase}`
 
   if (mini) {
-    const timerText = state.countdown || state.label
+    // Show countdown if meaningful, otherwise just the phase label
+    const mainText = (state.countdown && state.countdown !== '—') ? state.countdown : state.label
     return (
       <div className={`auction-countdown auction-countdown--mini ${phaseCls}`}>
         <span className="auc-mini-format">{state.formatLabel}</span>
-        <span className="auc-mini-timer">{timerText}</span>
-        <span className="auc-mini-phase">{state.label}</span>
+        <span className="auc-mini-main">{mainText}</span>
       </div>
     )
   }

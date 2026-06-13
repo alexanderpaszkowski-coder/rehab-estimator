@@ -30,15 +30,11 @@ function buildCategories() {
   return cats
 }
 
-function SowAccordion({ home, onChange }: { home: HomeFile; onChange: Props['onChange'] }) {
-  const [open, setOpen] = useState<Set<string>>(new Set())
-  const cats = buildCategories()
+type CatMeta = { name: string; category: string; lines: SowLine[] }
 
-  const toggle = (cat: string) => setOpen((prev) => {
-    const next = new Set(prev)
-    next.has(cat) ? next.delete(cat) : next.add(cat)
-    return next
-  })
+function SowAccordion({ home, onChange }: { home: HomeFile; onChange: Props['onChange'] }) {
+  const [selected, setSelected] = useState<string | null>(null)
+  const cats = buildCategories()
 
   const updateLine = (id: string, field: 'qty' | 'bid', value: string) => {
     const current = home.sowLines[id] ?? { qty: '', bid: '', actual: '', notes: '' }
@@ -46,75 +42,114 @@ function SowAccordion({ home, onChange }: { home: HomeFile; onChange: Props['onC
     onChange({ ...home.sowLines, [id]: { ...current, [field]: parsed } })
   }
 
+  const getCatStats = (cat: CatMeta) => {
+    const totalEst = cat.lines.reduce((s, l) => {
+      const d = home.sowLines[l.id]
+      return s + calcLineEstimate(l.unitCost, d?.qty ?? '', l.category, home.property)
+    }, 0)
+    const activeCount = cat.lines.filter((l) => num(home.sowLines[l.id]?.qty) > 0).length
+    return { totalEst, activeCount }
+  }
+
+  const pending   = cats.filter((c) => getCatStats(c).activeCount === 0)
+  const completed = cats.filter((c) => getCatStats(c).activeCount > 0)
+  const activeCat = cats.find((c) => c.category === selected) ?? null
+
+  const renderCard = (cat: CatMeta) => {
+    const { totalEst, activeCount } = getCatStats(cat)
+    const isSelected = selected === cat.category
+    const isDone = activeCount > 0
+    return (
+      <button
+        key={cat.category}
+        type="button"
+        className={`sow-box${isSelected ? ' sow-box--selected' : ''}${isDone ? ' sow-box--done' : ''}`}
+        onClick={() => setSelected(isSelected ? null : cat.category)}
+      >
+        <span className="sow-box-name">{cat.name}</span>
+        <div className="sow-box-foot">
+          {activeCount > 0
+            ? <span className="sow-box-count">{activeCount} item{activeCount !== 1 ? 's' : ''}</span>
+            : <span className="sow-box-empty">Tap to fill</span>
+          }
+          {totalEst > 0 && (
+            <span className="sow-box-total">{formatCurrency(totalEst)}</span>
+          )}
+        </div>
+      </button>
+    )
+  }
+
   return (
-    <div className="sow-accordion">
-      {cats.map((cat) => {
-        const isOpen = open.has(cat.category)
-        const totalEst = cat.lines.reduce((s, l) => {
-          const d = home.sowLines[l.id]
-          return s + calcLineEstimate(l.unitCost, d?.qty ?? '', l.category, home.property)
-        }, 0)
-        const activeCount = cat.lines.filter((l) => num(home.sowLines[l.id]?.qty) > 0).length
+    <div className="sow-grid-layout">
 
-        return (
-          <div key={cat.category} className={`sow-micro-card${isOpen ? ' sow-micro-card--open' : ''}`}>
-            <button
-              type="button"
-              className="sow-micro-header"
-              onClick={() => toggle(cat.category)}
-            >
-              <span className="sow-micro-name">{cat.name}</span>
-              <div className="sow-micro-meta">
-                {activeCount > 0 && (
-                  <span className="sow-micro-badge">{activeCount}</span>
-                )}
-                <span className={`sow-micro-total${totalEst > 0 ? ' sow-micro-total--active' : ''}`}>
-                  {totalEst > 0 ? formatCurrency(totalEst) : '—'}
-                </span>
-                <span className="sow-micro-chevron">{isOpen ? '▾' : '▸'}</span>
-              </div>
-            </button>
-
-            {isOpen && (
-              <div className="sow-micro-body">
-                <div className="sow-micro-col-header">
-                  <span>Item</span>
-                  <span>$/unit</span>
-                  <span>Qty</span>
-                  <span>Est.</span>
-                  <span>Bid</span>
-                </div>
-                {cat.lines.map((line) => {
-                  const data = home.sowLines[line.id] ?? { qty: '', bid: '', actual: '', notes: '' }
-                  const estimate = calcLineEstimate(line.unitCost, data.qty, line.category, home.property)
-                  const hasQty = num(data.qty) > 0
-                  return (
-                    <div key={line.id} className={`sow-micro-row${hasQty ? ' sow-micro-row--active' : ''}`}>
-                      <span className="sow-micro-item-name" title={line.spec ?? undefined}>{line.name}</span>
-                      <span className="sow-micro-unit-cost">${line.unitCost}</span>
-                      <input
-                        type="number"
-                        className="sow-micro-input"
-                        value={data.qty === '' ? '' : data.qty}
-                        placeholder="0"
-                        onChange={(e) => updateLine(line.id, 'qty', e.target.value)}
-                      />
-                      <span className="sow-micro-est">{estimate > 0 ? formatCurrency(estimate) : '—'}</span>
-                      <input
-                        type="number"
-                        className="sow-micro-input"
-                        value={data.bid === '' ? '' : data.bid}
-                        placeholder="—"
-                        onChange={(e) => updateLine(line.id, 'bid', e.target.value)}
-                      />
-                    </div>
-                  )
-                })}
-              </div>
-            )}
+      {/* Detail panel — shown above when a category is selected */}
+      {activeCat && (
+        <div className="sow-detail-panel">
+          <div className="sow-detail-header">
+            <span className="sow-detail-title">{activeCat.name}</span>
+            <button type="button" className="sow-detail-close" onClick={() => setSelected(null)}>✕</button>
           </div>
-        )
-      })}
+          <div className="sow-detail-col-header">
+            <span>Item</span>
+            <span>$/unit</span>
+            <span>Qty</span>
+            <span>Est.</span>
+            <span>Bid</span>
+          </div>
+          {activeCat.lines.map((line) => {
+            const data = home.sowLines[line.id] ?? { qty: '', bid: '', actual: '', notes: '' }
+            const estimate = calcLineEstimate(line.unitCost, data.qty, line.category, home.property)
+            const hasQty = num(data.qty) > 0
+            return (
+              <div key={line.id} className={`sow-detail-row${hasQty ? ' sow-detail-row--active' : ''}`}>
+                <span className="sow-micro-item-name" title={line.spec ?? undefined}>{line.name}</span>
+                <span className="sow-micro-unit-cost">${line.unitCost}</span>
+                <input
+                  type="number"
+                  className="sow-micro-input"
+                  value={data.qty === '' ? '' : data.qty}
+                  placeholder="0"
+                  onChange={(e) => updateLine(line.id, 'qty', e.target.value)}
+                />
+                <span className="sow-micro-est">{estimate > 0 ? formatCurrency(estimate) : '—'}</span>
+                <input
+                  type="number"
+                  className="sow-micro-input"
+                  value={data.bid === '' ? '' : data.bid}
+                  placeholder="—"
+                  onChange={(e) => updateLine(line.id, 'bid', e.target.value)}
+                />
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Pending grid */}
+      {pending.length > 0 && (
+        <div className="sow-grid-section">
+          {pending.length < cats.length && (
+            <div className="sow-grid-section-label">To fill in</div>
+          )}
+          <div className="sow-box-grid">
+            {pending.map(renderCard)}
+          </div>
+        </div>
+      )}
+
+      {/* Completed grid */}
+      {completed.length > 0 && (
+        <div className="sow-grid-section">
+          <div className="sow-grid-section-label sow-grid-section-label--done">
+            ✓ Filled in
+          </div>
+          <div className="sow-box-grid">
+            {completed.map(renderCard)}
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }

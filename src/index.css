@@ -2783,11 +2783,11 @@ textarea { resize: vertical; }
   );
   display: grid;
   grid-template-areas:
-    "score  .     ."
-    ".      .     ."
-    "logo   .  stage";
+    "score  ."
+    ".      ."
+    "logo   .";
   grid-template-rows: auto 1fr auto;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto 1fr;
   padding: 8px 10px;
   gap: 0;
 }

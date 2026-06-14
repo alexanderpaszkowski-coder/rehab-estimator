@@ -28,7 +28,7 @@ interface Props {
   autoOpenIntake?: boolean
 }
 
-type SortOption = 'score' | 'spread' | 'newest' | 'arv'
+type SortOption = 'score' | 'spread' | 'newest' | 'arv' | 'ending-soon'
 type ViewMode = 'pipeline' | 'priority'
 type QueueFilter = 'need-arv' | 'need-rehab' | 'thin-margin' | 'strong' | 'solid' | null
 
@@ -751,7 +751,6 @@ function DealCard({
   const arvLabel = getArvLabel(home.source)
   const bidLabel = getBidLabel(home.source)
   const customLabel = home.source === 'other' ? home.sourceCustom : undefined
-  const stageMeta = getStageMeta(home.stage)
   const sm = SCORE_META[analysis.scoreTier]
 
   const actionBg: Record<string, string> = {
@@ -800,7 +799,6 @@ function DealCard({
               <span className="dcard-score-label">{analysis.scoreLabel}</span>
             </div>
             <SourceLogo source={home.source} customLabel={customLabel} size={26} />
-            <span className="dcard-stage-chip" style={{ background: stageMeta.color }}>{stageMeta.label}</span>
           </div>
         </div>
       ) : (
@@ -813,7 +811,6 @@ function DealCard({
             <span className="dcard-score-label">{analysis.scoreLabel}</span>
           </div>
           <SourceLogo source={home.source} customLabel={customLabel} size={26} />
-          <span className="dcard-stage-chip" style={{ background: stageMeta.color }}>{stageMeta.label}</span>
         </div>
       )}
 
@@ -1108,7 +1105,7 @@ export function FunnelBoard({ homes, onSelect: _onSelect, onCreate, onStageChang
   const [showIntake,    setShowIntake]    = useState(() => autoOpenIntake ?? false)
   const [search,        setSearch]        = useState('')
   const [sourceFilter,  setSourceFilter]  = useState<PropertySource | 'all'>('all')
-  const [sortBy,        setSortBy]        = useState<SortOption>('score')
+  const [sortBy,        setSortBy]        = useState<SortOption>('ending-soon')
   const [viewMode,      setViewMode]      = useState<ViewMode>('pipeline')
   const [pipelineStage, setPipelineStage] = useState<FunnelStage>('lead')
   const [summaryHome,   setSummaryHome]   = useState<HomeFile | null>(null)

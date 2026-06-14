@@ -10,7 +10,7 @@ import type { DealAnalysis, Tag } from '../lib/dealScore'
 import { PropertyIntake } from './PropertyIntake'
 import { AuctionCountdown } from './AuctionCountdown'
 import { getListingUrl, isRefreshable } from '../lib/listingRefresh'
-import { getAuctionDeadlineMs } from '../lib/auctionSchedule'
+import { getAuctionDeadlineMs, getAuctionCountdown } from '../lib/auctionSchedule'
 import { FunnelDetails } from './FunnelDetails'
 import { PropertyInputs as PropertyInputsView } from './PropertyInputs'
 import { QuickEstimate } from './QuickEstimate'
@@ -1099,6 +1099,94 @@ function PriorityGroup({
   )
 }
 
+// ── Auction alert bar (live + starting soon) ──────────────────────────────────
+
+function AuctionAlertBar({ homes, onOpen }: { homes: HomeFile[]; onOpen: (h: HomeFile) => void }) {
+  const [tick, setTick] = useState(0)
+  useEffect(() => {
+    const id = window.setInterval(() => setTick((t) => t + 1), 30_000)
+    return () => window.clearInterval(id)
+  }, [])
+  void tick
+
+  const now = Date.now()
+
+  // Only auction.com homes with a scheduled start
+  const auctionHomes = homes.filter(
+    (h) => h.source === 'auction.com' && h.funnel.auctionStartAt
+  )
+
+  const live: HomeFile[]    = []
+  const upcoming: HomeFile[] = []
+
+  for (const h of auctionHomes) {
+    const { auctionStartAt, auctionEndAt, auctionFormat } = h.funnel
+    const start = new Date(auctionStartAt!).getTime()
+    const end = auctionEndAt
+      ? new Date(auctionEndAt).getTime()
+      : start + (auctionFormat === 'in-person' ? 2 : 48) * 3600_000
+
+    if (now >= start && now < end) {
+      live.push(h)
+    } else if (now < start) {
+      upcoming.push(h)
+    }
+  }
+
+  // Sort upcoming by start time ascending
+  upcoming.sort((a, b) =>
+    new Date(a.funnel.auctionStartAt!).getTime() - new Date(b.funnel.auctionStartAt!).getTime()
+  )
+
+  if (live.length === 0 && upcoming.length === 0) return null
+
+  const fmtCountdown = (startAt: string, endAt: string | null, format: string | null, isLive: boolean) => {
+    const state = getAuctionCountdown(startAt, endAt, format as 'online' | 'in-person' | null)
+    if (!state) return '—'
+    return isLive ? `Ends in ${state.countdown}` : `Starts in ${state.countdown}`
+  }
+
+  return (
+    <section className="auction-alert-bar">
+      {live.length > 0 && (
+        <div className="aab-group aab-group--live">
+          <div className="aab-group-label">
+            <span className="aab-pulse" />
+            Live Now
+          </div>
+          <div className="aab-cards">
+            {live.map((h) => (
+              <button key={h.id} type="button" className="aab-card aab-card--live" onClick={() => onOpen(h)}>
+                <span className="aab-addr">{h.address}</span>
+                <span className="aab-city">{[h.city, h.state].filter(Boolean).join(', ')}</span>
+                <span className="aab-countdown">
+                  {fmtCountdown(h.funnel.auctionStartAt!, h.funnel.auctionEndAt, h.funnel.auctionFormat, true)}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      {upcoming.length > 0 && (
+        <div className="aab-group aab-group--upcoming">
+          <div className="aab-group-label">Starting Soon</div>
+          <div className="aab-cards">
+            {upcoming.slice(0, 5).map((h) => (
+              <button key={h.id} type="button" className="aab-card aab-card--upcoming" onClick={() => onOpen(h)}>
+                <span className="aab-addr">{h.address}</span>
+                <span className="aab-city">{[h.city, h.state].filter(Boolean).join(', ')}</span>
+                <span className="aab-countdown">
+                  {fmtCountdown(h.funnel.auctionStartAt!, h.funnel.auctionEndAt, h.funnel.auctionFormat, false)}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </section>
+  )
+}
+
 // ── Main board ────────────────────────────────────────────────────────────────
 
 export function FunnelBoard({ homes, onSelect: _onSelect, onCreate, onStageChange, onDelete, onRefreshHome, onUpdateHome, autoOpenIntake }: Props) {
@@ -1280,6 +1368,9 @@ export function FunnelBoard({ homes, onSelect: _onSelect, onCreate, onStageChang
           onUpdateHome={onUpdateHome}
         />
       )}
+
+      {/* ── 0. Auction alert bar ── */}
+      <AuctionAlertBar homes={homes} onOpen={setSummaryHome} />
 
       {/* ── 1. Compact pipeline strip ── */}
       <section className="cpipeline">

@@ -10,6 +10,7 @@ import type { DealAnalysis, Tag } from '../lib/dealScore'
 import { PropertyIntake } from './PropertyIntake'
 import { AuctionCountdown } from './AuctionCountdown'
 import { getListingUrl, isRefreshable } from '../lib/listingRefresh'
+import { getAuctionDeadlineMs } from '../lib/auctionSchedule'
 import { FunnelDetails } from './FunnelDetails'
 import { PropertyInputs as PropertyInputsView } from './PropertyInputs'
 import { QuickEstimate } from './QuickEstimate'
@@ -140,10 +141,11 @@ const SOURCE_PILL_OPTIONS = [
 ]
 
 const SORT_PILL_OPTIONS = [
-  { value: 'score',   label: 'Deal Score' },
-  { value: 'spread',  label: 'Spread'     },
-  { value: 'arv',     label: 'ARV'        },
-  { value: 'newest',  label: 'Newest'     },
+  { value: 'score',        label: 'Deal Score'      },
+  { value: 'spread',       label: 'Spread'          },
+  { value: 'ending-soon',  label: 'Ending Soonest'  },
+  { value: 'arv',          label: 'ARV'             },
+  { value: 'newest',       label: 'Newest'          },
 ]
 
 function FilterPill({
@@ -1214,6 +1216,14 @@ export function FunnelBoard({ homes, onSelect: _onSelect, onCreate, onStageChang
       if (sortBy === 'spread')  return (db.spread ?? -Infinity) - (da.spread ?? -Infinity)
       if (sortBy === 'newest')  return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       if (sortBy === 'arv')     return (b.funnel.arv ?? 0) - (a.funnel.arv ?? 0)
+      if (sortBy === 'ending-soon') {
+        const aDeadline = getAuctionDeadlineMs(a.funnel.auctionStartAt, a.funnel.auctionEndAt)
+        const bDeadline = getAuctionDeadlineMs(b.funnel.auctionStartAt, b.funnel.auctionEndAt)
+        if (aDeadline == null && bDeadline == null) return 0
+        if (aDeadline == null) return 1
+        if (bDeadline == null) return -1
+        return aDeadline - bDeadline
+      }
       return 0
     })
     return result

@@ -212,3 +212,14 @@ export function getAuctionCountdown(
     formatLabel,
   }
 }
+
+/** Milliseconds until auction ends (or starts if no end). Null when no schedule. */
+export function getAuctionDeadlineMs(
+  startAt: string | null | undefined,
+  endAt: string | null | undefined,
+): number | null {
+  const iso = endAt ?? startAt
+  if (!iso) return null
+  const ms = new Date(iso).getTime()
+  return Number.isNaN(ms) ? null : ms
+}

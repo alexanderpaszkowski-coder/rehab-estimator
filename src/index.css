@@ -4351,28 +4351,79 @@ textarea { resize: vertical; }
   .dcard-addr-row .auction-countdown { display: none; }
 
   /* ── Property detail modal — bottom sheet ──────────── */
-  .modal-overlay { padding: 8px; align-items: flex-end; }
+  /* ── Property detail modal — compact bottom sheet ─────── */
+  /* Flush at bottom, edge-to-edge on mobile */
+  .modal-overlay { padding: 0; align-items: flex-end; }
   .summary-modal,
   .summary-modal--mls,
   .summary-modal--editing {
     max-width: 100%;
-    max-height: 92vh;
-    border-radius: 14px 14px 0 0;
+    max-height: 96vh;
+    border-radius: 16px 16px 0 0;
   }
+
+  /* Tight sticky hero */
+  .summary-hero,
+  .summary-hero--mls { padding: 9px 14px 8px; gap: 8px; }
+  .summary-address { font-size: 0.95rem; }
+  .summary-city { font-size: 0.68rem; }
+  .summary-hero-spec-chips { margin-top: 2px; gap: 3px; }
+  .summary-hero-spec-chips .screen-chip { font-size: 0.6rem; padding: 2px 5px; }
+  .summary-hero-meta { font-size: 0.6rem; gap: 3px; }
+  .stage-picker-btn { font-size: 0.62rem; padding: 4px 8px 4px 7px; gap: 4px; }
+  .stage-picker-dot { width: 5px; height: 5px; }
+
+  /* Tight tab strip */
+  .modal-tab-strip { padding: 0 8px; }
+  .modal-tab { padding: 7px 10px; font-size: 0.7rem; }
+
+  /* ov-top: small square thumbnail beside metrics — saves ~180px vs stacked layout */
   .ov-top {
-    flex-direction: column;
-    padding: 10px 14px 8px;
+    flex-direction: row;
+    padding: 8px 12px;
     gap: 10px;
+    align-items: flex-start;
   }
-  .ov-photo { width: 100%; height: 140px; }
-  .ov-body { grid-template-columns: 1fr; }
+  .ov-photo {
+    width: 82px;
+    height: 82px;
+    border-radius: 7px;
+    flex-shrink: 0;
+  }
+  .ov-metric { padding: 3px 0; gap: 6px; }
+  .ov-metric-label { font-size: 0.62rem; }
+  .ov-metric-value { font-size: 0.82rem; }
+  .ov-spec-chips { padding-top: 4px; gap: 3px; }
+  .ov-spec-chips .screen-chip { font-size: 0.58rem; padding: 2px 5px; }
+
+  /* Compact auction countdown block */
+  .ov-auction-row { padding: 5px 12px; }
+  .auction-countdown--compact { padding: 5px 8px; }
+  .auction-countdown-top { margin-bottom: 1px; }
+  .auction-countdown-timer { font-size: 0.88rem; }
+  .auction-countdown-date { font-size: 0.55rem; margin-top: 1px; }
+
+  /* Compact link actions */
+  .summary-link-actions,
+  .summary-modal--mls .summary-link-actions { padding: 5px 12px 6px; }
+
+  /* ov-body: 2-column grid on mobile — tags left, details+notes right */
+  .ov-body { grid-template-columns: 1fr 1fr; }
   .ov-body-left {
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-    padding: 8px 14px;
+    border-right: 1px solid var(--border);
+    border-bottom: none;
+    padding: 6px 10px;
+    overflow: hidden;
   }
-  .ov-body-right { padding: 8px 14px; }
-  .ov-metric-value { font-size: 0.88rem; }
-  .modal-tab-strip { padding: 0 10px; }
-  .summary-actions { padding: 10px 14px; flex-wrap: wrap; gap: 6px; }
+  .ov-body-right { padding: 6px 10px; }
+  .ov-kv { font-size: 0.65rem; padding: 2px 0; }
+  .ov-notes { font-size: 0.65rem; padding-top: 5px; }
+  .ov-body-left .stag { font-size: 0.6rem; padding: 2px 5px; }
+  .ov-body-left .summary-tag-group-label { font-size: 0.57rem; }
+  .ov-body-left .summary-tag-groups { gap: 6px; }
+  .ov-body-left .summary-tag-group { margin-bottom: 4px; }
+
+  /* Footer */
+  .summary-actions,
+  .summary-modal--mls .summary-actions { padding: 8px 12px; gap: 6px; flex-wrap: nowrap; }
 }

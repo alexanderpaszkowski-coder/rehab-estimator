@@ -2682,6 +2682,20 @@ textarea { resize: vertical; }
   font-weight: 600;
 }
 
+.cmd-layout-toggle {
+  display: flex;
+  gap: 3px;
+  flex-shrink: 0;
+}
+.cmd-layout-toggle .pvlt-btn {
+  width: var(--ctrl-h);
+  height: var(--ctrl-h);
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .cmd-bar-right {
   display: flex;
   align-items: center;
@@ -4652,6 +4666,7 @@ textarea { resize: vertical; }
     height: var(--ctrl-h);
     min-width: 0;
   }
+  .cmd-layout-toggle .pvlt-btn { width: var(--ctrl-h); height: var(--ctrl-h); }
   .cmd-bar-right {
     width: auto;
     margin-left: auto;

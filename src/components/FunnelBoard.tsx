@@ -980,6 +980,7 @@ function CommandBar({
   sourceFilter, setSourceFilter,
   sortBy, setSortBy,
   viewMode, setViewMode,
+  cardLayout, setCardLayout,
   totalShown,
   onAdd,
 }: {
@@ -991,6 +992,8 @@ function CommandBar({
   setSortBy: (v: SortOption) => void
   viewMode: ViewMode
   setViewMode: (v: ViewMode) => void
+  cardLayout: 'grid' | 'list'
+  setCardLayout: (v: 'grid' | 'list') => void
   totalShown: number
   onAdd: () => void
 }) {
@@ -1090,6 +1093,25 @@ function CommandBar({
           onClick={() => setViewMode('priority')}
         >
           Priority
+        </button>
+      </div>
+
+      <div className="pipeline-view-layout-toggle cmd-layout-toggle">
+        <button
+          className={`pvlt-btn${cardLayout === 'grid' ? ' pvlt-btn--active' : ''}`}
+          onClick={() => setCardLayout('grid')}
+          title="Grid view"
+          type="button"
+        >
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="0" y="0" width="6" height="6" rx="1" fill="currentColor"/><rect x="8" y="0" width="6" height="6" rx="1" fill="currentColor"/><rect x="0" y="8" width="6" height="6" rx="1" fill="currentColor"/><rect x="8" y="8" width="6" height="6" rx="1" fill="currentColor"/></svg>
+        </button>
+        <button
+          className={`pvlt-btn${cardLayout === 'list' ? ' pvlt-btn--active' : ''}`}
+          onClick={() => setCardLayout('list')}
+          title="List view"
+          type="button"
+        >
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="0" y="1" width="14" height="2" rx="1" fill="currentColor"/><rect x="0" y="6" width="14" height="2" rx="1" fill="currentColor"/><rect x="0" y="11" width="14" height="2" rx="1" fill="currentColor"/></svg>
         </button>
       </div>
 
@@ -1423,45 +1445,13 @@ export function FunnelBoard({ homes, onSelect: _onSelect, onCreate, onStageChang
         sourceFilter={sourceFilter} setSourceFilter={setSourceFilter}
         sortBy={sortBy} setSortBy={setSortBy}
         viewMode={viewMode} setViewMode={setViewMode}
+        cardLayout={cardLayout} setCardLayout={setCardLayout}
         totalShown={viewMode === 'priority' ? filtered.length : displayHomes.length}
         onAdd={() => setShowIntake(true)}
       />
 
       {/* ── 3. Property grid grouped by action ── */}
       <div className="pipeline-view">
-
-        {/* Shared header: stage info (pipeline) or all-props count (priority) + layout toggle */}
-        <div className="pipeline-view-header">
-          {viewMode === 'pipeline' ? (
-            <>
-              <div className="pipeline-view-stage-dot" style={{ background: currentStageMeta.color }} />
-              <h2 className="pipeline-view-title">{currentStageMeta.label}</h2>
-              <span className="pipeline-view-count">{displayHomes.length}</span>
-            </>
-          ) : (
-            <>
-              <h2 className="pipeline-view-title">All Properties</h2>
-              <span className="pipeline-view-count">{filtered.length}</span>
-            </>
-          )}
-          <div className="pipeline-view-layout-toggle">
-            <span className="pvlt-label">View:</span>
-            <button
-              className={`pvlt-btn${cardLayout === 'grid' ? ' pvlt-btn--active' : ''}`}
-              onClick={() => setCardLayout('grid')}
-              title="Grid view"
-            >
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="0" y="0" width="6" height="6" rx="1" fill="currentColor"/><rect x="8" y="0" width="6" height="6" rx="1" fill="currentColor"/><rect x="0" y="8" width="6" height="6" rx="1" fill="currentColor"/><rect x="8" y="8" width="6" height="6" rx="1" fill="currentColor"/></svg>
-            </button>
-            <button
-              className={`pvlt-btn${cardLayout === 'list' ? ' pvlt-btn--active' : ''}`}
-              onClick={() => setCardLayout('list')}
-              title="List view"
-            >
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="0" y="1" width="14" height="2" rx="1" fill="currentColor"/><rect x="0" y="6" width="14" height="2" rx="1" fill="currentColor"/><rect x="0" y="11" width="14" height="2" rx="1" fill="currentColor"/></svg>
-            </button>
-          </div>
-        </div>
 
         {/* Action group sections */}
         {(viewMode === 'pipeline' ? displayHomes.length === 0 : filtered.length === 0) ? (

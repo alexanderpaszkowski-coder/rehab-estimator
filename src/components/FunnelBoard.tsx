@@ -884,8 +884,8 @@ function DealCard({
           }}
           onClick={(e) => { e.stopPropagation(); onSummary() }}
         >
-          {analysis.nextAction}
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+          <span className="dcard-action-text">{analysis.nextAction}</span>
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true" className="dcard-action-arrow">
             <path d="M2.5 6h7m0 0L6.5 3m3 3-3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </div>

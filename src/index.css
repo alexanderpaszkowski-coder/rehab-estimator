@@ -3067,6 +3067,14 @@ textarea { resize: vertical; }
   letter-spacing: 0.005em;
 }
 .dcard-action:hover { filter: brightness(.93); }
+.dcard-action-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dcard-action-arrow { flex-shrink: 0; }
 
 /* Listing link + refresh actions */
 .dcard-actions {
@@ -4065,13 +4073,14 @@ textarea { resize: vertical; }
 /* Short pipeline labels — desktop shows full, mobile shows abbreviated */
 .cpipe-label--short { display: none; }
 
-/* ── Responsive ────────────────────────────────────── */
+/* ── Mobile (≤880px) ───────────────────────────────── */
 @media (max-width: 880px) {
   :root {
     --gutter: 8px;
     --ctrl-h: 30px;
   }
 
+  /* ── Non-dashboard pages ── */
   .topnav { padding: 6px 10px; gap: 6px; }
   .topnav-logo { font-size: 0.88rem; }
   .topnav-item { padding: 5px 8px; font-size: 0.72rem; gap: 4px; }
@@ -4086,7 +4095,7 @@ textarea { resize: vertical; }
   .role-card { padding: 32px 16px 28px; }
   .role-card-icon { font-size: 3rem; }
 
-  /* ── Command center mobile ── */
+  /* ── Dashboard shell ── */
   .main:has(.funnel-dashboard) { padding: 0; }
   .funnel-dashboard {
     border-radius: 0;
@@ -4095,105 +4104,140 @@ textarea { resize: vertical; }
     border-top: none;
   }
 
-  /* Auction bar — side-by-side, compact */
-  .auction-alert-bar { flex-direction: row; }
+  /* ── Auction / Starting Soon bar ──────────────────── */
+  /* Single compact row: [LABEL] [card] [card] [card...scroll] */
+  .auction-alert-bar {
+    flex-direction: row;
+    align-items: center;
+    padding: 0;
+    border-bottom: 1px solid var(--border);
+  }
+  /* When BOTH groups present, split evenly; live gets a right divider */
   .aab-group {
     flex: 1;
     min-width: 0;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 4px;
-    padding: 5px var(--gutter);
+    flex-direction: row;
+    align-items: center;
+    gap: 5px;
+    padding: 4px var(--gutter);
+    border-bottom: none;
   }
   .aab-group--live {
     max-width: none;
     border-right: 1px solid #fed7aa;
-    border-bottom: none;
+    background: linear-gradient(90deg, #fff7ed 0%, var(--surface) 100%);
   }
   .aab-group-label {
+    font-size: 0.52rem;
+    letter-spacing: 0.05em;
+    gap: 3px;
     min-width: 0;
-    font-size: 0.56rem;
-    gap: 4px;
+    flex-shrink: 0;
+    white-space: nowrap;
   }
   .aab-pulse { width: 5px; height: 5px; }
   .aab-cards {
     gap: 4px;
+    flex: 1;
+    min-width: 0;
     -webkit-overflow-scrolling: touch;
   }
   .aab-card {
-    min-width: 0;
-    flex: 1 1 0;
+    min-width: 90px;
     max-width: none;
-    padding: 4px 5px;
+    flex: 0 0 auto;
+    padding: 3px 7px;
     border-radius: 6px;
+    gap: 0;
   }
-  .aab-addr { font-size: 0.58rem; }
+  .aab-addr { font-size: 0.6rem; }
   .aab-city { display: none; }
-  .aab-countdown { font-size: 0.56rem; margin-top: 1px; }
+  .aab-countdown { font-size: 0.55rem; margin-top: 0; color: inherit; }
 
-  /* Pipeline strip — 3×3 grid, all stages visible */
+  /* ── Pipeline strip — compact single scroll row ────── */
+  /* Saves ~95px vs 3×3 grid, all 9 stages on one scrollable line */
   .cpipeline {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 3px;
-    padding: 5px var(--gutter);
-    overflow: visible;
+    display: flex;
+    flex-direction: row;
+    gap: 2px;
+    padding: 4px var(--gutter);
+    overflow-x: auto;
+    overflow-y: visible;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
   }
+  .cpipeline::-webkit-scrollbar { display: none; }
   .cpipe-stage {
-    min-width: 0;
-    flex: none;
-    padding: 5px 2px;
+    flex: 1 1 0;
+    min-width: 44px;
+    padding: 5px 3px;
     gap: 1px;
   }
-  .cpipe-count { font-size: 0.88rem; }
+  .cpipe-count { font-size: 0.85rem; }
   .cpipe-label--full { display: none; }
   .cpipe-label--short {
     display: block;
-    font-size: 0.52rem;
+    font-size: 0.5rem;
     letter-spacing: 0.02em;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 100%;
   }
-
-  /* Deal queue — 5 cards in one row */
-  .deal-queue {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 4px;
-    padding: 5px var(--gutter);
+  /* Zero-count stages are visually subdued */
+  .cpipe-stage:not(.cpipe-stage--has):not(.cpipe-stage--active) .cpipe-count,
+  .cpipe-stage:not(.cpipe-stage--has):not(.cpipe-stage--active) .cpipe-label--short {
+    opacity: 0.4;
   }
-  .deal-queue-eyebrow { font-size: 0.54rem; }
+
+  /* ── Today's Deal Queue — compact inline row ───────── */
+  .deal-queue {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 5px;
+    padding: 4px var(--gutter);
+  }
+  .deal-queue-eyebrow {
+    font-size: 0.5rem;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    transform: rotate(180deg);
+    flex-shrink: 0;
+    letter-spacing: 0.05em;
+    line-height: 1;
+    white-space: nowrap;
+  }
   .deal-queue-track {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    display: flex;
+    flex-direction: row;
     gap: 3px;
+    flex: 1;
+    min-width: 0;
     overflow: visible;
   }
   .queue-card {
+    flex: 1 1 0;
     min-width: 0;
-    flex: none;
     padding: 5px 3px;
     align-items: center;
     text-align: center;
     gap: 1px;
     border-left-width: 2px;
+    border-radius: 6px;
   }
   .queue-card-icon { display: none; }
   .queue-card-sub { display: none; }
-  .queue-card-count { font-size: 0.95rem; }
+  .queue-card-count { font-size: 0.9rem; }
   .queue-card-label--full { display: none; }
   .queue-card-label--short {
     display: block;
-    font-size: 0.48rem;
-    line-height: 1.15;
-    letter-spacing: 0;
-    text-transform: none;
+    font-size: 0.46rem;
+    line-height: 1.1;
     font-weight: 600;
   }
 
-  /* Command bar — compact, scrollable overflow row */
+  /* ── Command bar — single scrollable row ───────────── */
   .cmd-bar {
     flex-wrap: nowrap;
     gap: 4px;
@@ -4204,7 +4248,7 @@ textarea { resize: vertical; }
   }
   .cmd-bar::-webkit-scrollbar { display: none; }
   .cmd-bar-search {
-    flex: 0 0 120px;
+    flex: 0 0 118px;
     min-width: 100px;
     max-width: 140px;
     height: var(--ctrl-h);
@@ -4213,24 +4257,24 @@ textarea { resize: vertical; }
   .cmd-search-input { font-size: 0.72rem; }
   .fpill-btn {
     height: var(--ctrl-h);
-    padding: 0 8px;
+    padding: 0 9px;
     font-size: 0.68rem;
     gap: 4px;
   }
-  .fpill-prefix { font-size: 0.64rem; }
+  .fpill-prefix { font-size: 0.62rem; }
   .cmd-sep { display: none; }
   .cmd-view-toggle { flex-shrink: 0; }
-  .cmd-view-btn { padding: 0 8px; font-size: 0.68rem; height: var(--ctrl-h); }
+  .cmd-view-btn { padding: 0 9px; font-size: 0.68rem; height: var(--ctrl-h); }
   .cmd-bar-right {
     width: auto;
     margin-left: 0;
     flex-shrink: 0;
-    gap: 6px;
+    gap: 5px;
   }
   .cmd-count { display: none; }
-  .cmd-bar-right .btn-sm { padding: 0 8px; font-size: 0.68rem; height: var(--ctrl-h); }
+  .cmd-bar-right .btn-sm { padding: 0 9px; font-size: 0.68rem; height: var(--ctrl-h); white-space: nowrap; }
 
-  /* Pipeline / priority views */
+  /* ── Pipeline / priority view header ───────────────── */
   .pipeline-view, .priority-view { padding: 8px var(--gutter) 32px; }
   .pipeline-view-header { gap: 6px; margin-bottom: 8px; }
   .pipeline-view-title { font-size: 0.82rem; }
@@ -4243,7 +4287,7 @@ textarea { resize: vertical; }
   .priority-group-title { font-size: 0.65rem; }
   .priority-group-sub { font-size: 0.68rem; }
 
-  /* 3-column property grid */
+  /* ── 3-column property grid ────────────────────────── */
   .deals-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 5px;
@@ -4253,19 +4297,22 @@ textarea { resize: vertical; }
     gap: 5px;
   }
 
-  /* Compact deal cards */
+  /* ── Deal cards — ultra-compact for 3-up layout ─────── */
   .dcard { border-radius: 6px; border-width: 1px; }
   .dcard:hover { transform: none; }
-  .dcard-photo { height: 68px; }
-  .dcard-photo-overlay { padding: 4px 5px; }
+  /* Shorter photo: 56px saves ~12px/card vs 68px */
+  .dcard-photo { height: 56px; }
+  .dcard-photo-overlay { padding: 3px 4px; }
   .dcard-score { padding: 2px 4px; gap: 2px; border-radius: 4px; }
-  .dcard-score-num { font-size: 0.62rem; }
+  .dcard-score-num { font-size: 0.6rem; }
   .dcard-score-label { display: none; }
-  .dcard-no-photo { min-height: 36px; padding: 4px 5px; }
+  /* No-photo fallback */
+  .dcard-no-photo { min-height: 30px; padding: 4px 5px; }
   .dcard-no-photo .dcard-score--nophoto { padding: 2px 4px; }
-  .dcard-body { gap: 3px; padding: 5px 5px 0; }
+  /* Card body */
+  .dcard-body { gap: 2px; padding: 4px 5px 0; }
   .dcard-street {
-    font-size: 0.58rem;
+    font-size: 0.57rem;
     font-weight: 700;
     line-height: 1.2;
     white-space: nowrap;
@@ -4273,36 +4320,37 @@ textarea { resize: vertical; }
     text-overflow: ellipsis;
   }
   .dcard-city { display: none; }
-  .dcard-addr-row { gap: 3px; }
-  .dcard-warn-chip {
-    font-size: 0.48rem;
-    padding: 1px 3px;
-    align-self: flex-start;
-  }
+  .dcard-addr-row { gap: 2px; }
+  .dcard-warn-chip { font-size: 0.46rem; padding: 1px 3px; align-self: flex-start; }
+  /* Financials: hide label, show value only for last row (spread) */
   .dcard-fin {
-    padding: 3px 0;
+    padding: 2px 0;
     margin: 0 -5px;
     padding-left: 5px;
     padding-right: 5px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
   }
   .dcard-fin-row { padding: 1px 0; }
   .dcard-fin-row:not(:last-child) { display: none; }
-  .dcard-fin-label { font-size: 0.48rem; }
-  .dcard-fin-value { font-size: 0.58rem; }
+  .dcard-fin-label { display: none; }
+  .dcard-fin-value { font-size: 0.62rem; font-weight: 800; }
+  /* Action bar */
   .dcard-action {
     padding: 4px 5px;
-    font-size: 0.52rem;
+    font-size: 0.5rem;
     gap: 2px;
     letter-spacing: 0;
   }
-  .dcard-action svg { width: 8px; height: 8px; flex-shrink: 0; }
+  .dcard-action-arrow { width: 7px; height: 7px; }
+  /* Hide decorative chrome */
   .dcard-chips { display: none; }
-  .dcard-stage-chip { font-size: 0.48rem; padding: 1px 4px; }
+  .dcard-stage-chip { display: none; }
   .dcard-photo-overlay .source-logo,
   .dcard-no-photo .source-logo { display: none; }
   .dcard-addr-row .auction-countdown { display: none; }
 
-  /* Property modal — stack on mobile */
+  /* ── Property detail modal — bottom sheet ──────────── */
   .modal-overlay { padding: 8px; align-items: flex-end; }
   .summary-modal,
   .summary-modal--mls,
@@ -4316,13 +4364,8 @@ textarea { resize: vertical; }
     padding: 10px 14px 8px;
     gap: 10px;
   }
-  .ov-photo {
-    width: 100%;
-    height: 140px;
-  }
-  .ov-body {
-    grid-template-columns: 1fr;
-  }
+  .ov-photo { width: 100%; height: 140px; }
+  .ov-body { grid-template-columns: 1fr; }
   .ov-body-left {
     border-right: none;
     border-bottom: 1px solid var(--border);

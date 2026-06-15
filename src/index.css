@@ -4416,15 +4416,18 @@ textarea { resize: vertical; }
   .deals-grid--list .dcard-fin-value { font-size: 0.72rem; }
   .deals-grid--list .dcard-action { font-size: 0.62rem; padding: 6px 10px; }
 
-  /* ── Property detail modal — compact bottom sheet ─────── */
-  /* Flush at bottom, edge-to-edge on mobile */
-  .modal-overlay { padding: 0; align-items: flex-end; }
+  /* ── Property detail modal — centered on mobile ─────── */
+  .modal-overlay {
+    padding: 16px 12px;
+    place-items: center;
+    align-items: center;
+  }
   .summary-modal,
   .summary-modal--mls,
   .summary-modal--editing {
     max-width: 100%;
-    max-height: 96vh;
-    border-radius: 16px 16px 0 0;
+    max-height: 90vh;
+    border-radius: 16px;
   }
 
   /* Tight sticky hero */

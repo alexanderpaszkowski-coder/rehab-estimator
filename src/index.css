@@ -3619,6 +3619,23 @@ textarea { resize: vertical; }
 }
 .dcard-action-arrow { flex-shrink: 0; }
 
+/* ── "Added by" attribution ─────────────────────────────────────── */
+.dcard-added-by {
+  font-size: 0.62rem;
+  color: var(--text-subtle);
+  text-align: right;
+  padding: 4px 12px 0;
+  letter-spacing: 0.01em;
+}
+.dcard-list-added-by {
+  font-size: 0.6rem;
+  color: var(--text-subtle);
+  margin-top: 1px;
+  letter-spacing: 0.01em;
+}
+[data-theme="dark"] .dcard-added-by,
+[data-theme="dark"] .dcard-list-added-by { color: var(--text-muted); }
+
 /* Listing link + refresh actions */
 .dcard-actions {
   display: flex;

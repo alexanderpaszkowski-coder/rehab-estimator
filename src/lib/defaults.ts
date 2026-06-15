@@ -60,7 +60,7 @@ export function createEmptySowLines() {
   return lines
 }
 
-export function createHomeFile(address: string, intake?: Partial<IntakeData>): HomeFile {
+export function createHomeFile(address: string, intake?: Partial<IntakeData>, addedByName?: string): HomeFile {
   const now = new Date().toISOString()
   return {
     id: crypto.randomUUID(),
@@ -93,6 +93,7 @@ export function createHomeFile(address: string, intake?: Partial<IntakeData>): H
     reviewNotes: '',
     links: intake?.links ?? (intake?.listingUrl ? [intake.listingUrl] : []),
     photoUrl: intake?.photoUrl,
+    addedByName,
     listingUrl: intake?.listingUrl,
     lastScrapedAt: intake?.listingUrl ? now : undefined,
   }

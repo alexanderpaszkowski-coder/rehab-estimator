@@ -223,7 +223,12 @@ export default function App() {
 
   const handleCreate = useCallback(
     (data: IntakeData) => {
-      const home = createHomeFile(data.address, data)
+      const rawName = session?.user?.user_metadata?.full_name as string | undefined
+      const email = session?.user?.email ?? ''
+      const addedByName = rawName
+        ? rawName.split(' ')[0]
+        : email.split('@')[0]
+      const home = createHomeFile(data.address, data, addedByName)
       const withTs = { ...home, updatedAt: new Date().toISOString() }
       setHomes((prev) => [...prev, withTs])
       flashSaved()

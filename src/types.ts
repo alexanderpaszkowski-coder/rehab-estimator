@@ -153,6 +153,8 @@ export interface HomeFile {
   reviewNotes: string
   links: string[]
   photoUrl?: string
+  /** First name (or email prefix) of the user who added this property */
+  addedByName?: string
   /** Original listing URL used to import this property */
   listingUrl?: string
   /** Manually pasted PropStream search/property URL */

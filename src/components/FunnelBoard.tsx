@@ -997,6 +997,9 @@ function DealCard({
           <span className="dcard-list-city">
             {[home.city, home.state].filter(Boolean).join(', ') || 'No location'}
           </span>
+          {home.addedByName && (
+            <span className="dcard-list-added-by">by {home.addedByName}</span>
+          )}
         </div>
         <div className="dcard-list-val" title={listVal?.label}>
           {listVal ? (
@@ -1128,6 +1131,10 @@ function DealCard({
             <path d="M2.5 6h7m0 0L6.5 3m3 3-3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </div>
+
+        {home.addedByName && (
+          <div className="dcard-added-by">Added by {home.addedByName}</div>
+        )}
 
       </div>
     </div>

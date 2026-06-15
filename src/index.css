@@ -2822,8 +2822,6 @@ textarea { resize: vertical; }
 .deals-list-col--score { padding-right: 2px; }
 
 .deals-grid--list {
-  display: flex;
-  flex-direction: column;
   gap: 0;
 }
 
@@ -3085,6 +3083,13 @@ textarea { resize: vertical; }
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 12px;
   }
+}
+
+/* List override must come AFTER .deals-grid so display:flex wins the cascade */
+.deals-grid--list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 }
 
 /* ── Deal card ──────────────────────────────────────────────────────── */
@@ -4408,6 +4413,9 @@ textarea { resize: vertical; }
   flex-shrink: 0;
   margin-left: auto;
   opacity: 0.85;
+  display: block;
+  vertical-align: middle;
+  align-self: center;
 }
 .aab-card--live .aab-countdown { color: #c2410c; }
 
@@ -4507,11 +4515,14 @@ textarea { resize: vertical; }
     flex: none;
     padding: 4px 8px;
     border-radius: 6px;
-    gap: 0;
+    gap: 1px;
+    justify-content: center;
   }
   .aab-addr { font-size: 0.62rem; }
   .aab-city { display: none; }
-  .aab-countdown { font-size: 0.57rem; margin-top: 1px; }
+  .aab-countdown { font-size: 0.57rem; margin-top: 0; }
+  .aab-card-footer { margin-top: 1px; align-items: center; }
+  .aab-card-footer .source-logo { display: block; vertical-align: middle; }
 
   /* ── Pipeline strip — compact single scroll row ────── */
   /* Saves ~95px vs 3×3 grid, all 9 stages on one scrollable line */
@@ -4669,8 +4680,10 @@ textarea { resize: vertical; }
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 6px;
   }
-  /* List view: dense spreadsheet rows (see global .deals-grid--list rules) */
+  /* List view: dense spreadsheet rows — must force flex to override 2-col grid */
   .deals-grid--list {
+    display: flex;
+    flex-direction: column;
     gap: 0;
   }
 

@@ -721,16 +721,30 @@ const SCORE_META: Record<string, { color: string; border: string; bg: string }> 
   weak:    { color: '#9ca3af', border: '#e5e7eb', bg: '#f9fafb' },
 }
 
+function DealsListHeader() {
+  return (
+    <div className="deals-list-header" aria-hidden="true">
+      <span className="deals-list-col deals-list-col--photo" />
+      <span className="deals-list-col deals-list-col--addr">Address</span>
+      <span className="deals-list-col deals-list-col--val">Spread</span>
+      <span className="deals-list-col deals-list-col--score">Score</span>
+      <span className="deals-list-col deals-list-col--go" />
+    </div>
+  )
+}
+
 function DealCard({
   home,
   analysis,
   onSummary,
   streetViewStatus,
+  layout = 'grid',
 }: {
   home: HomeFile
   analysis: DealAnalysis
   onSummary: () => void
   streetViewStatus?: Record<string, 'fetching' | 'failed'>
+  layout?: 'grid' | 'list'
 }) {
   const [flipping, setFlipping] = useState(false)
   const arvLabel = getArvLabel(home.source)
@@ -765,6 +779,58 @@ function DealCard({
     if (flipping) return
     setFlipping(true)
     setTimeout(() => { setFlipping(false); onSummary() }, 270)
+  }
+
+  const listVal = analysis.spread !== null
+    ? { label: 'Spread', value: formatCurrency(analysis.spread), color: analysis.spread > 100_000 ? 'var(--success)' : analysis.spread > 40_000 ? 'var(--warning)' : 'var(--danger)' }
+    : home.funnel.arv
+    ? { label: arvLabel, value: formatCurrency(home.funnel.arv), color: 'var(--text)' }
+    : home.funnel.askingPrice
+    ? { label: bidLabel, value: formatCurrency(home.funnel.askingPrice), color: 'var(--text)' }
+    : null
+
+  if (layout === 'list') {
+    return (
+      <div
+        className={`dcard dcard--list-row${flipping ? ' dcard--flip' : ''}${analysis.scoreTier === 'strong' ? ' dcard--strong' : ''}`}
+        onClick={handleClick}
+      >
+        <div className={`dcard-list-thumb${photoPending ? ' dcard-list-thumb--pending' : ''}`}>
+          {home.photoUrl ? (
+            <img src={home.photoUrl} alt="" loading="lazy" />
+          ) : photoPending && photoFetchStatus === 'fetching' ? (
+            <span className="dcard-list-thumb-skeleton" aria-hidden="true" />
+          ) : (
+            <span className="dcard-list-thumb-empty" aria-hidden="true">🏠</span>
+          )}
+        </div>
+        <div className="dcard-list-addr">
+          <span className="dcard-list-street">
+            {home.address}
+            {analysis.isThinMargin && <span className="dcard-list-warn" title="Thin margin">!</span>}
+          </span>
+          <span className="dcard-list-city">
+            {[home.city, home.state].filter(Boolean).join(', ') || 'No location'}
+          </span>
+        </div>
+        <div className="dcard-list-val" title={listVal?.label}>
+          {listVal ? (
+            <span className="dcard-list-val-num" style={{ color: listVal.color }}>{listVal.value}</span>
+          ) : (
+            <span className="dcard-list-val-empty">—</span>
+          )}
+        </div>
+        <div
+          className="dcard-list-score"
+          style={{ color: sm.color, background: sm.bg, borderColor: sm.border }}
+        >
+          {analysis.score}
+        </div>
+        <svg className="dcard-list-chevron" width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+          <path d="M3 2.5 6.5 5 3 7.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </div>
+    )
   }
 
   return (
@@ -1228,15 +1294,18 @@ function AuctionAlertBar({ homes, onOpen }: { homes: HomeFile[]; onOpen: (h: Hom
       )}
       {upcoming.length > 0 && (
         <div className="aab-group aab-group--upcoming">
-          <div className="aab-group-label">auctions</div>
+          <div className="aab-group-label">AUCTIONS</div>
           <div className="aab-cards">
             {upcoming.slice(0, 5).map((h) => (
               <button key={h.id} type="button" className="aab-card aab-card--upcoming" onClick={() => onOpen(h)}>
                 <span className="aab-addr">{h.address}</span>
                 <span className="aab-city">{[h.city, h.state].filter(Boolean).join(', ')}</span>
-                <span className="aab-countdown">
-                  {fmtCountdown(h.funnel.auctionStartAt!, h.funnel.auctionEndAt, h.funnel.auctionFormat, false)}
-                </span>
+                <div className="aab-card-footer">
+                  <span className="aab-countdown">
+                    {fmtCountdown(h.funnel.auctionStartAt!, h.funnel.auctionEndAt, h.funnel.auctionFormat, false)}
+                  </span>
+                  <SourceLogo source="auction.com" size={14} />
+                </div>
               </button>
             ))}
           </div>
@@ -1532,16 +1601,20 @@ export function FunnelBoard({ homes, onSelect: _onSelect, onCreate, onStageChang
                 <span className="pipeline-view-count">{filtered.length}</span>
                 <button className="pipeline-view-clear" onClick={() => setQueueFilter(null)}>✕ Clear</button>
               </div>
-              <div className={`deals-grid${cardLayout === 'list' ? ' deals-grid--list' : ''}`}>
-                {filtered.map((h) => (
-                  <DealCard
-                    key={h.id}
-                    home={h}
-                    analysis={analyses.get(h.id)!}
-                    onSummary={() => setSummaryHome(h)}
-                    streetViewStatus={streetViewStatus}
-                  />
-                ))}
+              <div className={`deals-list-wrap${cardLayout === 'list' ? ' deals-list-wrap--active' : ''}`}>
+                {cardLayout === 'list' && <DealsListHeader />}
+                <div className={`deals-grid${cardLayout === 'list' ? ' deals-grid--list' : ''}`}>
+                  {filtered.map((h) => (
+                    <DealCard
+                      key={h.id}
+                      home={h}
+                      analysis={analyses.get(h.id)!}
+                      onSummary={() => setSummaryHome(h)}
+                      streetViewStatus={streetViewStatus}
+                      layout={cardLayout}
+                    />
+                  ))}
+                </div>
               </div>
             </>
           ) : (
@@ -1599,16 +1672,20 @@ export function FunnelBoard({ homes, onSelect: _onSelect, onCreate, onStageChang
                   )}
                 </div>
               ) : (
-                <div className={`deals-grid${cardLayout === 'list' ? ' deals-grid--list' : ''}`}>
-                  {displayHomes.map((h) => (
-                    <DealCard
-                      key={h.id}
-                      home={h}
-                      analysis={analyses.get(h.id)!}
-                      onSummary={() => setSummaryHome(h)}
-                      streetViewStatus={streetViewStatus}
-                    />
-                  ))}
+                <div className={`deals-list-wrap${cardLayout === 'list' ? ' deals-list-wrap--active' : ''}`}>
+                  {cardLayout === 'list' && <DealsListHeader />}
+                  <div className={`deals-grid${cardLayout === 'list' ? ' deals-grid--list' : ''}`}>
+                    {displayHomes.map((h) => (
+                      <DealCard
+                        key={h.id}
+                        home={h}
+                        analysis={analyses.get(h.id)!}
+                        onSummary={() => setSummaryHome(h)}
+                        streetViewStatus={streetViewStatus}
+                        layout={cardLayout}
+                      />
+                    ))}
+                  </div>
                 </div>
               )}
             </>

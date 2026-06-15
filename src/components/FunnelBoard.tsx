@@ -26,6 +26,7 @@ interface Props {
   onRefreshHome?: (home: HomeFile) => Promise<void>
   onUpdateHome?: (home: HomeFile) => void
   autoOpenIntake?: boolean
+  streetViewStatus?: Record<string, 'fetching' | 'failed'>
 }
 
 type SortOption = 'score' | 'spread' | 'newest' | 'arv' | 'ending-soon'
@@ -50,6 +51,7 @@ const SOURCE_DOMAIN: Partial<Record<PropertySource, string>> = {
   'homepath':     'homepath.com',
   'hubzu':        'hubzu.com',
   'mls':          'mls.com',
+  'driving-for-dollars': 'maps.google.com',
 }
 
 // ── Source logo ───────────────────────────────────────────────────────────────
@@ -286,7 +288,8 @@ function SummaryLinkActions({
   const [propError, setPropError] = useState<string | null>(null)
 
   const listingUrl = getListingUrl(home)
-  const hasActions = listingUrl || isRefreshable(home) || onUpdateHome
+  const canRefreshPhoto = home.source === 'driving-for-dollars' && !home.photoUrl
+  const hasActions = listingUrl || isRefreshable(home) || canRefreshPhoto || onUpdateHome
 
   useEffect(() => {
     setPropDraft(home.propstreamUrl ?? '')
@@ -334,18 +337,18 @@ function SummaryLinkActions({
             Listing
           </a>
         )}
-        {isRefreshable(home) && onRefresh && (
+        {(isRefreshable(home) || canRefreshPhoto) && onRefresh && (
           <button
             type="button"
             className={`dcard-action-btn${refreshing ? ' dcard-action-btn--loading' : ''}`}
-            title="Refresh listing data"
+            title={canRefreshPhoto ? 'Fetch Street View photo' : 'Refresh listing data'}
             disabled={refreshing}
             onClick={() => void onRefresh(home)}
           >
             <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
               <path d="M11 6.5A4.5 4.5 0 102.8 4.2M2.8 4.2V1.5M2.8 4.2H5.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-            {refreshing ? 'Refreshing…' : 'Refresh'}
+            {refreshing ? 'Refreshing…' : canRefreshPhoto ? 'Fetch Photo' : 'Refresh'}
           </button>
         )}
         {home.propstreamUrl && !showPropInput && (
@@ -742,16 +745,20 @@ function DealCard({
   home,
   analysis,
   onSummary,
+  streetViewStatus,
 }: {
   home: HomeFile
   analysis: DealAnalysis
   onSummary: () => void
+  streetViewStatus?: Record<string, 'fetching' | 'failed'>
 }) {
   const [flipping, setFlipping] = useState(false)
   const arvLabel = getArvLabel(home.source)
   const bidLabel = getBidLabel(home.source)
   const customLabel = home.source === 'other' ? home.sourceCustom : undefined
   const sm = SCORE_META[analysis.scoreTier]
+  const photoPending = !home.photoUrl && home.source === 'driving-for-dollars'
+  const photoFetchStatus = streetViewStatus?.[home.id]
 
   const actionBg: Record<string, string> = {
     'calculate-arv':    '#eff6ff',
@@ -786,11 +793,14 @@ function DealCard({
       onClick={handleClick}
     >
       {/* Photo / no-photo header */}
-      {home.photoUrl ? (
-        <div className="dcard-photo">
-          <img src={home.photoUrl} alt={home.address} loading="lazy" />
+      {home.photoUrl || photoPending ? (
+        <div className={`dcard-photo${photoPending ? ' dcard-photo--pending' : ''}`}>
+          {home.photoUrl ? (
+            <img src={home.photoUrl} alt={home.address} loading="lazy" />
+          ) : (
+            <div className="dcard-photo-skeleton" aria-hidden="true" />
+          )}
           <div className="dcard-photo-overlay">
-            {/* Score badge — top left over photo */}
             <div
               className="dcard-score dcard-score--photo"
               style={{ color: sm.color, background: sm.bg, borderColor: sm.border }}
@@ -800,6 +810,16 @@ function DealCard({
             </div>
             <SourceLogo source={home.source} customLabel={customLabel} size={26} />
           </div>
+          {photoPending && photoFetchStatus === 'fetching' && (
+            <div className="dcard-photo-loading" aria-label="Loading street view photo">
+              <span className="dcard-photo-spinner" />
+            </div>
+          )}
+          {photoPending && photoFetchStatus === 'failed' && (
+            <div className="dcard-photo-loading dcard-photo-loading--failed" aria-label="Street view photo unavailable">
+              <span>No photo</span>
+            </div>
+          )}
         </div>
       ) : (
         <div className="dcard-no-photo">
@@ -1066,11 +1086,13 @@ function PriorityGroup({
   homes,
   analyses,
   onSummary,
+  streetViewStatus,
 }: {
   groupKey: string
   homes: HomeFile[]
   analyses: Map<string, DealAnalysis>
   onSummary: (h: HomeFile) => void
+  streetViewStatus?: Record<string, 'fetching' | 'failed'>
 }) {
   const meta = PRIORITY_META[groupKey]
   if (homes.length === 0) return null
@@ -1092,6 +1114,7 @@ function PriorityGroup({
             home={h}
             analysis={analyses.get(h.id)!}
             onSummary={() => onSummary(h)}
+            streetViewStatus={streetViewStatus}
           />
         ))}
       </div>
@@ -1189,7 +1212,7 @@ function AuctionAlertBar({ homes, onOpen }: { homes: HomeFile[]; onOpen: (h: Hom
 
 // ── Main board ────────────────────────────────────────────────────────────────
 
-export function FunnelBoard({ homes, onSelect: _onSelect, onCreate, onStageChange, onDelete, onRefreshHome, onUpdateHome, autoOpenIntake }: Props) {
+export function FunnelBoard({ homes, onSelect: _onSelect, onCreate, onStageChange, onDelete, onRefreshHome, onUpdateHome, autoOpenIntake, streetViewStatus }: Props) {
   const [showIntake,    setShowIntake]    = useState(() => autoOpenIntake ?? false)
   const [search,        setSearch]        = useState('')
   const [sourceFilter,  setSourceFilter]  = useState<PropertySource | 'all'>('all')
@@ -1427,6 +1450,7 @@ export function FunnelBoard({ homes, onSelect: _onSelect, onCreate, onStageChang
               homes={priorityGroups[gk]}
               analyses={analyses}
               onSummary={setSummaryHome}
+              streetViewStatus={streetViewStatus}
             />
           ))}
           {filtered.length === 0 && (
@@ -1459,6 +1483,7 @@ export function FunnelBoard({ homes, onSelect: _onSelect, onCreate, onStageChang
                     home={h}
                     analysis={analyses.get(h.id)!}
                     onSummary={() => setSummaryHome(h)}
+                    streetViewStatus={streetViewStatus}
                   />
                 ))}
               </div>
@@ -1508,6 +1533,7 @@ export function FunnelBoard({ homes, onSelect: _onSelect, onCreate, onStageChang
                       home={h}
                       analysis={analyses.get(h.id)!}
                       onSummary={() => setSummaryHome(h)}
+                      streetViewStatus={streetViewStatus}
                     />
                   ))}
                 </div>

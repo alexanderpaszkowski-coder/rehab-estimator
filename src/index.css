@@ -2792,6 +2792,47 @@ textarea { resize: vertical; }
   gap: 0;
 }
 
+.dcard-photo--pending .dcard-photo-skeleton {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, var(--surface-3) 0%, color-mix(in srgb, var(--border) 40%, white) 100%);
+}
+
+.dcard-photo-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(22, 17, 14, 0.18);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.dcard-photo-spinner {
+  width: 22px;
+  height: 22px;
+  border: 2.5px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: dcard-spin 0.75s linear infinite;
+}
+
+@keyframes dcard-spin {
+  to { transform: rotate(360deg); }
+}
+
+.dcard-photo-loading--failed span {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.85);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: rgba(22, 17, 14, 0.45);
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
 /* No-photo state — intentional, not empty */
 .dcard-no-photo {
   height: 54px;
@@ -2802,6 +2843,7 @@ textarea { resize: vertical; }
   justify-content: space-between;
   padding: 0 12px;
   flex-shrink: 0;
+  position: relative;
 }
 
 /* Score badge on photo — top left corner */

@@ -13,6 +13,7 @@ import { migrateHome } from './lib/defaults'
 import { exportHomeFile } from './lib/storage'
 import { supabase } from './lib/supabase'
 import { refreshListingHome, shouldAutoRefresh } from './lib/listingRefresh'
+import { fetchStreetViewPhoto, needsStreetViewPhoto } from './lib/streetView'
 import { calcQuickEstimate, calcSowTotals, formatCurrency } from './lib/calculations'
 import { SOW_TEMPLATE } from './lib/defaults'
 import { exportHomePdf } from './lib/pdf'
@@ -55,6 +56,8 @@ export default function App() {
   const [currentId, setCurrentId] = useState<string | null>(null)
   const [tab, setTab] = useState<Tab>('funnel')
   const [saved, setSaved] = useState(false)
+  const [streetViewStatus, setStreetViewStatus] = useState<Record<string, 'fetching' | 'failed'>>({})
+  const svAttempted = useRef(new Set<string>())
 
   // Auth listener
   useEffect(() => {
@@ -124,6 +127,26 @@ export default function App() {
     [current, updateHome],
   )
 
+  const fetchStreetViewForHome = useCallback(
+    async (home: HomeFile) => {
+      if (!needsStreetViewPhoto(home)) return
+      setStreetViewStatus((prev) => ({ ...prev, [home.id]: 'fetching' }))
+      const result = await fetchStreetViewPhoto(home)
+      if (result.ok) {
+        updateHome({ ...home, photoUrl: result.photoUrl })
+        setStreetViewStatus((prev) => {
+          const next = { ...prev }
+          delete next[home.id]
+          return next
+        })
+      } else {
+        console.warn('[streetView] Auto-fetch failed:', home.address, result.error)
+        setStreetViewStatus((prev) => ({ ...prev, [home.id]: 'failed' }))
+      }
+    },
+    [updateHome],
+  )
+
   const handleCreate = useCallback(
     (data: IntakeData) => {
       const home = createHomeFile(data.address, data)
@@ -131,8 +154,13 @@ export default function App() {
       setHomes((prev) => [...prev, withTs])
       flashSaved()
       void dbUpsert(withTs)
+
+      if (needsStreetViewPhoto(withTs)) {
+        svAttempted.current.add(withTs.id)
+        void fetchStreetViewForHome(withTs)
+      }
     },
-    [flashSaved],
+    [flashSaved, fetchStreetViewForHome],
   )
 
   const handleSelect = (home: HomeFile) => {
@@ -156,11 +184,36 @@ export default function App() {
 
   const handleRefreshHome = useCallback(
     async (home: HomeFile) => {
+      if (home.source === 'driving-for-dollars') {
+        await fetchStreetViewForHome(home)
+        return
+      }
       const updated = await refreshListingHome(home)
       updateHome(updated)
     },
-    [updateHome],
+    [updateHome, fetchStreetViewForHome],
   )
+
+  // Auto-fetch Street View for driving-for-dollars homes missing a photo
+  useEffect(() => {
+    if (!session) return
+    const pending = homes.filter(
+      (h) => needsStreetViewPhoto(h) && !svAttempted.current.has(h.id),
+    )
+    if (pending.length === 0) return
+
+    let cancelled = false
+    ;(async () => {
+      for (const home of pending) {
+        if (cancelled) break
+        svAttempted.current.add(home.id)
+        await fetchStreetViewForHome(home)
+        await new Promise((r) => setTimeout(r, 500))
+      }
+    })()
+
+    return () => { cancelled = true }
+  }, [session, homes, fetchStreetViewForHome])
 
   // Daily auto-refresh for listings with saved URLs (once per browser day)
   const autoRefreshStarted = useRef(false)
@@ -305,6 +358,7 @@ export default function App() {
             onDelete={handleDelete}
             onRefreshHome={handleRefreshHome}
             onUpdateHome={updateHome}
+            streetViewStatus={streetViewStatus}
           />
         )}
         {tab === 'lead' && current && <FunnelDetails home={current} onChange={updateCurrent} />}

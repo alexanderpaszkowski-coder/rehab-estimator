@@ -481,20 +481,33 @@ textarea { resize: vertical; }
 .qe-table .cost { font-family: var(--mono); font-weight: 500; text-align: right; white-space: nowrap; }
 .qe-table input[type="number"] { width: 70px; padding: 5px 7px; text-align: right; }
 
-/* ── Locked-in cost cell with checkmark ────────────────────────────── */
+/* ── SOW-confirmed cost cell ────────────────────────────────────────── */
 .cost-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+.cost-amount {
+  font-family: var(--mono);
+  font-weight: 500;
+  white-space: nowrap;
+}
+.cost-confirmed-tag {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  justify-content: flex-end;
+  gap: 3px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--success);
+  letter-spacing: 0.01em;
 }
-.cost-check {
-  font-size: 0.78rem;
-  font-weight: 800;
-  color: #15803d;
-  flex-shrink: 0;
-}
-[data-theme="dark"] .cost-check { color: #4ade80; }
+.cost-confirmed-tag svg { flex-shrink: 0; }
+.qe-row--confirmed td { background: var(--success-soft); }
+.qe-row--confirmed:hover td { background: #dcfce7 !important; }
+[data-theme="dark"] .cost-confirmed-tag { color: #4ade80; }
+[data-theme="dark"] .qe-row--confirmed td { background: rgba(74,222,128,.08); }
+[data-theme="dark"] .qe-row--confirmed:hover td { background: rgba(74,222,128,.13) !important; }
 
 /* ── Scope of Work ─────────────────────────────────── */
 .sow-filters { display: flex; gap: 12px; margin-bottom: 14px; align-items: center; flex-wrap: wrap; }

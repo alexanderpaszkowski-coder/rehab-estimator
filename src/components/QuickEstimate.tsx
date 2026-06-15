@@ -1,5 +1,5 @@
 import type { Condition, HomeFile, QuickSystem } from '../types'
-import { calcQuickEstimate, formatCurrency, getSystemQty } from '../lib/calculations'
+import { calcQuickEstimate, calcSowCategoryRaw, formatCurrency, getSystemQty, QE_TO_SOW_CATEGORY } from '../lib/calculations'
 import { CopyButton } from './CopyButton'
 import { copyQuickEstimate } from '../lib/copyContent'
 
@@ -63,9 +63,13 @@ export function QuickEstimate({ home, onChange }: Props) {
             {home.quickEstimate.map((system) => {
               const autoQty = getSystemQty(system, home.property)
               const line = totals.lineCosts.find((l) => l.name === system.name)
+              const sowCat = QE_TO_SOW_CATEGORY[system.id]
+              const isConfirmed = !!(sowCat && home.sowFinalized?.[sowCat])
+              const confirmedCost = isConfirmed ? calcSowCategoryRaw(home, sowCat) : null
+              const displayCost = confirmedCost ?? line?.cost ?? 0
 
               return (
-                <tr key={system.id}>
+                <tr key={system.id} className={isConfirmed ? 'qe-row--confirmed' : ''}>
                   <td>
                     <div className="system-name">{system.name}</div>
                     {system.description && <div className="system-desc">{system.description}</div>}
@@ -95,12 +99,17 @@ export function QuickEstimate({ home, onChange }: Props) {
                   </td>
                   <td style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>{system.unit}</td>
                   <td className="cost">
-                    <span className="cost-cell">
-                      {system.condition !== 'None' && (line?.cost ?? 0) > 0 && (
-                        <span className="cost-check" aria-hidden="true">✓</span>
+                    <div className="cost-cell">
+                      <span className="cost-amount">{formatCurrency(displayCost)}</span>
+                      {isConfirmed && (
+                        <span className="cost-confirmed-tag">
+                          <svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                            <polyline points="2,6 5,9 10,3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                          Confirmed
+                        </span>
                       )}
-                      {formatCurrency(line?.cost ?? 0)}
-                    </span>
+                    </div>
                   </td>
                 </tr>
               )

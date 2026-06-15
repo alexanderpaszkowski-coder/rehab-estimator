@@ -220,7 +220,7 @@ export const QE_TO_SOW_CATEGORY: Record<string, string> = {
 }
 
 /** Compute the raw SOW line-item estimate total for one category (no contingency). */
-function calcSowCategoryRaw(home: HomeFile, category: string): number {
+export function calcSowCategoryRaw(home: HomeFile, category: string): number {
   let total = 0
   for (const item of SOW_TEMPLATE) {
     if (item.type !== 'line') continue

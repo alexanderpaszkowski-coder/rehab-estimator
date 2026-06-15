@@ -5,6 +5,23 @@ const CORS = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+async function hasStreetViewImagery(location: string, key: string): Promise<boolean> {
+  const params = new URLSearchParams({ location, key })
+  const res = await fetch(`https://maps.googleapis.com/maps/api/streetview/metadata?${params}`)
+  if (!res.ok) return false
+  const meta = await res.json() as { status?: string }
+  return meta.status === 'OK'
+}
+
+async function fetchGoogleImage(url: string): Promise<{ bytes: ArrayBuffer; contentType: string } | null> {
+  const imgRes = await fetch(url)
+  if (!imgRes.ok) return null
+  const contentType = imgRes.headers.get('content-type') ?? 'image/jpeg'
+  const imageBytes = await imgRes.arrayBuffer()
+  if (imageBytes.byteLength < 2000) return null
+  return { bytes: imageBytes, contentType }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: CORS })
@@ -33,50 +50,54 @@ Deno.serve(async (req) => {
       })
     }
 
-    // Build full address string
     const fullAddress = [address, city, state].filter(Boolean).join(', ')
-    const params = new URLSearchParams({
-      size: '640x480',
-      location: fullAddress,
-      fov: '90',
-      pitch: '5',
-      key: googleKey,
-    })
+    let image: { bytes: ArrayBuffer; contentType: string } | null = null
+    let ext = 'jpg'
 
-    const svUrl = `https://maps.googleapis.com/maps/api/streetview?${params}`
-    const imgRes = await fetch(svUrl)
-
-    if (!imgRes.ok) {
-      return new Response(JSON.stringify({ error: `Street View fetch failed: ${imgRes.status}` }), {
-        status: 502,
-        headers: { ...CORS, 'Content-Type': 'application/json' },
+    // Prefer Street View when available
+    if (await hasStreetViewImagery(fullAddress, googleKey)) {
+      const svParams = new URLSearchParams({
+        size: '640x480',
+        location: fullAddress,
+        fov: '90',
+        pitch: '5',
+        key: googleKey,
       })
+      image = await fetchGoogleImage(`https://maps.googleapis.com/maps/api/streetview?${svParams}`)
     }
 
-    // Check if Google returned the "no imagery" grey placeholder (it's a specific small PNG)
-    const contentType = imgRes.headers.get('content-type') ?? 'image/jpeg'
-    const imageBytes = await imgRes.arrayBuffer()
+    // Fall back to satellite/aerial when no street-level imagery
+    if (!image) {
+      const mapParams = new URLSearchParams({
+        center: fullAddress,
+        zoom: '19',
+        size: '640x480',
+        maptype: 'satellite',
+        markers: `color:red|${fullAddress}`,
+        key: googleKey,
+      })
+      image = await fetchGoogleImage(`https://maps.googleapis.com/maps/api/staticmap?${mapParams}`)
+    }
 
-    // Google's "no imagery available" image is always exactly 8267 bytes
-    if (imageBytes.byteLength < 2000) {
-      return new Response(JSON.stringify({ error: 'No Street View imagery available for this address' }), {
+    if (!image) {
+      return new Response(JSON.stringify({ error: 'No map imagery available for this address' }), {
         status: 404,
         headers: { ...CORS, 'Content-Type': 'application/json' },
       })
     }
 
-    // Upload to Supabase Storage
-    const supabaseUrl  = Deno.env.get('SUPABASE_URL')!
-    const supabaseKey  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    if (image.contentType.includes('png')) ext = 'png'
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const sb = createClient(supabaseUrl, supabaseKey)
 
-    const ext = contentType.includes('png') ? 'png' : 'jpg'
     const path = `street-view/${homeId}.${ext}`
 
     const { error: uploadErr } = await sb.storage
       .from('property-photos')
-      .upload(path, imageBytes, {
-        contentType,
+      .upload(path, image.bytes, {
+        contentType: image.contentType,
         upsert: true,
       })
 

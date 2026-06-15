@@ -57,7 +57,7 @@ export default function App() {
   const [tab, setTab] = useState<Tab>('funnel')
   const [saved, setSaved] = useState(false)
   const [streetViewStatus, setStreetViewStatus] = useState<Record<string, 'fetching' | 'failed'>>({})
-  const svAttempted = useRef(new Set<string>())
+  const svFetching = useRef(new Set<string>())
 
   // Auth listener
   useEffect(() => {
@@ -156,7 +156,6 @@ export default function App() {
       void dbUpsert(withTs)
 
       if (needsStreetViewPhoto(withTs)) {
-        svAttempted.current.add(withTs.id)
         void fetchStreetViewForHome(withTs)
       }
     },
@@ -198,7 +197,7 @@ export default function App() {
   useEffect(() => {
     if (!session) return
     const pending = homes.filter(
-      (h) => needsStreetViewPhoto(h) && !svAttempted.current.has(h.id),
+      (h) => needsStreetViewPhoto(h) && !svFetching.current.has(h.id),
     )
     if (pending.length === 0) return
 
@@ -206,8 +205,9 @@ export default function App() {
     ;(async () => {
       for (const home of pending) {
         if (cancelled) break
-        svAttempted.current.add(home.id)
+        svFetching.current.add(home.id)
         await fetchStreetViewForHome(home)
+        svFetching.current.delete(home.id)
         await new Promise((r) => setTimeout(r, 500))
       }
     })()

@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useLockBodyScroll } from '../lib/useLockBodyScroll'
 import type { FunnelStage, HomeFile, IntakeData, PropertyInputs as PropertyInputsType, PropertySource, QuickSystem } from '../types'
 import { formatCurrency, calcQuickEstimate } from '../lib/calculations'
 import {
-  AUCTION_SOURCES, FUNNEL_STAGES, getSourceLabel, getStageMeta,
-  passesQuickScreen, screenScore, getArvLabel, getBidLabel,
+  AUCTION_SOURCES, FUNNEL_STAGES, MLS_SOURCES, getSourceLabel, getStageMeta,
+  getArvLabel, getBidLabel,
 } from '../lib/funnel'
 import { analyzeDeal } from '../lib/dealScore'
 import type { DealAnalysis, Tag } from '../lib/dealScore'
@@ -323,7 +324,7 @@ function SummaryLinkActions({
             className="dcard-action-btn"
             title="Open listing"
           >
-            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+            <svg width="13" height="13" viewBox="-0.5 -0.5 14 14" fill="none" aria-hidden="true">
               <path d="M4.5 2H2.5A1 1 0 001.5 3.5v7A1 1 0 002.5 11.5h7a1 1 0 001-1V9" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
               <path d="M7 1.5h4.5V6M11 2L5.5 7.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
@@ -338,7 +339,7 @@ function SummaryLinkActions({
             disabled={refreshing}
             onClick={() => void onRefresh(home)}
           >
-            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+            <svg width="13" height="13" viewBox="-0.5 -0.5 14 14" fill="none" aria-hidden="true">
               <path d="M11 6.5A4.5 4.5 0 102.8 4.2M2.8 4.2V1.5M2.8 4.2H5.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
             {refreshing ? 'Refreshing…' : canRefreshPhoto ? 'Fetch Photo' : 'Refresh'}
@@ -408,6 +409,17 @@ const EDIT_TABS: { id: EditTab; label: string }[] = [
   { id: 'budget',    label: 'Budget'    },
 ]
 
+function getListingStatusPill(home: HomeFile): { label: string; cls: string } | null {
+  const { auctionType } = home.funnel
+  if (auctionType === 'bank-owned') return { label: 'Bank owned', cls: 'grey' }
+  if (auctionType === 'auction') return { label: 'Foreclosure', cls: 'red' }
+  if (MLS_SOURCES.includes(home.source) || home.source === 'mls') {
+    return { label: 'Active listing', cls: 'green' }
+  }
+  if (AUCTION_SOURCES.includes(home.source)) return { label: 'Foreclosure', cls: 'red' }
+  return null
+}
+
 function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefresh, refreshing, onUpdateHome }: {
   home: HomeFile
   onClose: () => void
@@ -430,13 +442,12 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
   const bidLabel = getBidLabel(home.source)
   const isAuction = AUCTION_SOURCES.includes(home.source)
   const funnel = home.funnel
-  const { arv, askingPrice, maxOffer, occupancy, rehabLevel, inTargetArea, auctionType, startingCreditBid, quickNotes } = funnel
+  const { arv, askingPrice, maxOffer, startingCreditBid, quickNotes } = funnel
   const spread = arv && askingPrice ? arv - askingPrice : null
   const quick = calcQuickEstimate(home.property, home.quickEstimate)
   const rehabEst = quick.withContingency > 0 ? quick.withContingency : null
   const netMargin = spread !== null && rehabEst ? spread - rehabEst : null
-  const passes = passesQuickScreen(funnel)
-  const score = screenScore(funnel)
+  const listingStatusPill = getListingStatusPill(home)
   const customLabel = home.source === 'other' ? home.sourceCustom : undefined
   const p = home.property
 
@@ -467,17 +478,6 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
   if (bathLabel) heroSpecChips.push({ label: bathLabel, cls: 'grey' })
   if (funnel.yearBuilt) heroSpecChips.push({ label: `Built ${funnel.yearBuilt}`, cls: 'grey' })
 
-  const contextChips: { label: string; cls?: string }[] = []
-  if (occupancy === 'vacant') contextChips.push({ label: 'Vacant', cls: 'green' })
-  if (occupancy === 'occupied') contextChips.push({ label: 'Occupied', cls: 'red' })
-  if (inTargetArea === 'yes') contextChips.push({ label: 'In area', cls: 'green' })
-  if (inTargetArea === 'maybe') contextChips.push({ label: 'Maybe area', cls: 'yellow' })
-  if (inTargetArea === 'no') contextChips.push({ label: 'Out of area', cls: 'red' })
-  if (rehabLevel) contextChips.push({ label: `${rehabLevel} rehab`, cls: 'grey' })
-  if (isAuction && auctionType) {
-    contextChips.push({ label: auctionType === 'bank-owned' ? 'Bank owned' : 'Auction', cls: 'grey' })
-  }
-
   const detailItems: { label: string; value: string }[] = []
   if (rehabEst) detailItems.push({ label: 'Est. rehab', value: formatCurrency(rehabEst) })
   if (maxOffer) detailItems.push({ label: 'Max offer', value: formatCurrency(maxOffer) })
@@ -491,6 +491,8 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
     onUpdateHome?.({ ...home, ...patch, updatedAt: new Date().toISOString() })
   }
 
+  useLockBodyScroll()
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className={`summary-modal summary-modal--mls${editTab !== 'overview' ? ' summary-modal--editing' : ''}`} onClick={(e) => e.stopPropagation()}>
@@ -502,6 +504,11 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
               <div className="summary-hero-addr-block">
                 <div className="summary-hero-addr-row">
                   <h2 className="summary-address">{home.address}</h2>
+                  {listingStatusPill && (
+                    <span className={`screen-chip listing-status-chip ${listingStatusPill.cls}`}>
+                      {listingStatusPill.label}
+                    </span>
+                  )}
                 </div>
                 <p className="summary-city">{[home.city, home.state, home.zip].filter(Boolean).join(', ')}</p>
                 {heroSpecChips.length > 0 && (
@@ -545,15 +552,23 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
 
               {/* ── Photo left + metrics right ── */}
               <div className="ov-top">
-                {home.photoUrl ? (
-                  <div className="ov-photo">
-                    <img src={home.photoUrl} alt={home.address} />
+                <div className="ov-photo-col">
+                  {home.photoUrl ? (
+                    <div className="ov-photo">
+                      <img src={home.photoUrl} alt={home.address} />
+                    </div>
+                  ) : (
+                    <div className="ov-photo ov-photo--empty">
+                      <SourceLogo source={home.source} customLabel={customLabel} size={36} />
+                    </div>
+                  )}
+                  <div className="ov-notes">
+                    {notesText
+                      ? <p>{notesText}</p>
+                      : <p className="ov-notes-empty">No notes</p>
+                    }
                   </div>
-                ) : (
-                  <div className="ov-photo ov-photo--empty">
-                    <SourceLogo source={home.source} customLabel={customLabel} size={36} />
-                  </div>
-                )}
+                </div>
 
                 <div className="ov-metrics">
                   {arv && (
@@ -580,20 +595,16 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
                       <span className={`ov-metric-value${netAccent ? ` accent-${netAccent}` : ''}`}>{formatCurrency(netMargin)}</span>
                     </div>
                   )}
-                  {(contextChips.length > 0 || score > 0) && (
-                    <div className="ov-spec-chips">
-                      {contextChips.map((c) => (
-                        <span key={c.label} className={`screen-chip ${c.cls ?? 'grey'}`}>{c.label}</span>
-                      ))}
-                      {score > 0 && (
-                        <span className={`screen-chip score-chip ${passes ? 'green' : 'red'}`}>
-                          {passes ? `✓ ${score} pts` : `✗ ${score} pts`}
-                        </span>
-                      )}
-                    </div>
-                  )}
                 </div>
               </div>
+
+              {/* ── Listing links (above auction bar) ── */}
+              <SummaryLinkActions
+                home={home}
+                onRefresh={onRefresh}
+                refreshing={refreshing}
+                onUpdateHome={onUpdateHome}
+              />
 
               {/* ── Auction countdown ── */}
               {home.source === 'auction.com' && (
@@ -602,15 +613,7 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
                 </div>
               )}
 
-              {/* ── Listing links ── */}
-              <SummaryLinkActions
-                home={home}
-                onRefresh={onRefresh}
-                refreshing={refreshing}
-                onUpdateHome={onUpdateHome}
-              />
-
-              {/* ── Body: tags | details + notes ── */}
+              {/* ── Body: tags | details ── */}
               <div className="ov-body">
                 <div className="ov-body-left">
                   <TagGroups home={home} />
@@ -633,21 +636,6 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
                           ))}
                         </>
                       )}
-                    </div>
-                  )}
-                  <div className="ov-notes">
-                    {notesText
-                      ? <p>{notesText}</p>
-                      : <p className="ov-notes-empty">No notes — add them in the Screen tab.</p>
-                    }
-                  </div>
-                  {(home.links ?? []).length > 0 && (
-                    <div className="ov-extra-links">
-                      {(home.links ?? []).slice(0, 2).map((url, i) => (
-                        <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="lead-link-chip">
-                          {i === 0 && getListingUrl(home) === url ? 'View listing' : `Link ${i + 1}`}
-                        </a>
-                      ))}
                     </div>
                   )}
                 </div>

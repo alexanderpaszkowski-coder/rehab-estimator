@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useLockBodyScroll } from '../lib/useLockBodyScroll'
 import type { FunnelScreen, IntakeData, PropertySource, TriState } from '../types'
 import { DEFAULT_FUNNEL, PROPERTY_SOURCES } from '../lib/funnel'
 import { AddressAutocomplete } from './AddressAutocomplete'
@@ -469,6 +470,8 @@ export function PropertyIntake({ onSubmit, onCancel }: Props) {
   const canNext = step === 0
     ? (data.address.trim().length > 0 && !fetchLoading)
     : true
+
+  useLockBodyScroll()
 
   return (
     <div className="modal-overlay" onClick={onCancel}>

@@ -893,8 +893,9 @@ textarea { resize: vertical; }
 }
 .stage-picker-menu {
   position: absolute;
-  bottom: calc(100% + 6px);
-  left: 0;
+  top: calc(100% + 6px);
+  right: 0;
+  left: auto;
   background: var(--surface);
   border: 1.5px solid var(--border);
   border-radius: var(--radius-sm);
@@ -902,6 +903,8 @@ textarea { resize: vertical; }
   padding: 4px;
   z-index: 200;
   min-width: 172px;
+  max-height: min(280px, 50vh);
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 1px;
@@ -1039,6 +1042,13 @@ textarea { resize: vertical; }
   align-items: center;
   gap: 6px;
   flex-wrap: wrap;
+}
+.listing-status-chip {
+  flex-shrink: 0;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  letter-spacing: 0.01em;
 }
 .summary-hero-spec-chips {
   display: flex;
@@ -1650,6 +1660,12 @@ textarea { resize: vertical; }
   place-items: center;
   z-index: 100;
   padding: 20px;
+  overscroll-behavior: none;
+}
+.summary-modal,
+.modal {
+  overscroll-behavior: contain;
+  touch-action: pan-y;
 }
 .modal {
   background: var(--surface);
@@ -3086,16 +3102,22 @@ textarea { resize: vertical; }
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 4px 9px;
+  padding: 5px 9px;
   border-radius: var(--radius-xs);
   border: 1px solid var(--border);
   background: var(--surface-2);
   color: var(--text-muted);
   font-size: 0.65rem;
   font-weight: 600;
+  line-height: 1;
   text-decoration: none;
   cursor: pointer;
   transition: background .12s, color .12s, border-color .12s;
+}
+.dcard-action-btn svg {
+  display: block;
+  flex-shrink: 0;
+  overflow: visible;
 }
 .dcard-action-btn:hover:not(:disabled) {
   background: var(--surface-3);
@@ -3216,14 +3238,33 @@ textarea { resize: vertical; }
   padding: 12px 24px;
 }
 .summary-link-actions {
-  padding: 8px 20px 10px;
+  padding: 10px 20px;
   border-bottom: 1px solid var(--border);
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 8px;
 }
+.summary-link-actions .dcard-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0;
+  width: 100%;
+}
+.summary-link-actions .dcard-action-btn {
+  padding: 7px 14px;
+  font-size: 0.75rem;
+  gap: 6px;
+}
+.summary-link-actions .dcard-action-btn svg {
+  width: 14px;
+  height: 14px;
+}
 .summary-modal--mls .summary-link-actions {
-  padding: 10px 24px 12px;
+  padding: 10px 24px;
 }
 .summary-modal--mls .summary-tag-groups {
   padding: 12px 24px 14px;
@@ -3395,8 +3436,17 @@ textarea { resize: vertical; }
   align-items: flex-start;
 }
 
-.ov-photo {
+.ov-photo-col {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-shrink: 0;
   width: 210px;
+  min-width: 0;
+}
+
+.ov-photo {
+  width: 100%;
   height: 158px;
   flex-shrink: 0;
   border-radius: 10px;
@@ -3511,13 +3561,12 @@ textarea { resize: vertical; }
 }
 
 .ov-notes {
-  font-size: 0.74rem;
-  color: var(--text-2);
-  border-top: 1px solid var(--border);
-  padding-top: 7px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  line-height: 1.4;
 }
-.ov-notes p { margin: 0; line-height: 1.5; }
-.ov-notes-empty { color: var(--text-muted) !important; font-style: italic; }
+.ov-notes p { margin: 0; line-height: 1.4; }
+.ov-notes-empty { color: var(--text-subtle) !important; font-style: italic; font-size: 0.68rem; }
 
 .ov-extra-links {
   display: flex;
@@ -4400,12 +4449,15 @@ textarea { resize: vertical; }
     gap: 10px;
     align-items: flex-start;
   }
+  .ov-photo-col { width: 82px; gap: 4px; }
   .ov-photo {
-    width: 82px;
+    width: 100%;
     height: 82px;
     border-radius: 7px;
     flex-shrink: 0;
   }
+  .ov-notes { font-size: 0.58rem; line-height: 1.35; }
+  .ov-notes-empty { font-size: 0.55rem; }
   .ov-metric { padding: 3px 0; gap: 6px; }
   .ov-metric-label { font-size: 0.62rem; }
   .ov-metric-value { font-size: 0.82rem; }
@@ -4419,9 +4471,17 @@ textarea { resize: vertical; }
   .auction-countdown-timer { font-size: 0.88rem; }
   .auction-countdown-date { font-size: 0.55rem; margin-top: 1px; }
 
-  /* Compact link actions */
+  /* Link actions — centered above auction bar */
   .summary-link-actions,
-  .summary-modal--mls .summary-link-actions { padding: 5px 12px 6px; }
+  .summary-modal--mls .summary-link-actions { padding: 8px 12px; }
+  .summary-link-actions .dcard-action-btn {
+    padding: 6px 12px;
+    font-size: 0.72rem;
+  }
+  .summary-link-actions .dcard-action-btn svg {
+    width: 13px;
+    height: 13px;
+  }
 
   /* ov-body: 2-column grid on mobile — tags left, details+notes right */
   .ov-body { grid-template-columns: 1fr 1fr; }
@@ -4433,7 +4493,6 @@ textarea { resize: vertical; }
   }
   .ov-body-right { padding: 6px 10px; }
   .ov-kv { font-size: 0.65rem; padding: 2px 0; }
-  .ov-notes { font-size: 0.65rem; padding-top: 5px; }
   .ov-body-left .stag { font-size: 0.6rem; padding: 2px 5px; }
   .ov-body-left .summary-tag-group-label { font-size: 0.57rem; }
   .ov-body-left .summary-tag-groups { gap: 6px; }

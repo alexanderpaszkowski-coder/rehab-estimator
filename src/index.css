@@ -86,7 +86,7 @@ textarea { resize: vertical; }
 .topnav-logo {
   font-size: 1.05rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--accent);
   letter-spacing: -0.02em;
   flex-shrink: 0;
   margin-right: 4px;
@@ -94,7 +94,7 @@ textarea { resize: vertical; }
   transition: opacity .15s;
 }
 .topnav-logo:hover { opacity: 0.7; }
-.topnav-logo span { color: #15803d; }
+.topnav-logo span { color: var(--accent); }
 
 .topnav-nav {
   display: flex;
@@ -2338,7 +2338,8 @@ textarea { resize: vertical; }
   color: #1e293b;
   margin-bottom: 32px;
 }
-.role-selector-logo span { color: #15803d; }
+.role-selector-logo { color: var(--accent); }
+.role-selector-logo span { color: var(--accent); }
 .role-selector h1 { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 28px; }
 .role-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 .role-card {
@@ -3690,12 +3691,12 @@ textarea { resize: vertical; }
   line-height: 1.2;
   white-space: nowrap;
 }
-.auction-countdown--upcoming .auc-mini-main { color: #1d4ed8; font-family: var(--mono); }
+.auction-countdown--upcoming .auc-mini-main { color: var(--accent); font-family: var(--mono); }
 .auction-countdown--live .auc-mini-main { color: #c2410c; font-family: var(--mono); }
 .auction-countdown--coming-soon .auc-mini-main { color: var(--text-muted); }
 .auction-countdown--upcoming {
-  border-color: #bfdbfe;
-  background: linear-gradient(135deg, #eff6ff 0%, #f8fafc 100%);
+  border-color: var(--accent-soft);
+  background: linear-gradient(135deg, var(--accent-soft) 0%, var(--surface) 100%);
 }
 .auction-countdown--live {
   border-color: #fed7aa;
@@ -3726,7 +3727,7 @@ textarea { resize: vertical; }
 .auction-countdown-phase {
   font-size: 0.62rem;
   font-weight: 700;
-  color: #2563eb;
+  color: var(--accent);
 }
 .auction-countdown--live .auction-countdown-phase { color: #c2410c; }
 .auction-countdown-badge {
@@ -3737,7 +3738,7 @@ textarea { resize: vertical; }
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
-.auction-countdown-badge--upcoming { background: #dbeafe; color: #1d4ed8; }
+.auction-countdown-badge--upcoming { background: var(--accent-soft); color: var(--accent); }
 .auction-countdown-badge--live { background: #ffedd5; color: #c2410c; }
 .auction-countdown-badge--coming-soon { background: var(--surface-3); color: var(--text-muted); }
 .auction-countdown-badge--ended { background: #f3f4f6; color: #6b7280; }
@@ -4910,6 +4911,7 @@ textarea { resize: vertical; }
   font-size: 0.7rem;
   font-weight: 700;
   font-family: var(--mono);
+  color: var(--accent);
   color: #2563eb;
   margin-top: 2px;
   white-space: nowrap;
@@ -4937,7 +4939,7 @@ textarea { resize: vertical; }
   vertical-align: middle;
   align-self: center;
 }
-.aab-card--live .aab-countdown { color: #c2410c; }
+.aab-card--live .aab-countdown { color: var(--accent); }
 
 /* ── funnel-dashboard overrides ─────────────────────────────────────── */
 
@@ -5465,11 +5467,11 @@ textarea { resize: vertical; }
 [data-theme="dark"] .ov-metric-value.accent-negative { color: #f87171; }
 [data-theme="dark"] .ov-metric-value.accent-neutral  { color: #94a3b8; }
 
-/* ── Dark mode logo ──────────────────────────────────────────────── */
-[data-theme="dark"] .topnav-logo { color: #60a5fa; }
-[data-theme="dark"] .topnav-logo span { color: #4ade80; }
-[data-theme="dark"] .role-selector-logo { color: #60a5fa; }
-[data-theme="dark"] .role-selector-logo span { color: #4ade80; }
+/* ── Dark mode logo — accent auto-resolves to dark-mode green ───── */
+[data-theme="dark"] .topnav-logo { color: var(--accent); }
+[data-theme="dark"] .topnav-logo span { color: var(--accent); }
+[data-theme="dark"] .role-selector-logo { color: var(--accent); }
+[data-theme="dark"] .role-selector-logo span { color: var(--accent); }
 
 /* ── Dark mode focus rings ───────────────────────────────────────── */
 [data-theme="dark"] input:focus,
@@ -5525,28 +5527,30 @@ textarea { resize: vertical; }
   border-top-color: #16a34a;
 }
 
-/* ── Dark mode auction countdown (live = slate/blue, not orange) ── */
-[data-theme="dark"] .auction-countdown--live .auc-mini-main { color: #60a5fa; }
+/* ── Dark mode auction countdown — use accent (green) for all states */
+[data-theme="dark"] .auction-countdown--upcoming {
+  border-color: var(--accent-soft);
+  background: linear-gradient(135deg, var(--accent-soft) 0%, var(--surface) 100%);
+}
 [data-theme="dark"] .auction-countdown--live {
-  border-color: #334155;
-  background: linear-gradient(135deg, #1e293b 0%, #243447 100%);
+  border-color: var(--accent-soft);
+  background: linear-gradient(135deg, var(--accent-soft) 0%, var(--surface) 100%);
 }
-[data-theme="dark"] .auction-countdown--live .auction-countdown-phase { color: #60a5fa; }
+[data-theme="dark"] .auction-countdown-badge--upcoming,
 [data-theme="dark"] .auction-countdown-badge--live {
-  background: rgba(96,165,250,.15);
-  color: #60a5fa;
+  background: var(--accent-soft);
+  color: var(--accent);
 }
-[data-theme="dark"] .auction-countdown--live .auction-countdown-timer { color: #f1f5f9; }
 
 /* ── Dark mode auction alert bar (live section) ──────────────────── */
 [data-theme="dark"] .aab-group--live {
   background: linear-gradient(90deg, rgba(30,41,59,.9) 0%, var(--surface) 100%);
   border-right-color: #334155;
 }
-[data-theme="dark"] .aab-group--live .aab-group-label { color: #60a5fa; }
-[data-theme="dark"] .aab-card--live { border-color: #334155; background: #1e293b; }
-[data-theme="dark"] .aab-card--live:hover { border-color: #475569; background: #243447; }
-[data-theme="dark"] .aab-card--live .aab-countdown { color: #60a5fa; }
+[data-theme="dark"] .aab-group--live .aab-group-label { color: var(--accent); }
+[data-theme="dark"] .aab-card--live { border-color: var(--accent-soft); background: var(--surface); }
+[data-theme="dark"] .aab-card--live:hover { border-color: var(--accent); background: var(--surface-2); }
+[data-theme="dark"] .aab-card--live .aab-countdown { color: var(--accent); }
 
 /* Mobile dark mode auction bar */
 @media (max-width: 700px) {

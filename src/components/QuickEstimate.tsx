@@ -94,7 +94,14 @@ export function QuickEstimate({ home, onChange }: Props) {
                     />
                   </td>
                   <td style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>{system.unit}</td>
-                  <td className="cost">{formatCurrency(line?.cost ?? 0)}</td>
+                  <td className="cost">
+                    <span className="cost-cell">
+                      {system.condition !== 'None' && (line?.cost ?? 0) > 0 && (
+                        <span className="cost-check" aria-hidden="true">✓</span>
+                      )}
+                      {formatCurrency(line?.cost ?? 0)}
+                    </span>
+                  </td>
                 </tr>
               )
             })}

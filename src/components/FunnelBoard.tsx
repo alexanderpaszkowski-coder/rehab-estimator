@@ -43,10 +43,10 @@ const ACTION_GROUP_ORDER: ActionGroupKey[] = ['send-mailer', 'need-arv', 'need-r
 const ACTION_GROUP_META: Record<ActionGroupKey, { label: string; sub: string; color: string }> = {
   'send-mailer': { label: 'Send Mailer',             sub: 'Off-market / drive-by — send a letter or make contact first', color: '#7c3aed' },
   'need-arv':    { label: 'Need ARV',                sub: 'Run comps to establish value before going further',            color: '#2563eb' },
-  'need-rehab':  { label: 'Need Rehab Numbers',      sub: 'Complete the full rehab scope — every system, not just a start', color: '#b45309' },
+  'need-rehab':  { label: 'Need Rehab Numbers',      sub: 'Complete the full rehab scope — every system, not just a start', color: '#1e3a5f' },
   'need-hml':    { label: 'Need Hard Money Numbers', sub: 'Run financing scenarios with your lender',                     color: '#0891b2' },
   'offer-ready': { label: 'Offer Ready',             sub: 'All numbers confirmed — move quickly',                         color: '#15803d' },
-  'max-bid':     { label: 'Max Bid Needed',          sub: 'Auction — calculate your walk-away number before it opens',    color: '#c2410c' },
+  'max-bid':     { label: 'Max Bid Needed',          sub: 'Auction — calculate your walk-away number before it opens',    color: '#1e293b' },
   'active':      { label: 'Active',                  sub: 'Under contract, in rehab, or listed',                          color: '#6b7280' },
   'closed':      { label: 'Closed',                  sub: 'Sold or passed on',                                            color: '#9ca3af' },
 }
@@ -728,7 +728,7 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
           )}
 
           {editTab === 'budget' && (
-            <div className="modal-edit-panel">
+            <div className="modal-edit-panel modal-edit-panel--budget">
               <BudgetSummary home={home} />
             </div>
           )}
@@ -856,7 +856,7 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
 const SCORE_META: Record<string, { color: string; border: string; bg: string }> = {
   strong:  { color: '#15803d', border: '#bbf7d0', bg: '#f0fdf4' },
   good:    { color: '#2563eb', border: '#bfdbfe', bg: '#eff6ff' },
-  caution: { color: '#b45309', border: '#fde68a', bg: '#fffbeb' },
+  caution: { color: '#475569', border: '#cbd5e1', bg: '#f1f5f9' },
   weak:    { color: '#9ca3af', border: '#e5e7eb', bg: '#f9fafb' },
 }
 
@@ -896,8 +896,8 @@ function DealCard({
   const actionBg: Record<string, string> = {
     'calculate-arv':    '#eff6ff',
     'estimate-rehab':   '#faf5ff',
-    'check-title':      '#fffbeb',
-    'verify-occupancy': '#fff7ed',
+    'check-title':      '#f1f5f9',
+    'verify-occupancy': '#eef2f8',
     'submit-offer':     '#f0fdf4',
     'review-deal':      '#f8fafc',
     'monitor':          '#f8fafc',
@@ -906,8 +906,8 @@ function DealCard({
   const actionColor: Record<string, string> = {
     'calculate-arv':    '#2563eb',
     'estimate-rehab':   '#7c3aed',
-    'check-title':      '#b45309',
-    'verify-occupancy': '#c2410c',
+    'check-title':      '#475569',
+    'verify-occupancy': '#1e293b',
     'submit-offer':     '#15803d',
     'review-deal':      '#475569',
     'monitor':          '#475569',

@@ -86,7 +86,7 @@ textarea { resize: vertical; }
 .topnav-logo {
   font-size: 1.05rem;
   font-weight: 700;
-  color: var(--text);
+  color: #1e293b;
   letter-spacing: -0.02em;
   flex-shrink: 0;
   margin-right: 4px;
@@ -94,7 +94,7 @@ textarea { resize: vertical; }
   transition: opacity .15s;
 }
 .topnav-logo:hover { opacity: 0.7; }
-.topnav-logo span { color: var(--accent); }
+.topnav-logo span { color: #15803d; }
 
 .topnav-nav {
   display: flex;
@@ -371,7 +371,15 @@ textarea { resize: vertical; }
 .address-text { font-weight: 600; font-size: 1rem; }
 .address-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; align-items: center; }
 .address-bar-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.bar-stat { font-size: 0.82rem; color: var(--text-muted); }
+.bar-stat {
+  font-size: 0.82rem;
+  color: #94a3b8;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 7px;
+  padding: 3px 10px;
+}
+.bar-stat strong { color: #4ade80; }
 .save-indicator { font-size: 0.8rem; color: var(--success); font-weight: 600; }
 
 /* ── Badges & pills ────────────────────────────────── */
@@ -458,8 +466,9 @@ textarea { resize: vertical; }
   font-family: var(--mono);
   letter-spacing: -0.03em;
 }
-.summary-tile.highlight { background: var(--accent-soft); border-color: #fbbf78; }
-.summary-tile.highlight .value { color: var(--accent); }
+.summary-tile.highlight { background: #1e293b; border-color: #334155; color: #f1f5f9; }
+.summary-tile.highlight .label { color: #94a3b8; }
+.summary-tile.highlight .value { color: #4ade80; }
 
 /* ── Quick estimate table ──────────────────────────── */
 .qe-table { width: 100%; border-collapse: collapse; }
@@ -479,6 +488,21 @@ textarea { resize: vertical; }
 .qe-table .system-desc { font-size: 0.73rem; color: var(--text-muted); margin-top: 2px; max-width: 260px; }
 .qe-table .cost { font-family: var(--mono); font-weight: 500; text-align: right; white-space: nowrap; }
 .qe-table input[type="number"] { width: 70px; padding: 5px 7px; text-align: right; }
+
+/* ── Locked-in cost cell with checkmark ────────────────────────────── */
+.cost-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  justify-content: flex-end;
+}
+.cost-check {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #15803d;
+  flex-shrink: 0;
+}
+[data-theme="dark"] .cost-check { color: #4ade80; }
 
 /* ── Scope of Work ─────────────────────────────────── */
 .sow-filters { display: flex; gap: 12px; margin-bottom: 14px; align-items: center; flex-wrap: wrap; }
@@ -2162,10 +2186,10 @@ textarea { resize: vertical; }
   font-size: 1.6rem;
   font-weight: 700;
   letter-spacing: -0.03em;
-  color: var(--text);
+  color: #1e293b;
   margin-bottom: 32px;
 }
-.role-selector-logo span { color: var(--accent); }
+.role-selector-logo span { color: #15803d; }
 .role-selector h1 { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 28px; }
 .role-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 .role-card {
@@ -3825,33 +3849,37 @@ textarea { resize: vertical; }
   display: flex;
   flex-direction: column;
   gap: 0;
+  background: #1e293b;
+  border-radius: 10px;
+  padding: 8px 14px;
+  border: 1px solid #334155;
 }
 
 .ov-metric {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  padding: 5px 0;
-  border-bottom: 1px solid var(--border);
+  padding: 7px 0;
+  border-bottom: 1px solid #334155;
   gap: 8px;
 }
 .ov-metric:last-of-type { border-bottom: none; }
 
 .ov-metric-label {
   font-size: 0.72rem;
-  color: var(--text-muted);
+  color: #94a3b8;
   font-weight: 500;
   flex-shrink: 0;
 }
 .ov-metric-value {
   font-size: 1rem;
   font-weight: 800;
-  color: var(--text);
+  color: #f1f5f9;
   text-align: right;
 }
-.ov-metric-value.accent-positive { color: #15803d; }
-.ov-metric-value.accent-negative { color: #b91c1c; }
-.ov-metric-value.accent-neutral  { color: #b45309; }
+.ov-metric-value.accent-positive { color: #4ade80; }
+.ov-metric-value.accent-negative { color: #f87171; }
+.ov-metric-value.accent-neutral  { color: #94a3b8; }
 
 .ov-spec-chips {
   display: flex;
@@ -4124,6 +4152,73 @@ textarea { resize: vertical; }
 /* SOW panel — uses accordion, no old table */
 .modal-edit-panel--sow {
   padding: 0;
+}
+
+/* ── Budget panel — compact Summary inside modal ─────────────────────── */
+.modal-edit-panel--budget {
+  padding: 0 0 12px;
+}
+
+/* Summary strip: horizontal flex, same treatment as Estimate tab */
+.modal-edit-panel--budget .summary-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  margin-bottom: 0;
+  border-bottom: 1px solid var(--border);
+}
+.modal-edit-panel--budget .summary-tile {
+  flex: 1;
+  min-width: 100px;
+  border-radius: 0;
+  border: none;
+  border-right: 1px solid var(--border);
+  padding: 10px 14px;
+  border-width: 1.5px;
+}
+.modal-edit-panel--budget .summary-tile:last-child { border-right: none; }
+.modal-edit-panel--budget .summary-tile .label {
+  font-size: 0.6rem;
+  margin-bottom: 3px;
+}
+.modal-edit-panel--budget .summary-tile .value { font-size: 0.9rem; }
+
+/* Cards inside budget modal: remove heavy outer styling, use subtle separation */
+.modal-edit-panel--budget .card {
+  border-radius: 0;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  box-shadow: none;
+  padding: 14px 16px;
+  margin-bottom: 0;
+}
+.modal-edit-panel--budget .card:last-child { border-bottom: none; }
+.modal-edit-panel--budget .card h2 {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+/* Summary table: compact rows */
+.modal-edit-panel--budget .summary-table {
+  font-size: 0.78rem;
+}
+.modal-edit-panel--budget .summary-table td,
+.modal-edit-panel--budget .summary-table th {
+  padding: 5px 8px;
+}
+.modal-edit-panel--budget .summary-table .total-row td {
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+/* Flag badge compact */
+.modal-edit-panel--budget .flag-badge {
+  font-size: 0.72rem;
+  padding: 2px 8px;
 }
 
 /* ── Other Costs tab ──────────────────────────────────────────────── */
@@ -5096,4 +5191,188 @@ textarea { resize: vertical; }
   /* Footer */
   .summary-actions,
   .summary-modal--mls .summary-actions { padding: 8px 12px; gap: 6px; flex-wrap: nowrap; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   DARK MODE  [data-theme="dark"]
+   Navy blue surfaces + green accent — all orange overridden
+   ══════════════════════════════════════════════════════════════════════ */
+
+[data-theme="dark"] {
+  --bg: #0f172a;
+  --surface: #1e293b;
+  --surface-2: #243447;
+  --surface-3: #2d3f56;
+  --border: #334155;
+  --border-strong: #475569;
+  --text: #f1f5f9;
+  --text-muted: #94a3b8;
+  --text-subtle: #64748b;
+  --accent: #16a34a;
+  --accent-soft: rgba(22,163,74,0.15);
+  --accent-hover: #15803d;
+  --success: #4ade80;
+  --success-soft: rgba(74,222,128,0.12);
+  --warning: #fbbf24;
+  --warning-soft: rgba(251,191,36,0.12);
+  --danger: #f87171;
+  --shadow: 0 1px 3px rgba(0,0,0,.45), 0 1px 2px rgba(0,0,0,.3);
+  --shadow-card: 0 1px 4px rgba(0,0,0,.5), 0 0 0 1.5px rgba(255,255,255,.04);
+  --shadow-float: 0 8px 28px rgba(0,0,0,.65), 0 2px 8px rgba(0,0,0,.4);
+}
+
+/* ── Dark mode logo ──────────────────────────────────────────────── */
+[data-theme="dark"] .topnav-logo { color: #60a5fa; }
+[data-theme="dark"] .topnav-logo span { color: #4ade80; }
+[data-theme="dark"] .role-selector-logo { color: #60a5fa; }
+[data-theme="dark"] .role-selector-logo span { color: #4ade80; }
+
+/* ── Dark mode focus rings ───────────────────────────────────────── */
+[data-theme="dark"] input:focus,
+[data-theme="dark"] select:focus,
+[data-theme="dark"] textarea:focus {
+  box-shadow: 0 0 0 3px rgba(22,163,74,.25);
+}
+[data-theme="dark"] .address-pill:focus { box-shadow: 0 0 0 3px rgba(22,163,74,.25); }
+
+/* ── Dark mode nav hover — replace orange border ─────────────────── */
+[data-theme="dark"] .topnav-item:hover:not(:disabled) { border-color: #475569; }
+
+/* ── Dark mode lead cards ────────────────────────────────────────── */
+[data-theme="dark"] .lead-card:hover { border-color: #475569; }
+[data-theme="dark"] .lead-link-chip { border-color: #334155; }
+[data-theme="dark"] .lead-link-chip:hover { background: #243447; }
+
+/* ── Dark mode list / source card hover ─────────────────────────── */
+[data-theme="dark"] .stage-list-row:hover { border-color: #475569; }
+[data-theme="dark"] .source-card:hover { border-color: #475569; }
+[data-theme="dark"] .role-card:hover { border-color: #475569; }
+
+/* ── Dark mode summary tile highlight — stand out on dark surface ── */
+[data-theme="dark"] .summary-tile.highlight {
+  background: #0f172a;
+  border-color: #4ade80;
+}
+
+/* ── Dark mode action tags — replace orange with steel blue ─────── */
+[data-theme="dark"] .dcard-tag--action {
+  color: #93c5fd;
+  background: rgba(147,197,253,.1);
+  border-color: rgba(147,197,253,.25);
+}
+[data-theme="dark"] .stag--action {
+  color: #93c5fd;
+  background: rgba(147,197,253,.1);
+  border-color: rgba(147,197,253,.25);
+}
+
+/* ── Dark mode deal card list warn icon ─────────────────────────── */
+[data-theme="dark"] .dcard-list-warn { background: rgba(71,85,105,.5); color: #94a3b8; }
+
+/* ── Dark mode SOW finalize — green instead of amber ────────────── */
+[data-theme="dark"] .sow-box--finalized {
+  border-color: #16a34a !important;
+  background: rgba(22,163,74,.1) !important;
+}
+[data-theme="dark"] .sow-finalize-btn:hover { background: rgba(22,163,74,.15); color: #4ade80; }
+[data-theme="dark"] .sow-finalize-btn--on {
+  background: rgba(22,163,74,.12);
+  color: #4ade80;
+  border-top-color: #16a34a;
+}
+
+/* ── Dark mode auction countdown (live = slate/blue, not orange) ── */
+[data-theme="dark"] .auction-countdown--live .auc-mini-main { color: #60a5fa; }
+[data-theme="dark"] .auction-countdown--live {
+  border-color: #334155;
+  background: linear-gradient(135deg, #1e293b 0%, #243447 100%);
+}
+[data-theme="dark"] .auction-countdown--live .auction-countdown-phase { color: #60a5fa; }
+[data-theme="dark"] .auction-countdown-badge--live {
+  background: rgba(96,165,250,.15);
+  color: #60a5fa;
+}
+[data-theme="dark"] .auction-countdown--live .auction-countdown-timer { color: #f1f5f9; }
+
+/* ── Dark mode auction alert bar (live section) ──────────────────── */
+[data-theme="dark"] .aab-group--live {
+  background: linear-gradient(90deg, rgba(30,41,59,.9) 0%, var(--surface) 100%);
+  border-right-color: #334155;
+}
+[data-theme="dark"] .aab-group--live .aab-group-label { color: #60a5fa; }
+[data-theme="dark"] .aab-card--live { border-color: #334155; background: #1e293b; }
+[data-theme="dark"] .aab-card--live:hover { border-color: #475569; background: #243447; }
+[data-theme="dark"] .aab-card--live .aab-countdown { color: #60a5fa; }
+
+/* Mobile dark mode auction bar */
+@media (max-width: 700px) {
+  [data-theme="dark"] .aab-group--live {
+    border-bottom-color: #334155;
+    background: linear-gradient(90deg, rgba(30,41,59,.9) 0%, var(--surface) 100%);
+  }
+}
+
+/* ── Dark mode toggle switch — inside user menu dropdown ─────────── */
+.user-menu-theme {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  gap: 12px;
+  user-select: none;
+}
+.user-menu-theme:hover { background: var(--surface-2); }
+
+.user-menu-theme-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* The hidden checkbox + visible track/thumb */
+.toggle-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+.toggle-switch input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.toggle-track {
+  display: block;
+  width: 36px;
+  height: 20px;
+  border-radius: 20px;
+  background: var(--border-strong);
+  border: 2px solid var(--border-strong);
+  transition: background .2s, border-color .2s;
+  position: relative;
+  cursor: pointer;
+}
+.toggle-switch input:checked ~ .toggle-track {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.toggle-thumb {
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,.2);
+  transition: transform .2s;
+}
+.toggle-switch input:checked ~ .toggle-track .toggle-thumb {
+  transform: translateX(16px);
 }

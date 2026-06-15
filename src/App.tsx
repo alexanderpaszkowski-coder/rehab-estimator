@@ -49,7 +49,17 @@ async function dbDelete(id: string): Promise<void> {
   if (error) console.error('Delete failed:', error.message)
 }
 
-function UserMenu({ email, onSignOut }: { email: string; onSignOut: () => void }) {
+function UserMenu({
+  email,
+  onSignOut,
+  darkMode,
+  onToggleDark,
+}: {
+  email: string
+  onSignOut: () => void
+  darkMode: boolean
+  onToggleDark: () => void
+}) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -80,6 +90,20 @@ function UserMenu({ email, onSignOut }: { email: string; onSignOut: () => void }
       {open && (
         <div className="user-menu-dropdown">
           <div className="user-menu-email" title={email}>{email}</div>
+          <label className="user-menu-theme">
+            <span className="user-menu-theme-label">Dark mode</span>
+            <span className="toggle-switch" aria-hidden="true">
+              <input
+                type="checkbox"
+                checked={darkMode}
+                onChange={onToggleDark}
+                tabIndex={-1}
+              />
+              <span className="toggle-track">
+                <span className="toggle-thumb" />
+              </span>
+            </span>
+          </label>
           <button
             type="button"
             className="user-menu-signout"
@@ -101,7 +125,13 @@ export default function App() {
   const [tab, setTab] = useState<Tab>('funnel')
   const [saved, setSaved] = useState(false)
   const [streetViewStatus, setStreetViewStatus] = useState<Record<string, 'fetching' | 'failed'>>({})
+  const [darkMode, setDarkMode] = useState(() => localStorage.getItem('theme') === 'dark')
   const svFetching = useRef(new Set<string>())
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : 'light')
+    localStorage.setItem('theme', darkMode ? 'dark' : 'light')
+  }, [darkMode])
 
   // Auth listener
   useEffect(() => {
@@ -338,7 +368,12 @@ export default function App() {
 
         <div className="topnav-end">
           {saved && <span className="save-indicator">✓ Saved</span>}
-          <UserMenu email={session.user.email ?? ''} onSignOut={handleLogout} />
+          <UserMenu
+            email={session.user.email ?? ''}
+            onSignOut={handleLogout}
+            darkMode={darkMode}
+            onToggleDark={() => setDarkMode(d => !d)}
+          />
         </div>
       </header>
 

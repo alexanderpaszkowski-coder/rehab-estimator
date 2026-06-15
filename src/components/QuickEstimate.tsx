@@ -68,8 +68,32 @@ export function QuickEstimate({ home, onChange }: Props) {
               const confirmedCost = isConfirmed ? calcSowCategoryRaw(home, sowCat) : null
               const displayCost = confirmedCost ?? line?.cost ?? 0
 
+              if (isConfirmed) {
+                return (
+                  <tr key={system.id} className="qe-row--confirmed">
+                    <td>
+                      <div className="system-name">{system.name}</div>
+                    </td>
+                    <td colSpan={3} className="qe-sow-label-cell">
+                      <span className="qe-sow-label">Finalized in Scope of Work</span>
+                    </td>
+                    <td className="cost">
+                      <div className="cost-cell">
+                        <span className="cost-amount">{formatCurrency(displayCost)}</span>
+                        <span className="cost-confirmed-tag">
+                          <svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                            <polyline points="2,6 5,9 10,3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                          Confirmed
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              }
+
               return (
-                <tr key={system.id} className={isConfirmed ? 'qe-row--confirmed' : ''}>
+                <tr key={system.id}>
                   <td>
                     <div className="system-name">{system.name}</div>
                     {system.description && <div className="system-desc">{system.description}</div>}
@@ -101,14 +125,6 @@ export function QuickEstimate({ home, onChange }: Props) {
                   <td className="cost">
                     <div className="cost-cell">
                       <span className="cost-amount">{formatCurrency(displayCost)}</span>
-                      {isConfirmed && (
-                        <span className="cost-confirmed-tag">
-                          <svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-                            <polyline points="2,6 5,9 10,3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                          </svg>
-                          Confirmed
-                        </span>
-                      )}
                     </div>
                   </td>
                 </tr>

@@ -508,6 +508,37 @@ textarea { resize: vertical; }
 [data-theme="dark"] .cost-confirmed-tag { color: #4ade80; }
 [data-theme="dark"] .qe-row--confirmed td { background: rgba(74,222,128,.08); }
 [data-theme="dark"] .qe-row--confirmed:hover td { background: rgba(74,222,128,.13) !important; }
+.qe-sow-label-cell { vertical-align: middle; }
+.qe-sow-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--success);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+.qe-sow-label::before {
+  content: '';
+  display: inline-block;
+  width: 18px;
+  height: 1px;
+  background: var(--success);
+  opacity: 0.5;
+}
+.qe-sow-label::after {
+  content: '';
+  display: inline-block;
+  width: 18px;
+  height: 1px;
+  background: var(--success);
+  opacity: 0.5;
+}
+[data-theme="dark"] .qe-sow-label { color: #4ade80; }
+[data-theme="dark"] .qe-sow-label::before,
+[data-theme="dark"] .qe-sow-label::after { background: #4ade80; }
 
 /* ── Scope of Work ─────────────────────────────────── */
 .sow-filters { display: flex; gap: 12px; margin-bottom: 14px; align-items: center; flex-wrap: wrap; }

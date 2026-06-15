@@ -4104,55 +4104,48 @@ textarea { resize: vertical; }
     border-top: none;
   }
 
-  /* ── Auction / Starting Soon bar ──────────────────── */
-  /* Single compact row: [LABEL] [card] [card] [card...scroll] */
-  .auction-alert-bar {
-    flex-direction: row;
-    align-items: center;
-    padding: 0;
-    border-bottom: 1px solid var(--border);
-  }
-  /* When BOTH groups present, split evenly; live gets a right divider */
+  /* ── Auction / Starting Soon bar — no horizontal scroll ── */
+  /* Groups stack vertically; cards wrap 2-per-row so all are visible */
+  .auction-alert-bar { flex-direction: column; border-bottom: 1px solid var(--border); }
   .aab-group {
-    flex: 1;
-    min-width: 0;
-    flex-direction: row;
-    align-items: center;
-    gap: 5px;
-    padding: 4px var(--gutter);
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    padding: 5px var(--gutter);
     border-bottom: none;
+    min-width: 0;
   }
   .aab-group--live {
     max-width: none;
-    border-right: 1px solid #fed7aa;
+    border-right: none;
+    border-bottom: 1px solid #fed7aa;
     background: linear-gradient(90deg, #fff7ed 0%, var(--surface) 100%);
   }
   .aab-group-label {
-    font-size: 0.52rem;
-    letter-spacing: 0.05em;
-    gap: 3px;
-    min-width: 0;
-    flex-shrink: 0;
+    font-size: 0.55rem;
+    letter-spacing: 0.06em;
+    gap: 4px;
     white-space: nowrap;
+    flex-shrink: 0;
   }
   .aab-pulse { width: 5px; height: 5px; }
   .aab-cards {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
     gap: 4px;
-    flex: 1;
-    min-width: 0;
-    -webkit-overflow-scrolling: touch;
+    overflow: visible;
   }
   .aab-card {
-    min-width: 90px;
+    min-width: 0;
     max-width: none;
-    flex: 0 0 auto;
-    padding: 3px 7px;
+    flex: none;
+    padding: 4px 8px;
     border-radius: 6px;
     gap: 0;
   }
-  .aab-addr { font-size: 0.6rem; }
+  .aab-addr { font-size: 0.62rem; }
   .aab-city { display: none; }
-  .aab-countdown { font-size: 0.55rem; margin-top: 0; color: inherit; }
+  .aab-countdown { font-size: 0.57rem; margin-top: 1px; }
 
   /* ── Pipeline strip — compact single scroll row ────── */
   /* Saves ~95px vs 3×3 grid, all 9 stages on one scrollable line */
@@ -4190,34 +4183,28 @@ textarea { resize: vertical; }
     opacity: 0.4;
   }
 
-  /* ── Today's Deal Queue — compact inline row ───────── */
+  /* ── Today's Deal Queue — label above, 5 cards in a row ── */
   .deal-queue {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 5px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 3px;
     padding: 4px var(--gutter);
   }
   .deal-queue-eyebrow {
-    font-size: 0.5rem;
-    writing-mode: vertical-rl;
-    text-orientation: mixed;
-    transform: rotate(180deg);
-    flex-shrink: 0;
-    letter-spacing: 0.05em;
-    line-height: 1;
+    writing-mode: horizontal-tb;
+    transform: none;
+    font-size: 0.52rem;
+    letter-spacing: 0.07em;
     white-space: nowrap;
   }
   .deal-queue-track {
-    display: flex;
-    flex-direction: row;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
     gap: 3px;
-    flex: 1;
-    min-width: 0;
     overflow: visible;
   }
   .queue-card {
-    flex: 1 1 0;
+    flex: none;
     min-width: 0;
     padding: 5px 3px;
     align-items: center;
@@ -4232,39 +4219,41 @@ textarea { resize: vertical; }
   .queue-card-label--full { display: none; }
   .queue-card-label--short {
     display: block;
-    font-size: 0.46rem;
+    font-size: 0.47rem;
     line-height: 1.1;
     font-weight: 600;
   }
 
-  /* ── Command bar — single scrollable row ───────────── */
+  /* ── Command bar — 2 clean rows, no horizontal scroll ── */
+  /* Row 1: search (flex-grow) + source pill + sort pill         */
+  /* Row 2: Pipeline/Priority toggle (flex-grow) + Add button    */
   .cmd-bar {
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
+    overflow: visible;
     gap: 4px;
     padding: 5px var(--gutter);
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
   }
-  .cmd-bar::-webkit-scrollbar { display: none; }
   .cmd-bar-search {
-    flex: 0 0 118px;
-    min-width: 100px;
-    max-width: 140px;
+    flex: 1 1 100px;
+    min-width: 0;
+    max-width: none;
     height: var(--ctrl-h);
     padding: 0 8px;
   }
-  .cmd-search-input { font-size: 0.72rem; }
+  .cmd-search-input { font-size: 0.73rem; }
+  .fpill { flex-shrink: 0; }
   .fpill-btn {
     height: var(--ctrl-h);
     padding: 0 9px;
-    font-size: 0.68rem;
-    gap: 4px;
+    font-size: 0.69rem;
+    gap: 3px;
   }
-  .fpill-prefix { font-size: 0.62rem; }
+  /* Hide "Sort:" prefix — just show the value (saves ~28px) */
+  .fpill-prefix { display: none; }
   .cmd-sep { display: none; }
-  .cmd-view-toggle { flex-shrink: 0; }
-  .cmd-view-btn { padding: 0 9px; font-size: 0.68rem; height: var(--ctrl-h); }
+  /* View toggle stretches to fill left side of row 2 */
+  .cmd-view-toggle { flex: 1; }
+  .cmd-view-btn { flex: 1; padding: 0 9px; font-size: 0.69rem; height: var(--ctrl-h); }
   .cmd-bar-right {
     width: auto;
     margin-left: 0;
@@ -4272,7 +4261,7 @@ textarea { resize: vertical; }
     gap: 5px;
   }
   .cmd-count { display: none; }
-  .cmd-bar-right .btn-sm { padding: 0 9px; font-size: 0.68rem; height: var(--ctrl-h); white-space: nowrap; }
+  .cmd-bar-right .btn-sm { padding: 0 10px; font-size: 0.69rem; height: var(--ctrl-h); white-space: nowrap; }
 
   /* ── Pipeline / priority view header ───────────────── */
   .pipeline-view, .priority-view { padding: 8px var(--gutter) 32px; }
@@ -4287,70 +4276,97 @@ textarea { resize: vertical; }
   .priority-group-title { font-size: 0.65rem; }
   .priority-group-sub { font-size: 0.68rem; }
 
-  /* ── 3-column property grid ────────────────────────── */
+  /* ── 2-column property grid (more readable than 3-up) ── */
   .deals-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 5px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
   }
+  /* List view: single column, horizontal card layout — visually distinct */
   .deals-grid--list {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: 1fr;
     gap: 5px;
   }
 
-  /* ── Deal cards — ultra-compact for 3-up layout ─────── */
-  .dcard { border-radius: 6px; border-width: 1px; }
+  /* ── Deal cards — 2-up grid styles ─────────────────── */
+  .dcard { border-radius: 8px; border-width: 1px; }
   .dcard:hover { transform: none; }
-  /* Shorter photo: 56px saves ~12px/card vs 68px */
-  .dcard-photo { height: 56px; }
-  .dcard-photo-overlay { padding: 3px 4px; }
-  .dcard-score { padding: 2px 4px; gap: 2px; border-radius: 4px; }
-  .dcard-score-num { font-size: 0.6rem; }
+  .dcard-photo { height: 96px; }
+  .dcard-photo-overlay { padding: 5px 7px; }
+  .dcard-score { padding: 2px 5px; gap: 2px; border-radius: 4px; }
+  .dcard-score-num { font-size: 0.68rem; }
   .dcard-score-label { display: none; }
-  /* No-photo fallback */
-  .dcard-no-photo { min-height: 30px; padding: 4px 5px; }
-  .dcard-no-photo .dcard-score--nophoto { padding: 2px 4px; }
-  /* Card body */
-  .dcard-body { gap: 2px; padding: 4px 5px 0; }
+  .dcard-no-photo { min-height: 40px; padding: 6px 7px; }
+  .dcard-no-photo .dcard-score--nophoto { padding: 2px 5px; }
+  .dcard-body { gap: 3px; padding: 7px 8px 0; }
   .dcard-street {
-    font-size: 0.57rem;
+    font-size: 0.72rem;
     font-weight: 700;
     line-height: 1.2;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  .dcard-city { display: none; }
-  .dcard-addr-row { gap: 2px; }
-  .dcard-warn-chip { font-size: 0.46rem; padding: 1px 3px; align-self: flex-start; }
-  /* Financials: hide label, show value only for last row (spread) */
+  /* Show city at 2-up — enough room */
+  .dcard-city { display: block; font-size: 0.62rem; margin-top: 1px; }
+  .dcard-addr-row { gap: 4px; }
+  .dcard-warn-chip { font-size: 0.5rem; padding: 1px 4px; }
   .dcard-fin {
-    padding: 2px 0;
-    margin: 0 -5px;
-    padding-left: 5px;
-    padding-right: 5px;
-    border-top-width: 1px;
-    border-bottom-width: 1px;
+    padding: 3px 0;
+    margin: 0 -8px;
+    padding-left: 8px;
+    padding-right: 8px;
   }
-  .dcard-fin-row { padding: 1px 0; }
-  .dcard-fin-row:not(:last-child) { display: none; }
-  .dcard-fin-label { display: none; }
-  .dcard-fin-value { font-size: 0.62rem; font-weight: 800; }
-  /* Action bar */
+  .dcard-fin-row { padding: 2px 0; }
+  /* Show all fin rows at 2-up (ARV + asking + spread all visible) */
+  .dcard-fin-row:not(:last-child) { display: flex; }
+  .dcard-fin-label { display: block; font-size: 0.52rem; }
+  .dcard-fin-value { font-size: 0.68rem; font-weight: 700; }
   .dcard-action {
-    padding: 4px 5px;
-    font-size: 0.5rem;
+    padding: 5px 8px;
+    font-size: 0.58rem;
     gap: 2px;
     letter-spacing: 0;
   }
-  .dcard-action-arrow { width: 7px; height: 7px; }
-  /* Hide decorative chrome */
+  .dcard-action-arrow { width: 9px; height: 9px; }
   .dcard-chips { display: none; }
   .dcard-stage-chip { display: none; }
   .dcard-photo-overlay .source-logo,
   .dcard-no-photo .source-logo { display: none; }
   .dcard-addr-row .auction-countdown { display: none; }
 
-  /* ── Property detail modal — bottom sheet ──────────── */
+  /* ── List view: horizontal card (photo left, info right) ── */
+  .deals-grid--list .dcard {
+    flex-direction: row;
+    border-radius: 8px;
+  }
+  .deals-grid--list .dcard-photo {
+    width: 96px;
+    height: auto;
+    min-height: 90px;
+    flex-shrink: 0;
+    border-radius: 7px 0 0 7px;
+  }
+  .deals-grid--list .dcard-no-photo {
+    width: 72px;
+    min-height: 90px;
+    padding: 10px 6px;
+    border-radius: 7px 0 0 7px;
+  }
+  .deals-grid--list .dcard-body {
+    flex: 1;
+    min-width: 0;
+    padding: 8px 10px 0;
+    gap: 3px;
+  }
+  /* Show all info in list view */
+  .deals-grid--list .dcard-city { display: block; font-size: 0.64rem; }
+  .deals-grid--list .dcard-street { font-size: 0.78rem; }
+  .deals-grid--list .dcard-fin-row { display: flex; }
+  .deals-grid--list .dcard-fin-row:not(:last-child) { display: flex; }
+  .deals-grid--list .dcard-fin-label { display: block; font-size: 0.56rem; }
+  .deals-grid--list .dcard-fin-value { font-size: 0.72rem; }
+  .deals-grid--list .dcard-action { font-size: 0.62rem; padding: 6px 10px; }
+
   /* ── Property detail modal — compact bottom sheet ─────── */
   /* Flush at bottom, edge-to-edge on mobile */
   .modal-overlay { padding: 0; align-items: flex-end; }

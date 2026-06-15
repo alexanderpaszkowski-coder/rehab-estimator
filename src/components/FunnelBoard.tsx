@@ -733,98 +733,135 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
             </div>
           )}
 
-          {editTab === 'other-costs' && (
-            <div className="modal-edit-panel other-costs-panel">
+          {editTab === 'other-costs' && (() => {
+            const hmlLow  = askingPrice ? Math.round(askingPrice * 0.03) : null
+            const hmlHigh = askingPrice ? Math.round(askingPrice * 0.06) : null
+            const buySideLow  = askingPrice ? Math.round(askingPrice * 0.01) : null
+            const buySideHigh = askingPrice ? Math.round(askingPrice * 0.02) : null
+            const agentLow  = arv ? Math.round(arv * 0.05) : null
+            const agentHigh = arv ? Math.round(arv * 0.06) : null
+            const closingLow  = (buySideLow  && agentLow)  ? buySideLow  + agentLow  : null
+            const closingHigh = (buySideHigh && agentHigh) ? buySideHigh + agentHigh : null
+            const fmt = (n: number | null) => n ? formatCurrency(n) : '—'
+            const fmtRange = (lo: number | null, hi: number | null) =>
+              lo && hi ? `${fmt(lo)} – ${fmt(hi)}` : '—'
+            return (
+              <div className="modal-edit-panel other-costs-panel">
 
-              {/* ── Hard money costs ── */}
-              <div className="ocost-section">
-                <div className="ocost-section-header">
-                  <span className="ocost-section-icon">🏦</span>
-                  <div>
-                    <div className="ocost-section-title">Hard Money Costs</div>
-                    <div className="ocost-section-sub">Points, origination fees, and interest carry</div>
+                {/* ── Hard Money Costs ── */}
+                <div className="ocost-section">
+                  <div className="ocost-section-header">
+                    <span className="ocost-section-icon">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="2" y="7" width="20" height="14" rx="2"/>
+                        <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+                        <line x1="12" y1="12" x2="12" y2="16"/>
+                        <line x1="10" y1="14" x2="14" y2="14"/>
+                      </svg>
+                    </span>
+                    <div className="ocost-section-header-text">
+                      <div className="ocost-section-title">Hard Money Costs</div>
+                      <div className="ocost-section-sub">Points, origination fees &amp; interest carry</div>
+                    </div>
+                    <span className="ocost-coming-soon">Coming soon</span>
+                  </div>
+                  <div className="ocost-fields-placeholder">
+                    <div className="ocost-placeholder-row">
+                      <span className="ocost-placeholder-label">Loan amount</span>
+                      <span className="ocost-placeholder-est">{askingPrice ? fmt(askingPrice) : '—'}</span>
+                    </div>
+                    <div className="ocost-placeholder-row">
+                      <span className="ocost-placeholder-label">Points (origination)</span>
+                      <span className="ocost-placeholder-est">{askingPrice ? '2 – 3 pts' : '—'}</span>
+                    </div>
+                    <div className="ocost-placeholder-row">
+                      <span className="ocost-placeholder-label">Interest rate</span>
+                      <span className="ocost-placeholder-est">10 – 12% / yr</span>
+                    </div>
+                    <div className="ocost-placeholder-row">
+                      <span className="ocost-placeholder-label">Hold period (months)</span>
+                      <span className="ocost-placeholder-est">6 – 9 mo</span>
+                    </div>
+                    <div className="ocost-placeholder-row ocost-placeholder-row--total">
+                      <span className="ocost-placeholder-label">Est. HML cost</span>
+                      <span className="ocost-placeholder-range">{fmtRange(hmlLow, hmlHigh)}</span>
+                    </div>
                   </div>
                 </div>
-                <div className="ocost-fields-placeholder">
-                  {/* Calculation fields to be wired in a future pass */}
-                  <div className="ocost-placeholder-row">
-                    <span className="ocost-placeholder-label">Loan amount</span>
-                    <span className="ocost-placeholder-value">—</span>
+
+                {/* ── Closing Costs & Fees ── */}
+                <div className="ocost-section">
+                  <div className="ocost-section-header">
+                    <span className="ocost-section-icon">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/>
+                        <line x1="10" y1="9" x2="8" y2="9"/>
+                      </svg>
+                    </span>
+                    <div className="ocost-section-header-text">
+                      <div className="ocost-section-title">Closing Costs &amp; Fees</div>
+                      <div className="ocost-section-sub">Title, transfer taxes, agent commissions, misc.</div>
+                    </div>
+                    <span className="ocost-coming-soon">Coming soon</span>
                   </div>
-                  <div className="ocost-placeholder-row">
-                    <span className="ocost-placeholder-label">Points (origination)</span>
-                    <span className="ocost-placeholder-value">—</span>
-                  </div>
-                  <div className="ocost-placeholder-row">
-                    <span className="ocost-placeholder-label">Interest rate</span>
-                    <span className="ocost-placeholder-value">—</span>
-                  </div>
-                  <div className="ocost-placeholder-row">
-                    <span className="ocost-placeholder-label">Hold period (months)</span>
-                    <span className="ocost-placeholder-value">—</span>
-                  </div>
-                  <div className="ocost-placeholder-row ocost-placeholder-row--total">
-                    <span className="ocost-placeholder-label">Est. HML cost</span>
-                    <span className="ocost-placeholder-value">—</span>
+                  <div className="ocost-fields-placeholder">
+                    <div className="ocost-placeholder-row">
+                      <span className="ocost-placeholder-label">Buy-side closing costs</span>
+                      <span className="ocost-placeholder-est">{fmtRange(buySideLow, buySideHigh)}</span>
+                    </div>
+                    <div className="ocost-placeholder-row">
+                      <span className="ocost-placeholder-label">Sell-side closing costs</span>
+                      <span className="ocost-placeholder-est">{arv ? fmt(Math.round(arv * 0.01)) : '—'}</span>
+                    </div>
+                    <div className="ocost-placeholder-row">
+                      <span className="ocost-placeholder-label">Agent commissions</span>
+                      <span className="ocost-placeholder-est">{fmtRange(agentLow, agentHigh)}</span>
+                    </div>
+                    <div className="ocost-placeholder-row">
+                      <span className="ocost-placeholder-label">Holding costs (taxes, ins.)</span>
+                      <span className="ocost-placeholder-est">{arv ? fmt(Math.round(arv * 0.015)) : '—'}</span>
+                    </div>
+                    <div className="ocost-placeholder-row ocost-placeholder-row--total">
+                      <span className="ocost-placeholder-label">Est. closing &amp; hold total</span>
+                      <span className="ocost-placeholder-range">{fmtRange(closingLow, closingHigh)}</span>
+                    </div>
                   </div>
                 </div>
+
+                {/* ── True net profit summary ── */}
+                <div className="ocost-section ocost-section--summary">
+                  <div className="ocost-summary-label">Deal Waterfall</div>
+                  <div className="ocost-summary-row">
+                    <span>Gross spread (ARV − ask)</span>
+                    <span className="ocost-summary-pos">{spread !== null ? formatCurrency(spread) : '—'}</span>
+                  </div>
+                  <div className="ocost-summary-row">
+                    <span>− Est. rehab</span>
+                    <span>{rehabEst ? formatCurrency(rehabEst) : '—'}</span>
+                  </div>
+                  <div className="ocost-summary-row ocost-summary-row--placeholder">
+                    <span>− Hard money costs</span>
+                    <span className="ocost-tbd">{hmlLow && hmlHigh ? `~${fmtRange(hmlLow, hmlHigh)}` : 'TBD'}</span>
+                  </div>
+                  <div className="ocost-summary-row ocost-summary-row--placeholder">
+                    <span>− Closing &amp; holding costs</span>
+                    <span className="ocost-tbd">{closingLow && closingHigh ? `~${fmtRange(closingLow, closingHigh)}` : 'TBD'}</span>
+                  </div>
+                  <div className="ocost-summary-row ocost-summary-row--net">
+                    <span>True net profit</span>
+                    <span className="ocost-net-value">
+                      {netMargin !== null ? formatCurrency(netMargin) : '—'}
+                      <span className="ocost-net-note"> (excl. HML &amp; closing)</span>
+                    </span>
+                  </div>
+                </div>
+
               </div>
-
-              {/* ── Closing costs & other fees ── */}
-              <div className="ocost-section">
-                <div className="ocost-section-header">
-                  <span className="ocost-section-icon">📋</span>
-                  <div>
-                    <div className="ocost-section-title">Closing Costs & Fees</div>
-                    <div className="ocost-section-sub">Title, transfer taxes, agent commissions, misc.</div>
-                  </div>
-                </div>
-                <div className="ocost-fields-placeholder">
-                  <div className="ocost-placeholder-row">
-                    <span className="ocost-placeholder-label">Buy-side closing costs</span>
-                    <span className="ocost-placeholder-value">—</span>
-                  </div>
-                  <div className="ocost-placeholder-row">
-                    <span className="ocost-placeholder-label">Sell-side closing costs</span>
-                    <span className="ocost-placeholder-value">—</span>
-                  </div>
-                  <div className="ocost-placeholder-row">
-                    <span className="ocost-placeholder-label">Agent commissions</span>
-                    <span className="ocost-placeholder-value">—</span>
-                  </div>
-                  <div className="ocost-placeholder-row">
-                    <span className="ocost-placeholder-label">Holding costs (taxes, ins.)</span>
-                    <span className="ocost-placeholder-value">—</span>
-                  </div>
-                  <div className="ocost-placeholder-row ocost-placeholder-row--total">
-                    <span className="ocost-placeholder-label">Est. closing & hold total</span>
-                    <span className="ocost-placeholder-value">—</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* ── True net profit summary ── */}
-              <div className="ocost-section ocost-section--summary">
-                <div className="ocost-summary-row">
-                  <span>Gross spread (ARV − ask)</span><span>{spread !== null ? formatCurrency(spread) : '—'}</span>
-                </div>
-                <div className="ocost-summary-row">
-                  <span>− Est. rehab</span><span>{rehabEst ? formatCurrency(rehabEst) : '—'}</span>
-                </div>
-                <div className="ocost-summary-row ocost-summary-row--placeholder">
-                  <span>− Hard money costs</span><span className="ocost-tbd">TBD</span>
-                </div>
-                <div className="ocost-summary-row ocost-summary-row--placeholder">
-                  <span>− Closing &amp; holding costs</span><span className="ocost-tbd">TBD</span>
-                </div>
-                <div className="ocost-summary-row ocost-summary-row--net">
-                  <span>True net profit</span>
-                  <span className="ocost-net-value">{netMargin !== null ? formatCurrency(netMargin) : '—'}<span className="ocost-net-note"> (excl. HML &amp; closing)</span></span>
-                </div>
-              </div>
-
-            </div>
-          )}
+            )
+          })()}
 
         </div>
 

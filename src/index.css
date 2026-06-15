@@ -371,15 +371,7 @@ textarea { resize: vertical; }
 .address-text { font-weight: 600; font-size: 1rem; }
 .address-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; align-items: center; }
 .address-bar-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.bar-stat {
-  font-size: 0.82rem;
-  color: #94a3b8;
-  background: #1e293b;
-  border: 1px solid #334155;
-  border-radius: 7px;
-  padding: 3px 10px;
-}
-.bar-stat strong { color: #4ade80; }
+.bar-stat { font-size: 0.82rem; color: var(--text-muted); }
 .save-indicator { font-size: 0.8rem; color: var(--success); font-weight: 600; }
 
 /* ── Badges & pills ────────────────────────────────── */
@@ -466,9 +458,8 @@ textarea { resize: vertical; }
   font-family: var(--mono);
   letter-spacing: -0.03em;
 }
-.summary-tile.highlight { background: #1e293b; border-color: #334155; color: #f1f5f9; }
-.summary-tile.highlight .label { color: #94a3b8; }
-.summary-tile.highlight .value { color: #4ade80; }
+.summary-tile.highlight { background: var(--accent-soft); border-color: var(--accent); }
+.summary-tile.highlight .value { color: var(--accent); }
 
 /* ── Quick estimate table ──────────────────────────── */
 .qe-table { width: 100%; border-collapse: collapse; }
@@ -3849,37 +3840,33 @@ textarea { resize: vertical; }
   display: flex;
   flex-direction: column;
   gap: 0;
-  background: #1e293b;
-  border-radius: 10px;
-  padding: 8px 14px;
-  border: 1px solid #334155;
 }
 
 .ov-metric {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  padding: 7px 0;
-  border-bottom: 1px solid #334155;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--border);
   gap: 8px;
 }
 .ov-metric:last-of-type { border-bottom: none; }
 
 .ov-metric-label {
   font-size: 0.72rem;
-  color: #94a3b8;
+  color: var(--text-muted);
   font-weight: 500;
   flex-shrink: 0;
 }
 .ov-metric-value {
   font-size: 1rem;
   font-weight: 800;
-  color: #f1f5f9;
+  color: var(--text);
   text-align: right;
 }
-.ov-metric-value.accent-positive { color: #4ade80; }
-.ov-metric-value.accent-negative { color: #f87171; }
-.ov-metric-value.accent-neutral  { color: #94a3b8; }
+.ov-metric-value.accent-positive { color: var(--success); }
+.ov-metric-value.accent-negative { color: var(--danger); }
+.ov-metric-value.accent-neutral  { color: var(--text-muted); }
 
 .ov-spec-chips {
   display: flex;
@@ -4225,125 +4212,186 @@ textarea { resize: vertical; }
 .other-costs-panel {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 0;
 }
 
 .ocost-section {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  padding: 14px 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 18px;
 }
+.ocost-section:last-child { border-bottom: none; }
 
 .ocost-section--summary {
   background: #1e293b;
-  border-color: #334155;
+  border-bottom: none;
   color: #f1f5f9;
 }
 
 .ocost-section-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 10px;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .ocost-section-icon {
-  font-size: 20px;
-  line-height: 1;
-  margin-top: 1px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: var(--surface-2);
+  border: 1.5px solid var(--border);
+  color: var(--text-muted);
+  flex-shrink: 0;
 }
 
+.ocost-section-header-text { flex: 1; min-width: 0; }
+
 .ocost-section-title {
-  font-size: 13px;
+  font-size: 0.84rem;
   font-weight: 700;
-  color: #0f172a;
-  letter-spacing: 0.01em;
+  color: var(--text);
+  letter-spacing: -0.01em;
 }
 
 .ocost-section-sub {
-  font-size: 11px;
-  color: #94a3b8;
-  margin-top: 2px;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
+.ocost-coming-soon {
+  flex-shrink: 0;
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-subtle);
+  background: var(--surface-3);
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  padding: 2px 9px;
 }
 
 .ocost-fields-placeholder {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 0;
+  border: 1.5px solid var(--border);
+  border-radius: 9px;
+  overflow: hidden;
+  background: var(--surface);
 }
 
 .ocost-placeholder-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 12px;
-  color: #475569;
-  padding: 4px 6px;
-  border-radius: 5px;
-  background: #fff;
-  border: 1px solid #e2e8f0;
+  font-size: 0.78rem;
+  color: var(--text);
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--border);
+  gap: 12px;
+}
+.ocost-placeholder-row:last-child { border-bottom: none; }
+
+.ocost-placeholder-label {
+  color: var(--text-muted);
+  font-size: 0.75rem;
 }
 
-.ocost-placeholder-row--total {
-  font-weight: 700;
-  color: #1e293b;
-  border-color: #cbd5e1;
-  background: #f1f5f9;
-}
-
-.ocost-placeholder-value {
-  color: #94a3b8;
+.ocost-placeholder-est {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--text-subtle);
   font-style: italic;
 }
 
-.ocost-placeholder-row--total .ocost-placeholder-value {
+.ocost-placeholder-row--total {
+  background: var(--surface-2);
+  font-weight: 700;
+}
+.ocost-placeholder-row--total .ocost-placeholder-label {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.ocost-placeholder-range {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+/* ── Summary waterfall card ──────────────────────────────────────── */
+.ocost-summary-label {
+  font-size: 0.6rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
   color: #64748b;
-  font-style: normal;
+  margin-bottom: 10px;
 }
 
 .ocost-summary-row {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  font-size: 12px;
+  font-size: 0.78rem;
   color: #94a3b8;
-  padding: 4px 0;
+  padding: 5px 0;
   border-bottom: 1px solid #334155;
+  gap: 12px;
 }
+.ocost-summary-row:last-child { border-bottom: none; }
 
-.ocost-summary-row:last-child {
-  border-bottom: none;
-}
+.ocost-summary-pos { color: #f1f5f9; font-weight: 700; font-family: var(--mono); }
 
-.ocost-summary-row--placeholder {
-  opacity: 0.65;
-}
+.ocost-summary-row--placeholder { opacity: 0.6; }
 
 .ocost-tbd {
   font-style: italic;
   color: #64748b;
+  font-family: var(--mono);
+  font-size: 0.72rem;
 }
 
 .ocost-summary-row--net {
   color: #f1f5f9;
-  font-size: 13px;
+  font-size: 0.84rem;
   font-weight: 700;
-  padding-top: 8px;
-  margin-top: 4px;
+  padding-top: 10px;
+  margin-top: 2px;
+  border-top: 1.5px solid #475569;
+  border-bottom: none;
 }
 
 .ocost-net-value {
   color: #4ade80;
+  font-family: var(--mono);
 }
 
 .ocost-net-note {
-  font-size: 10px;
-  color: #94a3b8;
+  font-size: 0.65rem;
+  color: #64748b;
   font-weight: 400;
   font-style: italic;
   margin-left: 4px;
+  font-family: var(--font);
 }
+
+/* ── Dark mode overrides for Other Costs ─────────────────────────── */
+[data-theme="dark"] .ocost-section { background: var(--surface); }
+[data-theme="dark"] .ocost-section-icon {
+  background: var(--surface-2);
+  border-color: var(--border);
+}
+[data-theme="dark"] .ocost-fields-placeholder { background: var(--surface-2); }
+[data-theme="dark"] .ocost-placeholder-row { background: transparent; }
+[data-theme="dark"] .ocost-placeholder-row--total { background: var(--surface-3); }
 
 /* ── SOW Grid (compact card boxes) ────────────────────────────────── */
 .sow-grid-layout {
@@ -5220,6 +5268,41 @@ textarea { resize: vertical; }
   --shadow-card: 0 1px 4px rgba(0,0,0,.5), 0 0 0 1.5px rgba(255,255,255,.04);
   --shadow-float: 0 8px 28px rgba(0,0,0,.65), 0 2px 8px rgba(0,0,0,.4);
 }
+
+/* ── Dark mode financial enhancements ───────────────────────────── */
+
+/* Address bar stat chips */
+[data-theme="dark"] .bar-stat {
+  color: #94a3b8;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 7px;
+  padding: 3px 10px;
+}
+[data-theme="dark"] .bar-stat strong { color: #4ade80; }
+
+/* Summary highlight tile → dark navy card */
+[data-theme="dark"] .summary-tile.highlight {
+  background: #0f172a;
+  border-color: #4ade80;
+  color: #f1f5f9;
+}
+[data-theme="dark"] .summary-tile.highlight .label { color: #94a3b8; }
+[data-theme="dark"] .summary-tile.highlight .value { color: #4ade80; }
+
+/* Overview metrics panel → dark navy card */
+[data-theme="dark"] .ov-metrics {
+  background: #1e293b;
+  border-radius: 10px;
+  padding: 8px 14px;
+  border: 1px solid #334155;
+}
+[data-theme="dark"] .ov-metric { border-bottom-color: #334155; }
+[data-theme="dark"] .ov-metric-label { color: #94a3b8; }
+[data-theme="dark"] .ov-metric-value { color: #f1f5f9; }
+[data-theme="dark"] .ov-metric-value.accent-positive { color: #4ade80; }
+[data-theme="dark"] .ov-metric-value.accent-negative { color: #f87171; }
+[data-theme="dark"] .ov-metric-value.accent-neutral  { color: #94a3b8; }
 
 /* ── Dark mode logo ──────────────────────────────────────────────── */
 [data-theme="dark"] .topnav-logo { color: #60a5fa; }

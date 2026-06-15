@@ -844,6 +844,9 @@ function DealCard({
           ) : (
             <span className="dcard-list-thumb-empty" aria-hidden="true">🏠</span>
           )}
+          <span className="dcard-list-source">
+            <SourceLogo source={home.source} customLabel={customLabel} size={12} />
+          </span>
         </div>
         <div className="dcard-list-addr">
           <span className="dcard-list-street">

@@ -2899,6 +2899,7 @@ textarea { resize: vertical; }
   flex-shrink: 0;
   display: grid;
   place-items: center;
+  position: relative;
 }
 
 .dcard-list-thumb img {
@@ -2918,6 +2919,26 @@ textarea { resize: vertical; }
   font-size: 0.85rem;
   line-height: 1;
   opacity: 0.45;
+}
+
+.dcard-list-source {
+  position: absolute;
+  right: 1px;
+  bottom: 1px;
+  width: 14px;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 2px;
+  line-height: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+.dcard-list-source .source-logo {
+  width: 12px !important;
+  height: 12px !important;
+  mix-blend-mode: multiply;
 }
 
 .dcard-list-addr {
@@ -4790,8 +4811,17 @@ textarea { resize: vertical; }
   .dcard-action-arrow { width: 9px; height: 9px; }
   .dcard-chips { display: none; }
   .dcard-stage-chip { display: none; }
-  .dcard-photo-overlay .source-logo,
-  .dcard-no-photo .source-logo { display: none; }
+  .dcard-photo-overlay .source-logo {
+    width: 18px !important;
+    height: 18px !important;
+    mix-blend-mode: screen;
+    filter: brightness(1.15);
+  }
+  .dcard-no-photo .source-logo {
+    width: 16px !important;
+    height: 16px !important;
+    mix-blend-mode: multiply;
+  }
   .dcard-addr-row .auction-countdown { display: none; }
 
   /* List view mobile tweaks */

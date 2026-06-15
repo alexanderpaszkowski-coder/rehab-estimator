@@ -2273,7 +2273,7 @@ textarea { resize: vertical; }
 /* ── Compact pipeline strip ─────────────────────────────────────────── */
 .cpipeline {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   gap: 2px;
   padding: 6px var(--gutter);
   background: var(--surface);
@@ -2290,15 +2290,15 @@ textarea { resize: vertical; }
   align-items: center;
   justify-content: center;
   gap: 2px;
-  padding: 8px 18px;
+  padding: 8px 6px;
   border-radius: var(--radius-xs);
   border: 1.5px solid transparent;
   background: transparent;
   cursor: pointer;
   white-space: nowrap;
-  flex-shrink: 0;
+  flex: 1 1 0;
+  min-width: 84px;
   transition: background .13s, border-color .13s;
-  min-width: 0;
 }
 .cpipe-stage:hover:not(.cpipe-stage--active) {
   background: var(--surface-2);
@@ -2354,7 +2354,7 @@ textarea { resize: vertical; }
 }
 .deal-queue-track {
   display: flex;
-  gap: 6px;
+  gap: 10px;
   overflow-x: auto;
   scrollbar-width: none;
   flex: 1;
@@ -2372,8 +2372,8 @@ textarea { resize: vertical; }
   border-left: 3px solid var(--qc, var(--border));
   background: var(--surface);
   cursor: pointer;
-  min-width: 148px;
-  flex-shrink: 0;
+  flex: 1 1 0;
+  min-width: 140px;
   text-align: left;
   transition: border-color .13s, box-shadow .13s, background .13s;
   box-shadow: var(--shadow);

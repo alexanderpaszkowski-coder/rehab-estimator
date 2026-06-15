@@ -4817,9 +4817,10 @@ textarea { resize: vertical; }
 
 .aab-group--live {
   background: linear-gradient(90deg, #fff7ed 0%, var(--surface) 100%);
-  border-right: 1px solid #fed7aa;   /* divider between live and upcoming */
-  flex-shrink: 0;
-  max-width: 340px;
+  border-right: 1px solid var(--accent-soft);
+  flex: 0 0 auto;      /* size to content; don't force-grow */
+  max-width: 50%;      /* never crowd out the upcoming side */
+  overflow: hidden;    /* clip; inner aab-cards scrolls */
 }
 
 .aab-group--upcoming {
@@ -4843,7 +4844,7 @@ textarea { resize: vertical; }
 }
 
 .aab-group--live .aab-group-label {
-  color: #c2410c;
+  color: var(--accent);
 }
 
 /* Pulsing live dot */

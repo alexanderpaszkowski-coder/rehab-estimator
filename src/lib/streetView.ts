@@ -53,7 +53,9 @@ export async function fetchStreetViewPhoto(home: HomeFile): Promise<StreetViewFe
   }
 }
 
-/** True when this home should auto-fetch a Street View photo. */
+/** True when this home should auto-fetch a Street View photo.
+ *  Applies to any home that has an address but no photo yet —
+ *  regardless of source (New Western, off-market, auction.com, etc.). */
 export function needsStreetViewPhoto(home: HomeFile): boolean {
-  return home.source === 'driving-for-dollars' && !home.photoUrl
+  return !home.photoUrl && !!home.address
 }

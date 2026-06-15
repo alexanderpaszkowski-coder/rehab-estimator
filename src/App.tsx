@@ -267,7 +267,7 @@ export default function App() {
     [updateHome, fetchStreetViewForHome],
   )
 
-  // Auto-fetch Street View for driving-for-dollars homes missing a photo
+  // Auto-fetch Street View for any home missing a photo (all sources)
   useEffect(() => {
     if (!session) return
     const pending = homes.filter(

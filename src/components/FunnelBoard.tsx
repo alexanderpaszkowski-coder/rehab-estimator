@@ -327,7 +327,7 @@ function SummaryLinkActions({
   const [propError, setPropError] = useState<string | null>(null)
 
   const listingUrl = getListingUrl(home)
-  const canRefreshPhoto = home.source === 'driving-for-dollars' && !home.photoUrl
+  const canRefreshPhoto = !home.photoUrl
   const hasActions = listingUrl || isRefreshable(home) || canRefreshPhoto || onUpdateHome
 
   useEffect(() => {
@@ -927,7 +927,7 @@ function DealCard({
   const bidLabel = getBidLabel(home.source)
   const customLabel = home.source === 'other' ? home.sourceCustom : undefined
   const sm = SCORE_META[analysis.scoreTier]
-  const photoPending = !home.photoUrl && home.source === 'driving-for-dollars'
+  const photoPending = !home.photoUrl
   const photoFetchStatus = streetViewStatus?.[home.id]
 
   const actionBg: Record<string, string> = {

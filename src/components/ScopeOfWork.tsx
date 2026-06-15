@@ -1,13 +1,16 @@
 import { useState } from 'react'
 import type { HomeFile, SowLine } from '../types'
 import { SOW_TEMPLATE } from '../lib/defaults'
-import { calcLineEstimate, formatCurrency, num } from '../lib/calculations'
+import { calcLineEstimate, formatCurrency, num, QE_TO_SOW_CATEGORY } from '../lib/calculations'
 import { CopyButton } from './CopyButton'
 import { copyScopeOfWork } from '../lib/copyContent'
 
+/** All SOW category strings that have a corresponding QuickEstimate system */
+const QE_MAPPED_SOW_CATS = new Set(Object.values(QE_TO_SOW_CATEGORY))
+
 interface Props {
   home: HomeFile
-  onChange: (sowLines: HomeFile['sowLines']) => void
+  onChange: (patch: Partial<Pick<HomeFile, 'sowLines' | 'sowFinalized'>>) => void
   compact?: boolean
 }
 
@@ -39,7 +42,12 @@ function SowAccordion({ home, onChange }: { home: HomeFile; onChange: Props['onC
   const updateLine = (id: string, field: 'qty' | 'bid', value: string) => {
     const current = home.sowLines[id] ?? { qty: '', bid: '', actual: '', notes: '' }
     const parsed = value === '' ? '' : parseFloat(value)
-    onChange({ ...home.sowLines, [id]: { ...current, [field]: parsed } })
+    onChange({ sowLines: { ...home.sowLines, [id]: { ...current, [field]: parsed } } })
+  }
+
+  const toggleFinalize = (category: string) => {
+    const nowFinalized = !(home.sowFinalized?.[category] ?? false)
+    onChange({ sowFinalized: { ...home.sowFinalized, [category]: nowFinalized } })
   }
 
   const getCatStats = (cat: CatMeta) => {
@@ -59,24 +67,43 @@ function SowAccordion({ home, onChange }: { home: HomeFile; onChange: Props['onC
     const { totalEst, activeCount } = getCatStats(cat)
     const isSelected = selected === cat.category
     const isDone = activeCount > 0
+    const isFinalized = home.sowFinalized?.[cat.category] ?? false
+    const isMapped = QE_MAPPED_SOW_CATS.has(cat.category)
     return (
-      <button
+      <div
         key={cat.category}
-        type="button"
-        className={`sow-box${isSelected ? ' sow-box--selected' : ''}${isDone ? ' sow-box--done' : ''}`}
-        onClick={() => setSelected(isSelected ? null : cat.category)}
+        className={`sow-box${isSelected ? ' sow-box--selected' : ''}${isDone ? ' sow-box--done' : ''}${isFinalized ? ' sow-box--finalized' : ''}`}
       >
-        <span className="sow-box-name">{cat.name}</span>
-        <div className="sow-box-foot">
-          {activeCount > 0
-            ? <span className="sow-box-count">{activeCount} item{activeCount !== 1 ? 's' : ''}</span>
-            : <span className="sow-box-empty">Tap to fill</span>
-          }
-          {totalEst > 0 && (
-            <span className="sow-box-total">{formatCurrency(totalEst)}</span>
-          )}
-        </div>
-      </button>
+        <button
+          type="button"
+          className="sow-box-main"
+          onClick={() => setSelected(isSelected ? null : cat.category)}
+        >
+          <span className="sow-box-name">{cat.name}</span>
+          <div className="sow-box-foot">
+            {activeCount > 0
+              ? <span className="sow-box-count">{activeCount} item{activeCount !== 1 ? 's' : ''}</span>
+              : <span className="sow-box-empty">Tap to fill</span>
+            }
+            {totalEst > 0 && (
+              <span className="sow-box-total">{formatCurrency(totalEst)}</span>
+            )}
+          </div>
+        </button>
+        {isDone && isMapped && (
+          <button
+            type="button"
+            className={`sow-finalize-btn${isFinalized ? ' sow-finalize-btn--on' : ''}`}
+            onClick={() => toggleFinalize(cat.category)}
+            title={isFinalized
+              ? 'Finalized — SOW total is overriding the Quick Estimate for this category. Click to unlock.'
+              : 'Finalize — lock in this SOW total to replace the Quick Estimate for this category.'
+            }
+          >
+            {isFinalized ? '🔒 Finalized' : 'Finalize'}
+          </button>
+        )}
+      </div>
     )
   }
 
@@ -163,10 +190,7 @@ export function ScopeOfWork({ home, onChange, compact = false }: Props) {
   const updateLine = (id: string, field: 'qty' | 'bid' | 'actual' | 'notes', value: string) => {
     const current = home.sowLines[id] ?? { qty: '', bid: '', actual: '', notes: '' }
     const parsed = field === 'notes' ? value : value === '' ? '' : parseFloat(value)
-    onChange({
-      ...home.sowLines,
-      [id]: { ...current, [field]: parsed },
-    })
+    onChange({ sowLines: { ...home.sowLines, [id]: { ...current, [field]: parsed } } })
   }
 
   if (compact) {

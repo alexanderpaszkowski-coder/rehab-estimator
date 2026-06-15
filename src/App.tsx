@@ -395,7 +395,7 @@ export default function App() {
           <QuickEstimate home={current} onChange={(q: QuickSystem[]) => updateCurrent({ quickEstimate: q })} />
         )}
         {tab === 'sow' && current && (
-          <ScopeOfWork home={current} onChange={(lines) => updateCurrent({ sowLines: lines })} />
+          <ScopeOfWork home={current} onChange={(patch) => updateCurrent(patch)} />
         )}
         {tab === 'summary' && current && <Summary home={current} />}
       </main>

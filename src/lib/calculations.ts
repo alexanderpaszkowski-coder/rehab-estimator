@@ -1,4 +1,4 @@
-import { FINISH_CATEGORIES, FINISH_FACTORS } from './defaults'
+import { FINISH_CATEGORIES, FINISH_FACTORS, SOW_TEMPLATE } from './defaults'
 import type {
   CategorySummary,
   Condition,
@@ -6,6 +6,7 @@ import type {
   PropertyInputs,
   QuickSystem,
   SowItem,
+  SowLine,
 } from '../types'
 
 export function num(v: number | string | null | undefined): number {
@@ -178,6 +179,134 @@ export function getBenchmark(perSf: number): string {
   if (perSf <= 45) return 'Moderate ($25–45/SF)'
   if (perSf <= 75) return 'Full gut ($45–75/SF)'
   return 'Gut + structural ($75+/SF)'
+}
+
+// ── SOW ↔ QuickEstimate bridge ────────────────────────────────────────────────
+
+/**
+ * Maps each QuickEstimate system ID to the SOW category it conceptually covers.
+ * When a SOW category is finalized by the user, every QE system pointing to it
+ * is replaced by the SOW line-item subtotal for that category.
+ *
+ * Multi-system categories (e.g. ROOF & GUTTERS covers both qe-6 and qe-7):
+ * the SOW total replaces the combined QE cost for those systems.
+ */
+export const QE_TO_SOW_CATEGORY: Record<string, string> = {
+  'qe-5':  'DEMOLITION & SITE PREP',
+  'qe-6':  'ROOF & GUTTERS',
+  'qe-7':  'ROOF & GUTTERS',
+  'qe-8':  'EXTERIOR & CURB APPEAL',
+  'qe-9':  'WINDOWS',
+  'qe-10': 'EXTERIOR & CURB APPEAL',
+  'qe-11': 'EXTERIOR & CURB APPEAL',
+  'qe-12': 'EXTERIOR & CURB APPEAL',
+  'qe-13': 'EXTERIOR & CURB APPEAL',
+  'qe-14': 'FOUNDATION & WATERPROOFING',
+  'qe-15': 'FRAMING & STRUCTURAL',
+  'qe-16': 'INSULATION & DRYWALL',
+  'qe-17': 'INSULATION & DRYWALL',
+  'qe-18': 'INTERIOR PAINT',
+  'qe-19': 'FLOORING',
+  'qe-20': 'INTERIOR DOORS, TRIM & CLOSETS',
+  'qe-21': 'KITCHEN',
+  'qe-22': 'BATHROOMS',
+  'qe-23': 'BATHROOMS',
+  'qe-24': 'PLUMBING',
+  'qe-25': 'ELECTRICAL',
+  'qe-26': 'HVAC',
+  'qe-27': 'BASEMENT FINISH',
+  'qe-28': 'DEMOLITION & SITE PREP',
+  'qe-29': 'PERMITS, FEES & GENERAL CONDITIONS',
+}
+
+/** Compute the raw SOW line-item estimate total for one category (no contingency). */
+function calcSowCategoryRaw(home: HomeFile, category: string): number {
+  let total = 0
+  for (const item of SOW_TEMPLATE) {
+    if (item.type !== 'line') continue
+    if ((item as SowLine).category !== category) continue
+    const data = home.sowLines[(item as SowLine).id] ?? { qty: '', bid: '', actual: '', notes: '' }
+    total += calcLineEstimate((item as SowLine).unitCost, data.qty, category, home.property)
+  }
+  return total
+}
+
+export interface BlendedRehabResult {
+  /** Per-system cost breakdown — source tells you which side provided the number */
+  lineCosts: { name: string; cost: number; source: 'estimate' | 'sow' }[]
+  point: number
+  low: number
+  high: number
+  withContingency: number
+  perSf: number
+  /** SOW categories that are finalized and currently overriding QE systems */
+  sowOverrideCategories: Set<string>
+}
+
+/**
+ * Blended rehab estimate.
+ *
+ * For each QuickEstimate system, use the QuickEstimate cost UNLESS the SOW
+ * category it belongs to has been finalized by the user — in that case use
+ * the SOW line-item subtotal for that category instead (added once, even when
+ * multiple QE systems share the same SOW category).
+ *
+ * SOW categories that have no corresponding QE system (e.g. CLEANING, STAGING
+ * & MISC) are added on top when finalized.
+ */
+export function calcBlendedRehab(home: HomeFile): BlendedRehabResult {
+  const finalized = home.sowFinalized ?? {}
+
+  // Pre-compute SOW totals for every finalized category (computed once each)
+  const sowCategoryTotals = new Map<string, number>()
+  const sowOverrideCategories = new Set<string>()
+  for (const [cat, isFinalized] of Object.entries(finalized)) {
+    if (isFinalized) {
+      sowCategoryTotals.set(cat, calcSowCategoryRaw(home, cat))
+      sowOverrideCategories.add(cat)
+    }
+  }
+
+  // Which QE systems are overridden? Track which SOW categories have already
+  // contributed their total so we don't double-count.
+  const sowCategoryContributed = new Set<string>()
+  const lineCosts: BlendedRehabResult['lineCosts'] = []
+
+  for (const system of home.quickEstimate) {
+    const sowCat = QE_TO_SOW_CATEGORY[system.id]
+    if (sowCat && sowOverrideCategories.has(sowCat)) {
+      // This QE system is overridden by SOW — contribute the category total once
+      if (!sowCategoryContributed.has(sowCat)) {
+        lineCosts.push({ name: sowCat, cost: sowCategoryTotals.get(sowCat) ?? 0, source: 'sow' })
+        sowCategoryContributed.add(sowCat)
+      }
+      // Subsequent QE systems in the same SOW category contribute $0
+    } else {
+      lineCosts.push({ name: system.name, cost: calcQuickSystemCost(system, home.property), source: 'estimate' })
+    }
+  }
+
+  // Add finalized SOW categories that have no QE counterpart (e.g. CLEANING, STAGING & MISC)
+  const qeMappedCategories = new Set(Object.values(QE_TO_SOW_CATEGORY))
+  for (const [cat, total] of sowCategoryTotals.entries()) {
+    if (!qeMappedCategories.has(cat) && !sowCategoryContributed.has(cat)) {
+      lineCosts.push({ name: cat, cost: total, source: 'sow' })
+    }
+  }
+
+  const point = lineCosts.reduce((s, l) => s + l.cost, 0)
+  const withContingency = point * (1 + home.property.contingency)
+  const perSf = home.property.livingArea ? withContingency / home.property.livingArea : 0
+
+  return {
+    lineCosts,
+    point,
+    low: point * 0.9,
+    high: point * 1.2,
+    withContingency,
+    perSf,
+    sowOverrideCategories,
+  }
 }
 
 export function slugifyAddress(home: HomeFile): string {

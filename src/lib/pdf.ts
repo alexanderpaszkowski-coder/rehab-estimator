@@ -2,7 +2,7 @@ import { jsPDF } from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import type { HomeFile } from '../types'
 import { SOW_TEMPLATE } from './defaults'
-import { calcLineEstimate, calcQuickEstimate, calcSowTotals, formatCurrency, getSystemQty, num, slugifyAddress } from './calculations'
+import { calcBlendedRehab, calcLineEstimate, calcSowTotals, formatCurrency, getSystemQty, num, slugifyAddress } from './calculations'
 import { getSourceLabel, getStageMeta } from './funnel'
 
 export function exportHomePdf(home: HomeFile) {
@@ -11,7 +11,7 @@ export function exportHomePdf(home: HomeFile) {
   let y = margin
 
   const fullAddress = [home.address, home.city, home.state, home.zip].filter(Boolean).join(', ')
-  const quick = calcQuickEstimate(home.property, home.quickEstimate)
+  const quick = calcBlendedRehab(home)
   const summary = calcSowTotals(home, SOW_TEMPLATE)
 
   const addHeader = (title: string) => {

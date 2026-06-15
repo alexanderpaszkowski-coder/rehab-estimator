@@ -1,6 +1,6 @@
 import type { HomeFile } from '../types'
 import { SOW_TEMPLATE } from './defaults'
-import { calcQuickEstimate, calcSowTotals, formatCurrency, getSystemQty, num } from './calculations'
+import { calcBlendedRehab, calcSowTotals, formatCurrency, getSystemQty, num } from './calculations'
 import { getSourceLabel, getStageMeta } from './funnel'
 
 function header(home: HomeFile): string {
@@ -81,18 +81,28 @@ export function copyPropertyInputs(home: HomeFile): string {
 }
 
 export function copyQuickEstimate(home: HomeFile): string {
-  const totals = calcQuickEstimate(home.property, home.quickEstimate)
+  const totals = calcBlendedRehab(home)
   const lines: string[] = [
     header(home),
-    '=== QUICK ESTIMATE ===',
+    '=== BLENDED REHAB ESTIMATE ===',
     '',
     `Point estimate:   ${formatCurrency(totals.point)}`,
     `Range:            ${formatCurrency(totals.low)} – ${formatCurrency(totals.high)}`,
     `With contingency: ${formatCurrency(totals.withContingency)}`,
     `Per SF:           ${totals.perSf ? `$${totals.perSf.toFixed(0)}` : '—'}`,
     '',
-    '-- By System --',
+    '-- By System (★ = SOW finalized) --',
   ]
+  for (const l of totals.lineCosts) {
+    if (l.cost === 0) continue
+    const src = l.source === 'sow' ? '★ SOW ' : 'Est.  '
+    lines.push(`${src} ${l.name.padEnd(38)} ${formatCurrency(l.cost).padStart(10)}`)
+  }
+  // Show which QE systems were not overridden by SOW
+  const overridden = totals.sowOverrideCategories
+  if (overridden.size > 0) {
+    lines.push('', `SOW overrides active: ${[...overridden].join(', ')}`)
+  }
   for (const s of home.quickEstimate) {
     if (s.condition === 'None') continue
     const qty = getSystemQty(s, home.property)
@@ -140,7 +150,7 @@ export function copyScopeOfWork(home: HomeFile): string {
 
 export function copySummary(home: HomeFile): string {
   const s = calcSowTotals(home, SOW_TEMPLATE)
-  const qTotals = calcQuickEstimate(home.property, home.quickEstimate)
+  const qTotals = calcBlendedRehab(home)
   const lines: string[] = [
     header(home),
     '=== BUDGET SUMMARY ===',

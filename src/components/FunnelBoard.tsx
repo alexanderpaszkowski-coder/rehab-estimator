@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useLockBodyScroll } from '../lib/useLockBodyScroll'
 import type { FunnelStage, HomeFile, IntakeData, PropertyInputs as PropertyInputsType, PropertySource, QuickSystem } from '../types'
-import { formatCurrency, calcQuickEstimate } from '../lib/calculations'
+import { formatCurrency, calcBlendedRehab } from '../lib/calculations'
 import {
   AUCTION_SOURCES, FUNNEL_STAGES, MLS_SOURCES, getSourceLabel, getStageMeta,
   getArvLabel, getBidLabel,
@@ -31,7 +31,11 @@ interface Props {
 }
 
 type SortOption = 'score' | 'spread' | 'newest' | 'arv' | 'ending-soon'
-type ViewMode = 'pipeline' | 'priority'
+type ViewMode = 'on-market' | 'off-market'
+
+const OFF_MARKET_SOURCES: PropertySource[] = [
+  'driving-for-dollars', 'off-market', 'wholesale', 'direct-mail', 'other',
+]
 type ActionGroupKey = 'send-mailer' | 'need-arv' | 'need-rehab' | 'need-hml' | 'offer-ready' | 'max-bid' | 'active' | 'closed'
 
 const ACTION_GROUP_ORDER: ActionGroupKey[] = ['send-mailer', 'need-arv', 'need-rehab', 'need-hml', 'offer-ready', 'max-bid', 'active', 'closed']
@@ -439,15 +443,16 @@ function SummaryLinkActions({
 
 // ── Property summary modal ("back of card") ───────────────────────────────────
 
-type EditTab = 'overview' | 'screen' | 'property' | 'estimate' | 'sow' | 'budget'
+type EditTab = 'overview' | 'screen' | 'property' | 'estimate' | 'sow' | 'budget' | 'other-costs'
 
 const EDIT_TABS: { id: EditTab; label: string }[] = [
-  { id: 'overview',  label: 'Overview'  },
-  { id: 'screen',    label: 'Screen'    },
-  { id: 'property',  label: 'Property'  },
-  { id: 'estimate',  label: 'Estimate'  },
-  { id: 'sow',       label: 'SOW'       },
-  { id: 'budget',    label: 'Budget'    },
+  { id: 'overview',    label: 'Overview'    },
+  { id: 'screen',      label: 'Screen'      },
+  { id: 'property',    label: 'Property'    },
+  { id: 'estimate',    label: 'Estimate'    },
+  { id: 'sow',         label: 'SOW'         },
+  { id: 'budget',      label: 'Budget'      },
+  { id: 'other-costs', label: 'Other Costs' },
 ]
 
 function getListingStatusPill(home: HomeFile): { label: string; cls: string } | null {
@@ -485,7 +490,7 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
   const funnel = home.funnel
   const { arv, askingPrice, maxOffer, startingCreditBid, quickNotes } = funnel
   const spread = arv && askingPrice ? arv - askingPrice : null
-  const quick = calcQuickEstimate(home.property, home.quickEstimate)
+  const quick = calcBlendedRehab(home)
   const rehabEst = quick.withContingency > 0 ? quick.withContingency : null
   const netMargin = spread !== null && rehabEst ? spread - rehabEst : null
   const listingStatusPill = getListingStatusPill(home)
@@ -716,7 +721,7 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
             <div className="modal-edit-panel modal-edit-panel--sow">
               <ScopeOfWork
                 home={home}
-                onChange={(sowLines) => handleChange({ sowLines })}
+                onChange={(patch) => handleChange(patch)}
                 compact
               />
             </div>
@@ -725,6 +730,99 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
           {editTab === 'budget' && (
             <div className="modal-edit-panel">
               <BudgetSummary home={home} />
+            </div>
+          )}
+
+          {editTab === 'other-costs' && (
+            <div className="modal-edit-panel other-costs-panel">
+
+              {/* ── Hard money costs ── */}
+              <div className="ocost-section">
+                <div className="ocost-section-header">
+                  <span className="ocost-section-icon">🏦</span>
+                  <div>
+                    <div className="ocost-section-title">Hard Money Costs</div>
+                    <div className="ocost-section-sub">Points, origination fees, and interest carry</div>
+                  </div>
+                </div>
+                <div className="ocost-fields-placeholder">
+                  {/* Calculation fields to be wired in a future pass */}
+                  <div className="ocost-placeholder-row">
+                    <span className="ocost-placeholder-label">Loan amount</span>
+                    <span className="ocost-placeholder-value">—</span>
+                  </div>
+                  <div className="ocost-placeholder-row">
+                    <span className="ocost-placeholder-label">Points (origination)</span>
+                    <span className="ocost-placeholder-value">—</span>
+                  </div>
+                  <div className="ocost-placeholder-row">
+                    <span className="ocost-placeholder-label">Interest rate</span>
+                    <span className="ocost-placeholder-value">—</span>
+                  </div>
+                  <div className="ocost-placeholder-row">
+                    <span className="ocost-placeholder-label">Hold period (months)</span>
+                    <span className="ocost-placeholder-value">—</span>
+                  </div>
+                  <div className="ocost-placeholder-row ocost-placeholder-row--total">
+                    <span className="ocost-placeholder-label">Est. HML cost</span>
+                    <span className="ocost-placeholder-value">—</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* ── Closing costs & other fees ── */}
+              <div className="ocost-section">
+                <div className="ocost-section-header">
+                  <span className="ocost-section-icon">📋</span>
+                  <div>
+                    <div className="ocost-section-title">Closing Costs & Fees</div>
+                    <div className="ocost-section-sub">Title, transfer taxes, agent commissions, misc.</div>
+                  </div>
+                </div>
+                <div className="ocost-fields-placeholder">
+                  <div className="ocost-placeholder-row">
+                    <span className="ocost-placeholder-label">Buy-side closing costs</span>
+                    <span className="ocost-placeholder-value">—</span>
+                  </div>
+                  <div className="ocost-placeholder-row">
+                    <span className="ocost-placeholder-label">Sell-side closing costs</span>
+                    <span className="ocost-placeholder-value">—</span>
+                  </div>
+                  <div className="ocost-placeholder-row">
+                    <span className="ocost-placeholder-label">Agent commissions</span>
+                    <span className="ocost-placeholder-value">—</span>
+                  </div>
+                  <div className="ocost-placeholder-row">
+                    <span className="ocost-placeholder-label">Holding costs (taxes, ins.)</span>
+                    <span className="ocost-placeholder-value">—</span>
+                  </div>
+                  <div className="ocost-placeholder-row ocost-placeholder-row--total">
+                    <span className="ocost-placeholder-label">Est. closing & hold total</span>
+                    <span className="ocost-placeholder-value">—</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* ── True net profit summary ── */}
+              <div className="ocost-section ocost-section--summary">
+                <div className="ocost-summary-row">
+                  <span>Gross spread (ARV − ask)</span><span>{spread !== null ? formatCurrency(spread) : '—'}</span>
+                </div>
+                <div className="ocost-summary-row">
+                  <span>− Est. rehab</span><span>{rehabEst ? formatCurrency(rehabEst) : '—'}</span>
+                </div>
+                <div className="ocost-summary-row ocost-summary-row--placeholder">
+                  <span>− Hard money costs</span><span className="ocost-tbd">TBD</span>
+                </div>
+                <div className="ocost-summary-row ocost-summary-row--placeholder">
+                  <span>− Closing &amp; holding costs</span><span className="ocost-tbd">TBD</span>
+                </div>
+                <div className="ocost-summary-row ocost-summary-row--net">
+                  <span>True net profit</span>
+                  <span className="ocost-net-value">{netMargin !== null ? formatCurrency(netMargin) : '—'}<span className="ocost-net-note"> (excl. HML &amp; closing)</span></span>
+                </div>
+              </div>
+
             </div>
           )}
 
@@ -822,8 +920,14 @@ function DealCard({
     setTimeout(() => { setFlipping(false); onSummary() }, 270)
   }
 
-  const listVal = analysis.spread !== null
-    ? { label: 'Spread', value: formatCurrency(analysis.spread), color: analysis.spread > 100_000 ? 'var(--success)' : analysis.spread > 40_000 ? 'var(--warning)' : 'var(--danger)' }
+  // On cards show net margin (spread − rehab) when we have rehab numbers; raw spread otherwise
+  const displayProfit = analysis.netMargin !== null
+    ? { raw: analysis.netMargin, label: 'Net' }
+    : analysis.spread !== null
+    ? { raw: analysis.spread, label: 'Spread' }
+    : null
+  const listVal = displayProfit !== null
+    ? { label: displayProfit.label, value: formatCurrency(displayProfit.raw), color: displayProfit.raw > 75_000 ? 'var(--success)' : displayProfit.raw > 25_000 ? 'var(--warning)' : 'var(--danger)' }
     : home.funnel.arv
     ? { label: arvLabel, value: formatCurrency(home.funnel.arv), color: 'var(--text)' }
     : home.funnel.askingPrice
@@ -955,18 +1059,18 @@ function DealCard({
                 <span className="dcard-fin-value">{formatCurrency(home.funnel.askingPrice)}</span>
               </div>
             )}
-            {analysis.spread !== null && (
+            {displayProfit !== null && (
               <div className="dcard-fin-row">
-                <span className="dcard-fin-label">Spread</span>
+                <span className="dcard-fin-label">{displayProfit.label}</span>
                 <span
                   className="dcard-fin-value"
                   style={{
-                    color: analysis.spread > 100_000 ? 'var(--success)'
-                      : analysis.spread > 40_000 ? 'var(--warning)' : 'var(--danger)',
+                    color: displayProfit.raw > 75_000 ? 'var(--success)'
+                      : displayProfit.raw > 25_000 ? 'var(--warning)' : 'var(--danger)',
                     fontWeight: 700,
                   }}
                 >
-                  {formatCurrency(analysis.spread)}
+                  {formatCurrency(displayProfit.raw)}
                 </span>
               </div>
             )}
@@ -1115,17 +1219,19 @@ function CommandBar({
           <div className="cmd-view-toggle">
             <button
               type="button"
-              className={`cmd-view-btn${viewMode === 'pipeline' ? ' cmd-view-btn--active' : ''}`}
-              onClick={() => setViewMode('pipeline')}
+              className={`cmd-view-btn${viewMode === 'on-market' ? ' cmd-view-btn--active' : ''}`}
+              onClick={() => setViewMode('on-market')}
+              title="Show on-market listings (MLS, auction, etc.)"
             >
-              Pipeline
+              On-Market
             </button>
             <button
               type="button"
-              className={`cmd-view-btn${viewMode === 'priority' ? ' cmd-view-btn--active' : ''}`}
-              onClick={() => setViewMode('priority')}
+              className={`cmd-view-btn${viewMode === 'off-market' ? ' cmd-view-btn--active' : ''}`}
+              onClick={() => setViewMode('off-market')}
+              title="Show off-market leads (D4D, wholesale, direct mail, etc.)"
             >
-              Priority
+              Off-Market
             </button>
           </div>
 
@@ -1316,7 +1422,7 @@ export function FunnelBoard({ homes, onSelect: _onSelect, onCreate, onStageChang
   const [search,        setSearch]        = useState('')
   const [sourceFilter,  setSourceFilter]  = useState<PropertySource | 'all'>('all')
   const [sortBy,        setSortBy]        = useState<SortOption>('ending-soon')
-  const [viewMode,      setViewMode]      = useState<ViewMode>('pipeline')
+  const [viewMode,      setViewMode]      = useState<ViewMode>('on-market')
   const [cardLayout,    setCardLayout]    = useState<'grid' | 'list'>('grid')
   const [pipelineStage, setPipelineStage] = useState<FunnelStage>('lead')
   const [summaryHome,   setSummaryHome]   = useState<HomeFile | null>(null)
@@ -1353,6 +1459,10 @@ export function FunnelBoard({ homes, onSelect: _onSelect, onCreate, onStageChang
         if (![h.address, h.city, h.state, getSourceLabel(h)].join(' ').toLowerCase().includes(q))
           return false
       }
+      // On-market / off-market toggle
+      const isOffMarket = OFF_MARKET_SOURCES.includes(h.source)
+      if (viewMode === 'on-market'  && isOffMarket) return false
+      if (viewMode === 'off-market' && !isOffMarket) return false
       // Source filter
       if (sourceFilter !== 'all' && h.source !== sourceFilter) return false
       return true
@@ -1375,20 +1485,9 @@ export function FunnelBoard({ homes, onSelect: _onSelect, onCreate, onStageChang
       return 0
     })
     return result
-  }, [homes, search, sourceFilter, sortBy, analyses])
+  }, [homes, search, sourceFilter, sortBy, viewMode, analyses])
 
-  const byStage = useMemo(() => {
-    const map = new Map<FunnelStage, HomeFile[]>()
-    for (const s of FUNNEL_STAGES) map.set(s.id, [])
-    for (const h of filtered) {
-      const list = map.get(h.stage) ?? []
-      list.push(h)
-      map.set(h.stage, list)
-    }
-    return map
-  }, [filtered])
-
-  // Group all filtered homes by action group (priority view)
+  // Group all filtered homes by action group
   const actionGroups = useMemo(() => {
     const groups = Object.fromEntries(ACTION_GROUP_ORDER.map((k) => [k, [] as HomeFile[]])) as Record<ActionGroupKey, HomeFile[]>
     for (const h of filtered) {
@@ -1398,23 +1497,10 @@ export function FunnelBoard({ homes, onSelect: _onSelect, onCreate, onStageChang
     return groups
   }, [filtered, analyses])
 
-  // Group stage-specific homes by action group (pipeline view)
-  const stageActionGroups = useMemo(() => {
-    const stageHomes = byStage.get(pipelineStage) ?? []
-    const groups = Object.fromEntries(ACTION_GROUP_ORDER.map((k) => [k, [] as HomeFile[]])) as Record<ActionGroupKey, HomeFile[]>
-    for (const h of stageHomes) {
-      const ag = getActionGroup(h, analyses.get(h.id)!)
-      groups[ag].push(h)
-    }
-    return groups
-  }, [byStage, pipelineStage, analyses])
-
   const liveSummaryHome = summaryHome
     ? (homes.find((h) => h.id === summaryHome.id) ?? summaryHome)
     : null
 
-  const displayHomes     = byStage.get(pipelineStage) ?? []
-  const currentStageMeta = getStageMeta(pipelineStage)
   const totalCounts    = useMemo(() => {
     const m = new Map<FunnelStage, number>()
     for (const s of FUNNEL_STAGES) m.set(s.id, homes.filter((h) => h.stage === s.id).length)
@@ -1449,7 +1535,7 @@ export function FunnelBoard({ homes, onSelect: _onSelect, onCreate, onStageChang
       <section className="cpipeline">
         {FUNNEL_STAGES.map((stage) => {
           const count  = totalCounts.get(stage.id) ?? 0
-          const active = stage.id === pipelineStage && viewMode === 'pipeline'
+          const active = stage.id === pipelineStage
           return (
             <button
               key={stage.id}
@@ -1457,7 +1543,6 @@ export function FunnelBoard({ homes, onSelect: _onSelect, onCreate, onStageChang
               style={{ '--sc': stage.color } as React.CSSProperties}
               onClick={() => {
                 setPipelineStage(stage.id)
-                setViewMode('pipeline')
               }}
             >
               <span className="cpipe-count">{count}</span>
@@ -1475,7 +1560,7 @@ export function FunnelBoard({ homes, onSelect: _onSelect, onCreate, onStageChang
         sortBy={sortBy} setSortBy={setSortBy}
         viewMode={viewMode} setViewMode={setViewMode}
         cardLayout={cardLayout} setCardLayout={setCardLayout}
-        totalShown={viewMode === 'priority' ? filtered.length : displayHomes.length}
+        totalShown={filtered.length}
         onAdd={() => setShowIntake(true)}
       />
 
@@ -1483,47 +1568,17 @@ export function FunnelBoard({ homes, onSelect: _onSelect, onCreate, onStageChang
       <div className="pipeline-view">
 
         {/* Action group sections */}
-        {(viewMode === 'pipeline' ? displayHomes.length === 0 : filtered.length === 0) ? (
-          viewMode === 'pipeline' ? (
-            <div className="stage-empty">
-              <div className="stage-empty-icon">
-                {pipelineStage === 'lead' ? '📥' :
-                 pipelineStage === 'arv-calculated' ? '📐' :
-                 pipelineStage === 'rehab-calculated' ? '🔨' :
-                 pipelineStage === 'solid-candidate' ? '🎯' :
-                 pipelineStage === 'under-contract' ? '📋' :
-                 pipelineStage === 'rehab' ? '🏗️' :
-                 pipelineStage === 'listed' ? '🏠' :
-                 pipelineStage === 'sold' ? '🏆' : '⏭️'}
-              </div>
-              <h3>No properties in {currentStageMeta.label}</h3>
-              <p>
-                {pipelineStage === 'lead'
-                  ? 'Add a property to get started — it will land here as a new lead.'
-                  : pipelineStage === 'arv-calculated'
-                  ? 'Calculate ARV on a New Lead to move it here.'
-                  : pipelineStage === 'rehab-calculated'
-                  ? 'Once rehab costs are estimated, move leads here.'
-                  : pipelineStage === 'solid-candidate'
-                  ? 'Move your best deals here once numbers look solid.'
-                  : `Move candidates here once they reach this stage.`}
-              </p>
-              {pipelineStage === 'lead' && (
-                <button className="btn btn-primary btn-sm" onClick={() => setShowIntake(true)}>+ Add Property</button>
-              )}
-            </div>
-          ) : (
-            <div className="board-empty">
-              <p>No properties match your filters.</p>
-              <button className="btn btn-primary btn-sm" onClick={() => setShowIntake(true)}>+ Add Property</button>
-            </div>
-          )
+        {filtered.length === 0 ? (
+          <div className="board-empty">
+            <p>No {viewMode === 'off-market' ? 'off-market' : 'on-market'} properties match your filters.</p>
+            <button className="btn btn-primary btn-sm" onClick={() => setShowIntake(true)}>+ Add Property</button>
+          </div>
         ) : (
           ACTION_GROUP_ORDER.map((gk) => (
             <ActionGroupSection
               key={gk}
               groupKey={gk}
-              homes={viewMode === 'pipeline' ? stageActionGroups[gk] : actionGroups[gk]}
+              homes={actionGroups[gk]}
               analyses={analyses}
               onSummary={setSummaryHome}
               streetViewStatus={streetViewStatus}

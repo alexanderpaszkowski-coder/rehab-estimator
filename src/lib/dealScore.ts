@@ -1,6 +1,6 @@
 import type { HomeFile } from '../types'
 import { AUCTION_SOURCES } from './funnel'
-import { calcQuickEstimate } from './calculations'
+import { calcBlendedRehab } from './calculations'
 
 export type NextActionKey =
   | 'calculate-arv'
@@ -137,7 +137,7 @@ function computeStructuredTags(home: HomeFile, analysis: {
 
 export function analyzeDeal(home: HomeFile): DealAnalysis {
   const f = home.funnel
-  const quick = calcQuickEstimate(home.property, home.quickEstimate)
+  const quick = calcBlendedRehab(home)
   const rehabEst = quick.withContingency > 0 ? quick.withContingency : null
 
   const spread = f.arv && f.askingPrice ? f.arv - f.askingPrice : null

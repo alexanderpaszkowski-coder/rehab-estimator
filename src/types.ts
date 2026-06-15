@@ -145,6 +145,8 @@ export interface HomeFile {
   property: PropertyInputs
   quickEstimate: QuickSystem[]
   sowLines: Record<string, { qty: number | string; bid: number | string; actual: number | string; notes: string }>
+  /** SOW categories the user has explicitly locked in — their line-item total replaces the QuickEstimate system cost */
+  sowFinalized: Record<string, boolean>
   notes: string
   submittedBy: 'partner' | 'reviewer'
   reviewStatus: ReviewStatus

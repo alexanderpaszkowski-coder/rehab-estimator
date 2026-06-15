@@ -2275,7 +2275,7 @@ textarea { resize: vertical; }
   display: flex;
   align-items: center;
   gap: 2px;
-  padding: 4px var(--gutter);
+  padding: 6px var(--gutter);
   background: var(--surface);
   border-bottom: 1px solid var(--border);
   overflow-x: auto;
@@ -2290,7 +2290,7 @@ textarea { resize: vertical; }
   align-items: center;
   justify-content: center;
   gap: 2px;
-  padding: 5px 12px;
+  padding: 8px 18px;
   border-radius: var(--radius-xs);
   border: 1.5px solid transparent;
   background: transparent;
@@ -2316,7 +2316,7 @@ textarea { resize: vertical; }
   color: color-mix(in srgb, var(--sc, var(--accent)) 90%, #000);
 }
 .cpipe-count {
-  font-size: 1.05rem;
+  font-size: 1.15rem;
   font-weight: 800;
   font-family: var(--mono);
   color: var(--text-muted);
@@ -2339,7 +2339,7 @@ textarea { resize: vertical; }
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 8px var(--gutter);
+  padding: 10px var(--gutter);
   background: var(--surface);
   border-bottom: 1px solid var(--border);
 }
@@ -2366,7 +2366,7 @@ textarea { resize: vertical; }
   flex-direction: column;
   align-items: flex-start;
   gap: 2px;
-  padding: 10px 14px;
+  padding: 12px 16px;
   border-radius: var(--radius-sm);
   border: 1.5px solid var(--border);
   border-left: 3px solid var(--qc, var(--border));
@@ -2634,6 +2634,51 @@ textarea { resize: vertical; }
   gap: 10px;
   margin-bottom: 12px;
 }
+
+/* ── Section header view toggle ─────────────────────────────────────── */
+.pipeline-view-layout-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+.pvlt-label {
+  font-size: 0.7rem;
+  color: var(--text-subtle);
+  margin-right: 2px;
+  font-weight: 500;
+}
+.pvlt-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background .12s, border-color .12s, color .12s;
+}
+.pvlt-btn:hover { background: var(--surface-2); border-color: var(--border-strong); color: var(--text); }
+.pvlt-btn--active {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ── List layout override ────────────────────────────────────────────── */
+.deals-grid--list {
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+@media (min-width: 1280px) {
+  .deals-grid--list {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}
 .pipeline-view-stage-dot {
   width: 9px;
   height: 9px;
@@ -2764,7 +2809,7 @@ textarea { resize: vertical; }
 /* ── Photo area ─────────────────────────────────────── */
 .dcard-photo {
   position: relative;
-  height: 124px;
+  height: 160px;
   overflow: hidden;
   background: var(--surface-3);
   flex-shrink: 0;
@@ -3993,21 +4038,27 @@ textarea { resize: vertical; }
 
 /* ── funnel-dashboard overrides ─────────────────────────────────────── */
 
-/* Remove main padding when dashboard is active — dashboard owns its own spacing */
+/* Beige page background with outer margin so white panel "floats" */
 .main:has(.funnel-dashboard) {
-  padding: 0;
+  padding: 14px 18px 0;
+  background: var(--bg);
 }
 
+/* White panel centered on the beige page — rounded top, subtle shadow */
 .funnel-dashboard {
   display: flex;
   flex-direction: column;
   flex: 1;
   min-height: 0;
   overflow: hidden;
-  /* Centered max-width container — prevents edge-to-edge stretch on wide monitors */
   max-width: 1640px;
   width: 100%;
   margin: 0 auto;
+  background: var(--surface);
+  border-radius: 10px 10px 0 0;
+  border: 1.5px solid var(--border);
+  border-bottom: none;
+  box-shadow: 0 2px 12px rgba(28,25,23,.07), 0 0 0 0 transparent;
 }
 
 /* ── Responsive ────────────────────────────────────── */
@@ -4025,6 +4076,8 @@ textarea { resize: vertical; }
   .role-card-icon { font-size: 3rem; }
 
   /* Command center mobile */
+  .main:has(.funnel-dashboard) { padding: 0; }
+  .funnel-dashboard { border-radius: 0; border-left: none; border-right: none; border-top: none; }
   .cmd-bar { flex-wrap: wrap; gap: 6px; padding: 8px 16px; }
   .cmd-bar-search { max-width: 100%; flex: 1 1 100%; }
   .cmd-bar-right { width: 100%; justify-content: flex-end; }
@@ -4036,4 +4089,5 @@ textarea { resize: vertical; }
   .aab-group--live { max-width: none; border-right: none; border-bottom: 1px solid #fed7aa; }
   /* Single-column grid on mobile */
   .deals-grid { grid-template-columns: 1fr; gap: 10px; }
+  .deals-grid--list { grid-template-columns: 1fr; }
 }

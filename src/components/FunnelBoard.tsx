@@ -177,11 +177,11 @@ const SOURCE_PILL_OPTIONS = [
 ]
 
 const SORT_PILL_OPTIONS = [
-  { value: 'score',        label: 'Deal Score'      },
-  { value: 'spread',       label: 'Spread'          },
-  { value: 'ending-soon',  label: 'Ending Soonest'  },
-  { value: 'arv',          label: 'ARV'             },
-  { value: 'newest',       label: 'Newest'          },
+  { value: 'score',        label: 'Deal Score',      shortLabel: 'Score'    },
+  { value: 'spread',       label: 'Spread',          shortLabel: 'Spread'   },
+  { value: 'ending-soon',  label: 'Ending Soonest',  shortLabel: 'Soonest'  },
+  { value: 'arv',          label: 'ARV',             shortLabel: 'ARV'      },
+  { value: 'newest',       label: 'Newest',          shortLabel: 'Newest'   },
 ]
 
 function FilterPill({
@@ -191,7 +191,7 @@ function FilterPill({
   prefix,
 }: {
   value: string
-  options: { value: string; label: string }[]
+  options: { value: string; label: string; shortLabel?: string }[]
   onChange: (v: string) => void
   prefix?: string
 }) {
@@ -217,7 +217,8 @@ function FilterPill({
         onClick={() => setOpen((o) => !o)}
       >
         {prefix && <span className="fpill-prefix">{prefix}</span>}
-        <span className="fpill-value">{current?.label ?? value}</span>
+        <span className="fpill-value fpill-value--full">{current?.label ?? value}</span>
+        <span className="fpill-value fpill-value--short">{current?.shortLabel ?? current?.label ?? value}</span>
         <svg
           className={`fpill-chevron${open ? ' fpill-chevron--up' : ''}`}
           width="11" height="11" viewBox="0 0 11 11" fill="none"
@@ -1051,97 +1052,104 @@ function CommandBar({
       )}
 
       <div className="cmd-bar-main">
-      {/* Desktop: always-visible inline search */}
-      <div className="cmd-bar-search cmd-bar-search--inline">
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-          <circle cx="6" cy="6" r="4.25" stroke="currentColor" strokeWidth="1.5" />
-          <path d="M10 10l2.5 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        </svg>
-        <input
-          type="search"
-          placeholder="Search address, city…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="cmd-search-input"
-        />
-        {search && (
-          <button className="cmd-search-clear" onClick={() => setSearch('')} aria-label="Clear">✕</button>
-        )}
-      </div>
+        <div className="cmd-bar-filters">
+          {/* Desktop: always-visible inline search */}
+          <div className="cmd-bar-search cmd-bar-search--inline">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+              <circle cx="6" cy="6" r="4.25" stroke="currentColor" strokeWidth="1.5" />
+              <path d="M10 10l2.5 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+            <input
+              type="search"
+              placeholder="Search address, city…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="cmd-search-input"
+            />
+            {search && (
+              <button className="cmd-search-clear" onClick={() => setSearch('')} aria-label="Clear">✕</button>
+            )}
+          </div>
 
-      {/* Mobile: search icon toggle */}
-      <button
-        type="button"
-        className={`cmd-search-icon-btn${(searchOpen || search) ? ' cmd-search-icon-btn--active' : ''}`}
-        onClick={searchOpen ? closeSearch : openSearch}
-        aria-label="Search"
-      >
-        <svg width="16" height="16" viewBox="0 0 14 14" fill="none">
-          <circle cx="6" cy="6" r="4.25" stroke="currentColor" strokeWidth="1.5" />
-          <path d="M10 10l2.5 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        </svg>
-      </button>
+          {/* Mobile: search icon toggle */}
+          <button
+            type="button"
+            className={`cmd-search-icon-btn${(searchOpen || search) ? ' cmd-search-icon-btn--active' : ''}`}
+            onClick={searchOpen ? closeSearch : openSearch}
+            aria-label="Search"
+          >
+            <svg width="16" height="16" viewBox="0 0 14 14" fill="none">
+              <circle cx="6" cy="6" r="4.25" stroke="currentColor" strokeWidth="1.5" />
+              <path d="M10 10l2.5 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </button>
 
-      <FilterPill
-        value={sourceFilter}
-        options={SOURCE_PILL_OPTIONS}
-        onChange={(v) => setSourceFilter(v as PropertySource | 'all')}
-      />
+          <FilterPill
+            value={sourceFilter}
+            options={SOURCE_PILL_OPTIONS}
+            onChange={(v) => setSourceFilter(v as PropertySource | 'all')}
+          />
 
-      <FilterPill
-        value={sortBy}
-        options={SORT_PILL_OPTIONS}
-        prefix="Sort:"
-        onChange={(v) => setSortBy(v as SortOption)}
-      />
+          <FilterPill
+            value={sortBy}
+            options={SORT_PILL_OPTIONS}
+            prefix="Sort:"
+            onChange={(v) => setSortBy(v as SortOption)}
+          />
 
-      <div className="cmd-sep" aria-hidden="true" />
+          <div className="cmd-bar-right cmd-bar-right--mobile">
+            <button className="cmd-add-icon-btn btn btn-primary" onClick={onAdd} aria-label="Add property" title="Add property">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            </button>
+          </div>
+        </div>
 
-      <div className="cmd-view-toggle">
-        <button
-          type="button"
-          className={`cmd-view-btn${viewMode === 'pipeline' ? ' cmd-view-btn--active' : ''}`}
-          onClick={() => setViewMode('pipeline')}
-        >
-          Pipeline
-        </button>
-        <button
-          type="button"
-          className={`cmd-view-btn${viewMode === 'priority' ? ' cmd-view-btn--active' : ''}`}
-          onClick={() => setViewMode('priority')}
-        >
-          Priority
-        </button>
-      </div>
+        <div className="cmd-bar-controls">
+          <div className="cmd-sep" aria-hidden="true" />
 
-      <div className="pipeline-view-layout-toggle cmd-layout-toggle">
-        <button
-          className={`pvlt-btn${cardLayout === 'grid' ? ' pvlt-btn--active' : ''}`}
-          onClick={() => setCardLayout('grid')}
-          title="Grid view"
-          type="button"
-        >
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="0" y="0" width="6" height="6" rx="1" fill="currentColor"/><rect x="8" y="0" width="6" height="6" rx="1" fill="currentColor"/><rect x="0" y="8" width="6" height="6" rx="1" fill="currentColor"/><rect x="8" y="8" width="6" height="6" rx="1" fill="currentColor"/></svg>
-        </button>
-        <button
-          className={`pvlt-btn${cardLayout === 'list' ? ' pvlt-btn--active' : ''}`}
-          onClick={() => setCardLayout('list')}
-          title="List view"
-          type="button"
-        >
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="0" y="1" width="14" height="2" rx="1" fill="currentColor"/><rect x="0" y="6" width="14" height="2" rx="1" fill="currentColor"/><rect x="0" y="11" width="14" height="2" rx="1" fill="currentColor"/></svg>
-        </button>
-      </div>
+          <div className="cmd-view-toggle">
+            <button
+              type="button"
+              className={`cmd-view-btn${viewMode === 'pipeline' ? ' cmd-view-btn--active' : ''}`}
+              onClick={() => setViewMode('pipeline')}
+            >
+              Pipeline
+            </button>
+            <button
+              type="button"
+              className={`cmd-view-btn${viewMode === 'priority' ? ' cmd-view-btn--active' : ''}`}
+              onClick={() => setViewMode('priority')}
+            >
+              Priority
+            </button>
+          </div>
 
-      <div className="cmd-bar-right">
-        <span className="cmd-count">{totalShown} shown</span>
-        <button className="btn btn-primary btn-sm" onClick={onAdd}>+ Add Property</button>
-        <button className="cmd-add-icon-btn btn btn-primary" onClick={onAdd} aria-label="Add property" title="Add property">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-          </svg>
-        </button>
-      </div>
+          <div className="pipeline-view-layout-toggle cmd-layout-toggle">
+            <button
+              className={`pvlt-btn${cardLayout === 'grid' ? ' pvlt-btn--active' : ''}`}
+              onClick={() => setCardLayout('grid')}
+              title="Grid view"
+              type="button"
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="0" y="0" width="6" height="6" rx="1" fill="currentColor"/><rect x="8" y="0" width="6" height="6" rx="1" fill="currentColor"/><rect x="0" y="8" width="6" height="6" rx="1" fill="currentColor"/><rect x="8" y="8" width="6" height="6" rx="1" fill="currentColor"/></svg>
+            </button>
+            <button
+              className={`pvlt-btn${cardLayout === 'list' ? ' pvlt-btn--active' : ''}`}
+              onClick={() => setCardLayout('list')}
+              title="List view"
+              type="button"
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="0" y="1" width="14" height="2" rx="1" fill="currentColor"/><rect x="0" y="6" width="14" height="2" rx="1" fill="currentColor"/><rect x="0" y="11" width="14" height="2" rx="1" fill="currentColor"/></svg>
+            </button>
+          </div>
+
+          <div className="cmd-bar-right cmd-bar-right--desktop">
+            <span className="cmd-count">{totalShown} shown</span>
+            <button className="btn btn-primary btn-sm" onClick={onAdd}>+ Add Property</button>
+          </div>
+        </div>
       </div>
     </div>
   )

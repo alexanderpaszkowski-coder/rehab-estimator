@@ -2718,6 +2718,22 @@ textarea { resize: vertical; }
   flex: 1;
   min-width: 0;
 }
+.cmd-bar-filters {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+.cmd-bar-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+.cmd-bar-right--mobile { display: none; }
+.fpill-value--short { display: none; }
 .cmd-bar-search-row { display: none; }
 .cmd-search-icon-btn { display: none; }
 .cmd-add-icon-btn { display: none; }
@@ -4615,7 +4631,7 @@ textarea { resize: vertical; }
     font-weight: 600;
   }
 
-  /* ── Command bar — collapsible search icon + single row ── */
+  /* ── Command bar — two rows on mobile ── */
   .cmd-bar {
     flex-direction: column;
     align-items: stretch;
@@ -4626,11 +4642,42 @@ textarea { resize: vertical; }
   }
   .cmd-bar-main {
     display: flex;
-    align-items: center;
-    flex-wrap: nowrap;
+    flex-direction: column;
+    align-items: stretch;
     gap: 6px;
     min-width: 0;
     width: 100%;
+  }
+  .cmd-bar-filters {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    min-width: 0;
+  }
+  .cmd-bar-filters .fpill {
+    flex: 1;
+    min-width: 0;
+  }
+  .cmd-bar-filters .fpill-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 0 6px;
+    overflow: hidden;
+  }
+  .cmd-bar-filters .fpill-value {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
+  .fpill-value--full { display: none; }
+  .fpill-value--short { display: inline; }
+  .cmd-bar-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    margin-left: 0;
   }
   .cmd-bar-search--inline { display: none; }
   .cmd-search-icon-btn { display: inline-flex; }
@@ -4649,10 +4696,8 @@ textarea { resize: vertical; }
     padding: 0 8px;
   }
   .cmd-search-input { font-size: 0.73rem; }
-  .fpill { flex-shrink: 0; }
   .fpill-btn {
     height: var(--ctrl-h);
-    padding: 0 8px;
     font-size: 0.67rem;
     gap: 3px;
   }
@@ -4666,15 +4711,15 @@ textarea { resize: vertical; }
     height: var(--ctrl-h);
     min-width: 0;
   }
+  .cmd-layout-toggle { flex-shrink: 0; }
   .cmd-layout-toggle .pvlt-btn { width: var(--ctrl-h); height: var(--ctrl-h); }
-  .cmd-bar-right {
-    width: auto;
+  .cmd-bar-right--mobile {
+    display: flex;
     margin-left: auto;
     flex-shrink: 0;
     gap: 0;
   }
-  .cmd-count { display: none; }
-  .cmd-bar-right .btn-sm { display: none; }
+  .cmd-bar-right--desktop { display: none; }
   .cmd-add-icon-btn { display: inline-flex; }
 
   /* ── Pipeline / priority view header ───────────────── */

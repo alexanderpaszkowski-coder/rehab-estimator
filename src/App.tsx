@@ -49,6 +49,50 @@ async function dbDelete(id: string): Promise<void> {
   if (error) console.error('Delete failed:', error.message)
 }
 
+function UserMenu({ email, onSignOut }: { email: string; onSignOut: () => void }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [open])
+
+  return (
+    <div className="user-menu" ref={ref}>
+      <button
+        type="button"
+        className="user-menu-btn"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        aria-haspopup="true"
+        title="Account"
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="2" />
+          <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+        </svg>
+      </button>
+      {open && (
+        <div className="user-menu-dropdown">
+          <div className="user-menu-email" title={email}>{email}</div>
+          <button
+            type="button"
+            className="user-menu-signout"
+            onClick={() => { setOpen(false); onSignOut() }}
+          >
+            Sign out
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function App() {
   const [session, setSession] = useState<Session | null>(null)
   const [sessionLoading, setSessionLoading] = useState(true)
@@ -294,10 +338,7 @@ export default function App() {
 
         <div className="topnav-end">
           {saved && <span className="save-indicator">✓ Saved</span>}
-          <span className="topnav-user">{session.user.email}</span>
-          <button className="topnav-home" onClick={handleLogout}>
-            Sign out
-          </button>
+          <UserMenu email={session.user.email ?? ''} onSignOut={handleLogout} />
         </div>
       </header>
 

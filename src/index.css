@@ -4246,8 +4246,8 @@ textarea { resize: vertical; }
   .topnav-logo { font-size: 0.88rem; }
   .topnav-item { padding: 5px 8px; font-size: 0.72rem; gap: 4px; }
   .topnav-step-num { width: 15px; height: 15px; font-size: 0.58rem; }
-  .topnav-home { display: none; }
-  .topnav-end .topnav-email { max-width: 100px; font-size: 0.72rem; }
+  .user-menu-dropdown { max-width: min(240px, calc(100vw - 20px)); }
+  .user-menu-email { font-size: 0.72rem; padding: 8px 10px; }
   .main { padding: 16px 14px 40px; }
   .sow-line, .sow-header { grid-template-columns: 1fr; gap: 4px; }
   .sow-scroll { max-height: none; }

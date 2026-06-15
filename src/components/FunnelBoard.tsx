@@ -32,28 +32,46 @@ interface Props {
 
 type SortOption = 'score' | 'spread' | 'newest' | 'arv' | 'ending-soon'
 type ViewMode = 'pipeline' | 'priority'
-type ActionGroupKey = 'outreach' | 'need-arv' | 'need-rehab' | 'need-hml' | 'offer-ready' | 'active' | 'closed'
+type ActionGroupKey = 'send-mailer' | 'need-arv' | 'need-rehab' | 'need-hml' | 'offer-ready' | 'max-bid' | 'active' | 'closed'
 
-const ACTION_GROUP_ORDER: ActionGroupKey[] = ['outreach', 'need-arv', 'need-rehab', 'need-hml', 'offer-ready', 'active', 'closed']
+const ACTION_GROUP_ORDER: ActionGroupKey[] = ['send-mailer', 'need-arv', 'need-rehab', 'need-hml', 'offer-ready', 'max-bid', 'active', 'closed']
 
 const ACTION_GROUP_META: Record<ActionGroupKey, { label: string; sub: string; color: string }> = {
-  'outreach':    { label: 'Outreach Needed',         sub: 'Off-market or drive-by — mail, call, or follow up', color: '#7c3aed' },
-  'need-arv':    { label: 'Need ARV',                sub: 'Run comps to establish value before going further',  color: '#2563eb' },
-  'need-rehab':  { label: 'Need Rehab Numbers',      sub: 'Estimate repair costs to know your real margin',     color: '#b45309' },
-  'need-hml':    { label: 'Need Hard Money Numbers', sub: 'Run financing scenarios with your lender',           color: '#0891b2' },
-  'offer-ready': { label: 'Offer Ready',             sub: 'Numbers look solid — move on this quickly',          color: '#15803d' },
-  'active':      { label: 'Active',                  sub: 'Under contract, in rehab, or listed',                color: '#6b7280' },
-  'closed':      { label: 'Closed',                  sub: 'Sold or passed on',                                  color: '#9ca3af' },
+  'send-mailer': { label: 'Send Mailer',             sub: 'Off-market / drive-by — send a letter or make contact first', color: '#7c3aed' },
+  'need-arv':    { label: 'Need ARV',                sub: 'Run comps to establish value before going further',            color: '#2563eb' },
+  'need-rehab':  { label: 'Need Rehab Numbers',      sub: 'Complete the full rehab scope — every system, not just a start', color: '#b45309' },
+  'need-hml':    { label: 'Need Hard Money Numbers', sub: 'Run financing scenarios with your lender',                     color: '#0891b2' },
+  'offer-ready': { label: 'Offer Ready',             sub: 'All numbers confirmed — move quickly',                         color: '#15803d' },
+  'max-bid':     { label: 'Max Bid Needed',          sub: 'Auction — calculate your walk-away number before it opens',    color: '#c2410c' },
+  'active':      { label: 'Active',                  sub: 'Under contract, in rehab, or listed',                          color: '#6b7280' },
+  'closed':      { label: 'Closed',                  sub: 'Sold or passed on',                                            color: '#9ca3af' },
 }
 
-function getActionGroup(home: HomeFile, analysis: DealAnalysis): ActionGroupKey {
+// Off-market / direct-contact sources where you send mail before anything else
+const SEND_MAILER_SOURCES: PropertySource[] = [
+  'driving-for-dollars', 'off-market', 'wholesale', 'direct-mail', 'other',
+]
+
+function getActionGroup(home: HomeFile, _analysis: DealAnalysis): ActionGroupKey {
   if (['sold', 'passed'].includes(home.stage)) return 'closed'
   if (['under-contract', 'rehab', 'listed'].includes(home.stage)) return 'active'
-  if (home.stage === 'solid-candidate' || (analysis.score >= 72 && home.funnel.arv && analysis.rehabEst)) return 'offer-ready'
-  if (['driving-for-dollars', 'other'].includes(home.source) && !home.funnel.arv) return 'outreach'
-  if (!home.funnel.arv) return 'need-arv'
-  if (!analysis.rehabEst) return 'need-rehab'
-  return 'need-hml'
+
+  // Offer ready / max bid — only when the user has explicitly promoted to solid-candidate
+  if (home.stage === 'solid-candidate') {
+    return AUCTION_SOURCES.includes(home.source) ? 'max-bid' : 'offer-ready'
+  }
+
+  // Rehab scope confirmed complete — stage rehab-calculated means all systems assessed
+  if (home.stage === 'rehab-calculated') return 'need-hml'
+
+  // ARV is done but rehab scope not yet complete
+  if (home.stage === 'arv-calculated') return 'need-rehab'
+
+  // New lead (lead stage) — off-market sources need a mailer before anything else
+  if (SEND_MAILER_SOURCES.includes(home.source)) return 'send-mailer'
+
+  // Online listing with no further work done
+  return 'need-arv'
 }
 
 const SOURCE_DOMAIN: Partial<Record<PropertySource, string>> = {

@@ -10,11 +10,14 @@ export type StreetViewFetchResult =
 /** Fetches a Street View photo server-side, uploads to Storage, returns the public URL. */
 export async function fetchStreetViewPhoto(home: HomeFile): Promise<StreetViewFetchResult> {
   try {
-    // Use anon key directly — avoids failures when the user's session JWT is from a different project
-    const res = await fetch(`${supabaseUrl}/functions/v1/fetch-street-view`, {
+    const functionUrl = import.meta.env.DEV
+      ? '/api/fetch-street-view'
+      : `${supabaseUrl}/functions/v1/fetch-street-view`
+    const res = await fetch(functionUrl, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${supabaseAnonKey}`,
+        apikey: supabaseAnonKey,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -25,7 +28,12 @@ export async function fetchStreetViewPhoto(home: HomeFile): Promise<StreetViewFe
       }),
     })
 
-    const result = await res.json() as { photoUrl?: string; error?: string }
+    let result: { photoUrl?: string; error?: string } = {}
+    try {
+      result = await res.json() as { photoUrl?: string; error?: string }
+    } catch {
+      return { ok: false, error: 'Invalid response from edge function' }
+    }
 
     if (!res.ok) {
       console.warn('[streetView] HTTP error:', res.status, result.error)

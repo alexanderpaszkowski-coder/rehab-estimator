@@ -691,7 +691,7 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
           )}
 
           {editTab === 'screen' && onUpdateHome && (
-            <div className="modal-edit-panel">
+            <div className="modal-edit-panel modal-edit-panel--screen">
               <FunnelDetails
                 home={home}
                 onChange={(patch) => handleChange(patch)}

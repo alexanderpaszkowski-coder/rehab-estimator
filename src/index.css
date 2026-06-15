@@ -627,6 +627,119 @@ textarea { resize: vertical; }
 .screen-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 18px; }
 .screen-item label { display: block; font-size: 0.84rem; font-weight: 500; margin-bottom: 8px; }
 
+/* ── Compact screen tab layout ──────────────────────── */
+.screen-layout { display: flex; flex-direction: column; gap: 10px; }
+
+.screen-questions-card { padding: 14px 16px 12px; }
+.screen-questions-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.screen-questions-header h2 { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin: 0; }
+
+.screen-grid-compact {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px 12px;
+}
+.screen-notes-field { grid-column: 1 / -1; }
+.screen-grid-compact .screen-item label,
+.screen-grid-compact .field label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.screen-grid-compact .condition-pill { font-size: 0.65rem; padding: 2px 8px; }
+.screen-grid-compact input[type="number"],
+.screen-grid-compact textarea,
+.screen-grid-compact select { font-size: 0.78rem; padding: 5px 8px; }
+.screen-grid-compact textarea { resize: none; min-height: unset; }
+
+/* Meta strip — source/stage on left, review on right */
+.screen-meta-strip {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  padding: 12px 16px;
+}
+.screen-meta-left {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 0 0 200px;
+}
+.screen-meta-left .field label,
+.screen-meta-right .field label,
+.screen-meta-review-row label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  display: block;
+  margin-bottom: 5px;
+}
+.screen-meta-left select,
+.screen-meta-left input,
+.screen-meta-right textarea {
+  font-size: 0.78rem;
+  padding: 5px 8px;
+  width: 100%;
+}
+.screen-meta-divider {
+  width: 1px;
+  background: var(--border);
+  align-self: stretch;
+  margin: 0 16px;
+  flex-shrink: 0;
+}
+.screen-meta-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.screen-meta-review-row { display: flex; flex-direction: column; gap: 5px; }
+.screen-meta-right .condition-pill { font-size: 0.65rem; padding: 2px 8px; }
+.screen-meta-right textarea { resize: none; font-size: 0.78rem; padding: 5px 8px; }
+
+/* Partner submission compact card */
+.screen-partner-card {
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.screen-partner-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+}
+.screen-partner-links { margin: 0; padding: 0; list-style: none; }
+.screen-partner-links li a { font-size: 0.78rem; color: var(--accent); word-break: break-all; }
+.screen-partner-notes { font-size: 0.82rem; color: var(--text); line-height: 1.5; margin: 0; }
+
+/* Screen panel: suppress scroll so it fits the modal pane */
+.modal-edit-panel--screen {
+  padding: 10px 4px 10px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+.modal-edit-panel--screen .screen-layout {
+  flex: 1;
+  overflow: hidden;
+}
+
 /* ── Empty state ───────────────────────────────────── */
 .empty-state {
   text-align: center;

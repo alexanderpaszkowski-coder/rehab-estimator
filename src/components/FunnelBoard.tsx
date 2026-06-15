@@ -900,6 +900,7 @@ function DealCard({
 interface QueueCardDef {
   key: QueueFilter
   label: string
+  shortLabel: string
   count: number
   sub: string
   color: string
@@ -974,7 +975,8 @@ function DealQueue({
               <span className="queue-card-count" style={{ color: isEmpty ? 'var(--text-muted)' : card.color }}>
                 {card.count}
               </span>
-              <span className="queue-card-label">{card.label}</span>
+              <span className="queue-card-label queue-card-label--full">{card.label}</span>
+              <span className="queue-card-label queue-card-label--short">{card.shortLabel}</span>
               <span className="queue-card-sub">{card.sub}</span>
             </button>
           )
@@ -1202,6 +1204,19 @@ function AuctionAlertBar({ homes, onOpen }: { homes: HomeFile[]; onOpen: (h: Hom
   )
 }
 
+// Short labels for compact mobile pipeline strip
+const STAGE_SHORT_LABELS: Record<FunnelStage, string> = {
+  'lead':             'Leads',
+  'arv-calculated':   'ARV',
+  'rehab-calculated': 'Est.',
+  'solid-candidate':  'Solid',
+  'under-contract':   'Contract',
+  'rehab':            'Active',
+  'listed':           'Listed',
+  'sold':             'Sold',
+  'passed':           'Pass',
+}
+
 // ── Main board ────────────────────────────────────────────────────────────────
 
 export function FunnelBoard({ homes, onSelect: _onSelect, onCreate, onStageChange, onDelete, onRefreshHome, onUpdateHome, autoOpenIntake, streetViewStatus }: Props) {
@@ -1251,6 +1266,7 @@ export function FunnelBoard({ homes, onSelect: _onSelect, onCreate, onStageChang
       {
         key: 'need-arv',
         label: 'Need ARV',
+        shortLabel: 'ARV',
         count: needArv,
         sub: needArv > 0 ? 'Start with these first' : 'All have ARV',
         color: '#2563eb',
@@ -1259,6 +1275,7 @@ export function FunnelBoard({ homes, onSelect: _onSelect, onCreate, onStageChang
       {
         key: 'need-rehab',
         label: 'Need Rehab Est.',
+        shortLabel: 'Rehab',
         count: needRehab,
         sub: needRehab > 0 ? 'Calculate rehab costs' : 'All estimates in',
         color: '#7c3aed',
@@ -1267,6 +1284,7 @@ export function FunnelBoard({ homes, onSelect: _onSelect, onCreate, onStageChang
       {
         key: 'thin-margin',
         label: 'Thin Margin',
+        shortLabel: 'Thin',
         count: thinMargin,
         sub: thinMargin > 0 ? 'Spread may not cover costs' : 'No margin warnings',
         color: '#b91c1c',
@@ -1275,6 +1293,7 @@ export function FunnelBoard({ homes, onSelect: _onSelect, onCreate, onStageChang
       {
         key: 'strong',
         label: 'Strong Deals',
+        shortLabel: 'Strong',
         count: strong,
         sub: strong > 0 ? 'High score — prioritize' : 'No strong deals yet',
         color: '#15803d',
@@ -1283,6 +1302,7 @@ export function FunnelBoard({ homes, onSelect: _onSelect, onCreate, onStageChang
       {
         key: 'solid',
         label: 'Ready to Offer',
+        shortLabel: 'Offer',
         count: solid,
         sub: solid > 0 ? 'Move quickly on these' : 'No offers pending',
         color: '#b45309',
@@ -1405,7 +1425,8 @@ export function FunnelBoard({ homes, onSelect: _onSelect, onCreate, onStageChang
               }}
             >
               <span className="cpipe-count">{count}</span>
-              <span className="cpipe-label">{stage.label}</span>
+              <span className="cpipe-label cpipe-label--full">{stage.label}</span>
+              <span className="cpipe-label cpipe-label--short">{STAGE_SHORT_LABELS[stage.id]}</span>
             </button>
           )
         })}

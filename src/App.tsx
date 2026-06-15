@@ -196,7 +196,17 @@ export default function App() {
       .select('data')
       .then(({ data, error }) => {
         if (error) { console.error('Load failed:', error.message); return }
-        setHomes((data ?? []).map((row) => migrateHome(row.data as Partial<HomeFile> & { address: string })))
+        const loaded = (data ?? []).map((row) => migrateHome(row.data as Partial<HomeFile> & { address: string }))
+
+        // One-time backfill: stamp existing homes with 'Alex' if they have no addedByName
+        const needsBackfill = loaded.filter((h) => !h.addedByName)
+        if (needsBackfill.length > 0) {
+          const backfilled = needsBackfill.map((h) => ({ ...h, addedByName: 'Alex' }))
+          for (const h of backfilled) void dbUpsert(h)
+          setHomes(loaded.map((h) => backfilled.find((b) => b.id === h.id) ?? h))
+        } else {
+          setHomes(loaded)
+        }
       })
 
     const channel = supabase

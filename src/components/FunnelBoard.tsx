@@ -995,9 +995,44 @@ function CommandBar({
   totalShown: number
   onAdd: () => void
 }) {
+  const [searchOpen, setSearchOpen] = useState(false)
+  const searchInputRef = useRef<HTMLInputElement>(null)
+
+  const openSearch = () => {
+    setSearchOpen(true)
+    setTimeout(() => searchInputRef.current?.focus(), 30)
+  }
+  const closeSearch = () => {
+    setSearchOpen(false)
+    setSearch('')
+  }
+
   return (
     <div className="cmd-bar">
-      <div className="cmd-bar-search">
+      {/* Mobile: collapsible search row */}
+      {searchOpen && (
+        <div className="cmd-bar-search-row">
+          <div className="cmd-bar-search cmd-bar-search--open">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+              <circle cx="6" cy="6" r="4.25" stroke="currentColor" strokeWidth="1.5" />
+              <path d="M10 10l2.5 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+            <input
+              ref={searchInputRef}
+              type="search"
+              placeholder="Search address, city…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="cmd-search-input"
+            />
+            <button className="cmd-search-clear" onClick={closeSearch} aria-label="Close search">✕</button>
+          </div>
+        </div>
+      )}
+
+      <div className="cmd-bar-main">
+      {/* Desktop: always-visible inline search */}
+      <div className="cmd-bar-search cmd-bar-search--inline">
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
           <circle cx="6" cy="6" r="4.25" stroke="currentColor" strokeWidth="1.5" />
           <path d="M10 10l2.5 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
@@ -1013,6 +1048,19 @@ function CommandBar({
           <button className="cmd-search-clear" onClick={() => setSearch('')} aria-label="Clear">✕</button>
         )}
       </div>
+
+      {/* Mobile: search icon toggle */}
+      <button
+        type="button"
+        className={`cmd-search-icon-btn${(searchOpen || search) ? ' cmd-search-icon-btn--active' : ''}`}
+        onClick={searchOpen ? closeSearch : openSearch}
+        aria-label="Search"
+      >
+        <svg width="16" height="16" viewBox="0 0 14 14" fill="none">
+          <circle cx="6" cy="6" r="4.25" stroke="currentColor" strokeWidth="1.5" />
+          <path d="M10 10l2.5 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        </svg>
+      </button>
 
       <FilterPill
         value={sourceFilter}
@@ -1049,6 +1097,12 @@ function CommandBar({
       <div className="cmd-bar-right">
         <span className="cmd-count">{totalShown} shown</span>
         <button className="btn btn-primary btn-sm" onClick={onAdd}>+ Add Property</button>
+        <button className="cmd-add-icon-btn btn btn-primary" onClick={onAdd} aria-label="Add property" title="Add property">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+        </button>
+      </div>
       </div>
     </div>
   )
@@ -1174,7 +1228,7 @@ function AuctionAlertBar({ homes, onOpen }: { homes: HomeFile[]; onOpen: (h: Hom
       )}
       {upcoming.length > 0 && (
         <div className="aab-group aab-group--upcoming">
-          <div className="aab-group-label">Starting Soon</div>
+          <div className="aab-group-label">auctions</div>
           <div className="aab-cards">
             {upcoming.slice(0, 5).map((h) => (
               <button key={h.id} type="button" className="aab-card aab-card--upcoming" onClick={() => onOpen(h)}>

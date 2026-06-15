@@ -2452,6 +2452,13 @@ textarea { resize: vertical; }
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
+.cmd-bar-main {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
 .cmd-bar-search {
   display: flex;
   align-items: center;
@@ -2498,6 +2505,44 @@ textarea { resize: vertical; }
   transition: background .1s;
 }
 .cmd-search-clear:hover { background: var(--border); color: var(--text); }
+
+/* Mobile-only cmd-bar controls — hidden on desktop */
+.cmd-bar-search-row { display: none; }
+.cmd-bar-search--inline { display: flex; }
+.cmd-search-icon-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--ctrl-h);
+  height: var(--ctrl-h);
+  padding: 0;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-xs);
+  background: var(--surface);
+  color: var(--text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: border-color .13s, background .13s, color .13s;
+}
+.cmd-search-icon-btn:hover {
+  background: var(--surface-2);
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+.cmd-search-icon-btn--active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.cmd-add-icon-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--ctrl-h);
+  height: var(--ctrl-h);
+  padding: 0;
+  flex-shrink: 0;
+}
 
 /* ── Filter pill ──────────────────────────────────── */
 .fpill { position: relative; flex-shrink: 0; }
@@ -2635,6 +2680,54 @@ textarea { resize: vertical; }
   color: var(--text-subtle);
   font-weight: 500;
   white-space: nowrap;
+}
+
+/* Command bar layout helpers */
+.cmd-bar-main {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+.cmd-bar-search-row { display: none; }
+.cmd-search-icon-btn { display: none; }
+.cmd-add-icon-btn { display: none; }
+.cmd-bar-search--inline { display: flex; }
+
+.cmd-search-icon-btn {
+  align-items: center;
+  justify-content: center;
+  width: var(--ctrl-h);
+  height: var(--ctrl-h);
+  flex-shrink: 0;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-xs);
+  background: var(--surface);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: border-color .13s, background .13s, color .13s;
+}
+.cmd-search-icon-btn:hover {
+  background: var(--surface-2);
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+.cmd-search-icon-btn--active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.cmd-add-icon-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--ctrl-h);
+  height: var(--ctrl-h);
+  flex-shrink: 0;
+  padding: 0;
+  border-radius: var(--radius-xs);
 }
 
 /* ── Pipeline & Priority views ──────────────────────────────────────── */
@@ -3977,7 +4070,7 @@ textarea { resize: vertical; }
 /* ── Auction Alert Bar ───────────────────────────────────────────────── */
 .auction-alert-bar {
   display: flex;
-  flex-direction: row;   /* side-by-side: Live Now | Starting Soon */
+  flex-direction: row;   /* side-by-side: Live Now | auctions */
   align-items: stretch;
   border-bottom: 1.5px solid var(--border);
   background: var(--surface);
@@ -4003,6 +4096,11 @@ textarea { resize: vertical; }
   background: var(--surface);
   flex: 1;
   min-width: 0;
+}
+
+.aab-group--upcoming .aab-group-label {
+  text-transform: none;
+  letter-spacing: 0.02em;
 }
 
 .aab-group-label {
@@ -4153,7 +4251,7 @@ textarea { resize: vertical; }
     border-top: none;
   }
 
-  /* ── Auction / Starting Soon bar — no horizontal scroll ── */
+  /* ── Auction bar — no horizontal scroll ── */
   /* Groups stack vertically; cards wrap 2-per-row so all are visible */
   .auction-alert-bar { flex-direction: column; border-bottom: 1px solid var(--border); }
   .aab-group {
@@ -4273,17 +4371,32 @@ textarea { resize: vertical; }
     font-weight: 600;
   }
 
-  /* ── Command bar — 2 clean rows, no horizontal scroll ── */
-  /* Row 1: search (flex-grow) + source pill + sort pill         */
-  /* Row 2: Pipeline/Priority toggle (flex-grow) + Add button    */
+  /* ── Command bar — single row; collapsible search icon ── */
   .cmd-bar {
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: stretch;
+    flex-wrap: nowrap;
     overflow: visible;
     gap: 4px;
     padding: 5px var(--gutter);
   }
-  .cmd-bar-search {
-    flex: 1 1 100px;
+  .cmd-bar-main {
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 4px;
+    min-width: 0;
+    width: 100%;
+  }
+  .cmd-bar-search--inline { display: none; }
+  .cmd-search-icon-btn { display: inline-flex; }
+  .cmd-bar-search-row {
+    display: block;
+    width: 100%;
+  }
+  .cmd-bar-search-row .cmd-bar-search {
+    display: flex;
+    flex: 1;
     min-width: 0;
     max-width: none;
     height: var(--ctrl-h);
@@ -4310,7 +4423,8 @@ textarea { resize: vertical; }
     gap: 5px;
   }
   .cmd-count { display: none; }
-  .cmd-bar-right .btn-sm { padding: 0 10px; font-size: 0.69rem; height: var(--ctrl-h); white-space: nowrap; }
+  .cmd-bar-right .btn-sm { display: none; }
+  .cmd-add-icon-btn { display: inline-flex; }
 
   /* ── Pipeline / priority view header ───────────────── */
   .pipeline-view, .priority-view { padding: 8px var(--gutter) 32px; }

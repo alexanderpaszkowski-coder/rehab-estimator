@@ -8,6 +8,7 @@ interface Props {
 export function Auth({ onAuthenticated }: Props) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [firstName, setFirstName] = useState('')
   const [mode, setMode] = useState<'signin' | 'signup'>('signin')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -21,7 +22,11 @@ export function Auth({ onAuthenticated }: Props) {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
       } else {
-        const { error } = await supabase.auth.signUp({ email, password })
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { data: { full_name: firstName.trim() } },
+        })
         if (error) throw error
       }
       onAuthenticated()
@@ -42,6 +47,20 @@ export function Auth({ onAuthenticated }: Props) {
         <p className="auth-sub">Rehab deal tracking for your team</p>
         <form onSubmit={handleSubmit} className="auth-form">
           {error && <div className="auth-error">{error}</div>}
+          {mode === 'signup' && (
+            <div className="field">
+              <label htmlFor="auth-firstname">First name</label>
+              <input
+                id="auth-firstname"
+                type="text"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                placeholder="Alex"
+                required
+                autoFocus
+              />
+            </div>
+          )}
           <div className="field">
             <label htmlFor="auth-email">Email</label>
             <input
@@ -51,7 +70,7 @@ export function Auth({ onAuthenticated }: Props) {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
               required
-              autoFocus
+              autoFocus={mode === 'signin'}
             />
           </div>
           <div className="field">

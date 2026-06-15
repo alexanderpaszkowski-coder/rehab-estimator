@@ -198,6 +198,54 @@ textarea { resize: vertical; }
   min-width: 200px;
   max-width: min(280px, calc(100vw - 16px));
 }
+/* Avatar initial in nav button */
+.user-menu-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+/* Name edit row inside dropdown */
+.user-menu-name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.user-menu-name-input {
+  flex: 1;
+  font-size: 0.78rem;
+  padding: 5px 8px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-xs);
+  background: var(--surface);
+  color: var(--text);
+  min-width: 0;
+}
+.user-menu-name-input:focus { border-color: var(--accent); outline: none; }
+.user-menu-name-save {
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: var(--radius-xs);
+  background: var(--accent);
+  color: #fff;
+  transition: background .15s, opacity .15s;
+}
+.user-menu-name-save:hover { background: var(--accent-hover); }
+.user-menu-name-save:disabled { opacity: 0.4; cursor: default; }
+.user-menu-name-save--saved { background: var(--success) !important; }
+
 .user-menu-email {
   padding: 10px 12px;
   font-size: 0.78rem;

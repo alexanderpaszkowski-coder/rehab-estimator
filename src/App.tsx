@@ -51,17 +51,24 @@ async function dbDelete(id: string): Promise<void> {
 
 function UserMenu({
   email,
+  displayName,
   onSignOut,
   darkMode,
   onToggleDark,
 }: {
   email: string
+  displayName: string
   onSignOut: () => void
   darkMode: boolean
   onToggleDark: () => void
 }) {
   const [open, setOpen] = useState(false)
+  const [nameInput, setNameInput] = useState(displayName)
+  const [nameSaving, setNameSaving] = useState(false)
+  const [nameSaved, setNameSaved] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => { setNameInput(displayName) }, [displayName])
 
   useEffect(() => {
     if (!open) return
@@ -71,6 +78,16 @@ function UserMenu({
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [open])
+
+  const saveName = async () => {
+    const trimmed = nameInput.trim()
+    if (!trimmed || trimmed === displayName) return
+    setNameSaving(true)
+    await supabase.auth.updateUser({ data: { full_name: trimmed } })
+    setNameSaving(false)
+    setNameSaved(true)
+    setTimeout(() => setNameSaved(false), 2000)
+  }
 
   return (
     <div className="user-menu" ref={ref}>
@@ -82,14 +99,39 @@ function UserMenu({
         aria-haspopup="true"
         title="Account"
       >
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="2" />
-          <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-        </svg>
+        {displayName ? (
+          <span className="user-menu-avatar">{displayName[0].toUpperCase()}</span>
+        ) : (
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="2" />
+            <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+        )}
       </button>
       {open && (
         <div className="user-menu-dropdown">
           <div className="user-menu-email" title={email}>{email}</div>
+
+          <div className="user-menu-name-row">
+            <input
+              className="user-menu-name-input"
+              type="text"
+              value={nameInput}
+              onChange={(e) => { setNameInput(e.target.value); setNameSaved(false) }}
+              onKeyDown={(e) => { if (e.key === 'Enter') void saveName() }}
+              placeholder="Your first name"
+              maxLength={32}
+            />
+            <button
+              type="button"
+              className={`user-menu-name-save${nameSaved ? ' user-menu-name-save--saved' : ''}`}
+              onClick={() => void saveName()}
+              disabled={nameSaving || !nameInput.trim() || nameInput.trim() === displayName}
+            >
+              {nameSaved ? '✓' : nameSaving ? '…' : 'Save'}
+            </button>
+          </div>
+
           <label className="user-menu-theme">
             <span className="user-menu-theme-label">Dark mode</span>
             <span className="toggle-switch" aria-hidden="true">
@@ -375,6 +417,7 @@ export default function App() {
           {saved && <span className="save-indicator">✓ Saved</span>}
           <UserMenu
             email={session.user.email ?? ''}
+            displayName={(session.user.user_metadata?.full_name as string | undefined)?.split(' ')[0] ?? ''}
             onSignOut={handleLogout}
             darkMode={darkMode}
             onToggleDark={() => setDarkMode(d => !d)}

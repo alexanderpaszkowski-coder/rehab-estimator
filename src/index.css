@@ -4912,7 +4912,6 @@ textarea { resize: vertical; }
   font-weight: 700;
   font-family: var(--mono);
   color: var(--accent);
-  color: #2563eb;
   margin-top: 2px;
   white-space: nowrap;
 }

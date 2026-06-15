@@ -32,7 +32,29 @@ interface Props {
 
 type SortOption = 'score' | 'spread' | 'newest' | 'arv' | 'ending-soon'
 type ViewMode = 'pipeline' | 'priority'
-type QueueFilter = 'need-arv' | 'need-rehab' | 'thin-margin' | 'strong' | 'solid' | null
+type ActionGroupKey = 'outreach' | 'need-arv' | 'need-rehab' | 'need-hml' | 'offer-ready' | 'active' | 'closed'
+
+const ACTION_GROUP_ORDER: ActionGroupKey[] = ['outreach', 'need-arv', 'need-rehab', 'need-hml', 'offer-ready', 'active', 'closed']
+
+const ACTION_GROUP_META: Record<ActionGroupKey, { label: string; sub: string; color: string }> = {
+  'outreach':    { label: 'Outreach Needed',         sub: 'Off-market or drive-by — mail, call, or follow up', color: '#7c3aed' },
+  'need-arv':    { label: 'Need ARV',                sub: 'Run comps to establish value before going further',  color: '#2563eb' },
+  'need-rehab':  { label: 'Need Rehab Numbers',      sub: 'Estimate repair costs to know your real margin',     color: '#b45309' },
+  'need-hml':    { label: 'Need Hard Money Numbers', sub: 'Run financing scenarios with your lender',           color: '#0891b2' },
+  'offer-ready': { label: 'Offer Ready',             sub: 'Numbers look solid — move on this quickly',          color: '#15803d' },
+  'active':      { label: 'Active',                  sub: 'Under contract, in rehab, or listed',                color: '#6b7280' },
+  'closed':      { label: 'Closed',                  sub: 'Sold or passed on',                                  color: '#9ca3af' },
+}
+
+function getActionGroup(home: HomeFile, analysis: DealAnalysis): ActionGroupKey {
+  if (['sold', 'passed'].includes(home.stage)) return 'closed'
+  if (['under-contract', 'rehab', 'listed'].includes(home.stage)) return 'active'
+  if (home.stage === 'solid-candidate' || (analysis.score >= 72 && home.funnel.arv && analysis.rehabEst)) return 'offer-ready'
+  if (['driving-for-dollars', 'other'].includes(home.source) && !home.funnel.arv) return 'outreach'
+  if (!home.funnel.arv) return 'need-arv'
+  if (!analysis.rehabEst) return 'need-rehab'
+  return 'need-hml'
+}
 
 const SOURCE_DOMAIN: Partial<Record<PropertySource, string>> = {
   'auction.com':  'auction.com',
@@ -949,96 +971,7 @@ function DealCard({
   )
 }
 
-// ── Today's deal queue ────────────────────────────────────────────────────────
-
-interface QueueCardDef {
-  key: QueueFilter
-  label: string
-  shortLabel: string
-  count: number
-  sub: string
-  color: string
-  bg: string
-}
-
-// Clean line icons per queue category
-const QUEUE_SVG: Record<string, React.ReactNode> = {
-  'need-arv': (
-    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M2 12V9M5 12V6M8 12V8M11 12V3" />
-      <path d="M2 13.5h11" />
-    </svg>
-  ),
-  'need-rehab': (
-    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M9.5 2a4 4 0 0 1-5.3 5.9L2 11.5V13h1.5l2.6-2.6A4 4 0 0 1 9.5 2z" />
-    </svg>
-  ),
-  'thin-margin': (
-    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M7.5 2L14 13H1L7.5 2z" />
-      <path d="M7.5 6.5v3" />
-      <circle cx="7.5" cy="11" r=".7" fill="currentColor" stroke="none" />
-    </svg>
-  ),
-  'strong': (
-    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="7.5" cy="7.5" r="6" />
-      <circle cx="7.5" cy="7.5" r="2.5" />
-      <circle cx="7.5" cy="7.5" r=".7" fill="currentColor" stroke="none" />
-    </svg>
-  ),
-  'solid': (
-    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="2" y="2" width="11" height="11" rx="2.5" />
-      <path d="M4.5 7.5L6.5 9.5 10.5 5" />
-    </svg>
-  ),
-}
-
-function DealQueue({
-  cards,
-  activeFilter,
-  onFilter,
-}: {
-  cards: QueueCardDef[]
-  activeFilter: QueueFilter
-  onFilter: (f: QueueFilter) => void
-}) {
-  const hasAny = cards.some((c) => c.count > 0)
-  if (!hasAny) return null
-
-  return (
-    <section className="deal-queue">
-      <span className="deal-queue-eyebrow">Today's Deal Queue</span>
-      <div className="deal-queue-track">
-        {cards.map((card) => {
-          const isEmpty = card.count === 0
-          const isActive = activeFilter === card.key
-          return (
-            <button
-              key={card.key}
-              className={`queue-card${isActive ? ' queue-card--active' : ''}${isEmpty ? ' queue-card--empty' : ''}`}
-              onClick={() => !isEmpty && onFilter(isActive ? null : card.key)}
-              style={{ '--qc': card.color, '--qb': card.bg } as React.CSSProperties}
-              disabled={isEmpty}
-            >
-              <span className="queue-card-icon" style={{ color: isEmpty ? 'var(--text-muted)' : card.color }}>
-                {QUEUE_SVG[card.key ?? ''] ?? null}
-              </span>
-              <span className="queue-card-count" style={{ color: isEmpty ? 'var(--text-muted)' : card.color }}>
-                {card.count}
-              </span>
-              <span className="queue-card-label queue-card-label--full">{card.label}</span>
-              <span className="queue-card-label queue-card-label--short">{card.shortLabel}</span>
-              <span className="queue-card-sub">{card.sub}</span>
-            </button>
-          )
-        })}
-      </div>
-    </section>
-  )
-}
+// ── Action group section ──────────────────────────────────────────────────────
 
 // ── Command bar ───────────────────────────────────────────────────────────────
 
@@ -1174,30 +1107,23 @@ function CommandBar({
   )
 }
 
-// ── Priority group section ────────────────────────────────────────────────────
-
-const PRIORITY_META: Record<string, { label: string; sub: string; color: string }> = {
-  'work-now':     { label: 'Work Now',     sub: 'High score, numbers complete — take action today', color: '#15803d' },
-  'needs-review': { label: 'Needs Review', sub: 'Missing data or moderate score — investigate further', color: '#2563eb' },
-  'watchlist':    { label: 'Watchlist',    sub: 'Active deals in progress or lower priority leads', color: '#b45309' },
-  'pass':         { label: 'Likely Pass',  sub: 'Low score or already closed', color: '#9ca3af' },
-}
-
-function PriorityGroup({
+function ActionGroupSection({
   groupKey,
   homes,
   analyses,
   onSummary,
   streetViewStatus,
+  cardLayout,
 }: {
-  groupKey: string
+  groupKey: ActionGroupKey
   homes: HomeFile[]
   analyses: Map<string, DealAnalysis>
   onSummary: (h: HomeFile) => void
   streetViewStatus?: Record<string, 'fetching' | 'failed'>
+  cardLayout: 'grid' | 'list'
 }) {
-  const meta = PRIORITY_META[groupKey]
   if (homes.length === 0) return null
+  const meta = ACTION_GROUP_META[groupKey]
 
   return (
     <div className="priority-group">
@@ -1209,16 +1135,20 @@ function PriorityGroup({
         </div>
         <span className="priority-group-desc">{meta.sub}</span>
       </div>
-      <div className="deals-grid">
-        {homes.map((h) => (
-          <DealCard
-            key={h.id}
-            home={h}
-            analysis={analyses.get(h.id)!}
-            onSummary={() => onSummary(h)}
-            streetViewStatus={streetViewStatus}
-          />
-        ))}
+      <div className={`deals-list-wrap${cardLayout === 'list' ? ' deals-list-wrap--active' : ''}`}>
+        {cardLayout === 'list' && <DealsListHeader />}
+        <div className={`deals-grid${cardLayout === 'list' ? ' deals-grid--list' : ''}`}>
+          {homes.map((h) => (
+            <DealCard
+              key={h.id}
+              home={h}
+              analysis={analyses.get(h.id)!}
+              onSummary={() => onSummary(h)}
+              streetViewStatus={streetViewStatus}
+              layout={cardLayout}
+            />
+          ))}
+        </div>
       </div>
     </div>
   )
@@ -1339,7 +1269,6 @@ export function FunnelBoard({ homes, onSelect: _onSelect, onCreate, onStageChang
   const [cardLayout,    setCardLayout]    = useState<'grid' | 'list'>('grid')
   const [pipelineStage, setPipelineStage] = useState<FunnelStage>('lead')
   const [summaryHome,   setSummaryHome]   = useState<HomeFile | null>(null)
-  const [queueFilter,   setQueueFilter]   = useState<QueueFilter>(null)
   const [refreshingIds, setRefreshingIds] = useState<Set<string>>(new Set())
 
   const handleRefresh = async (home: HomeFile) => {
@@ -1363,64 +1292,6 @@ export function FunnelBoard({ homes, onSelect: _onSelect, onCreate, onStageChang
     return map
   }, [homes])
 
-  // Queue stats (from all homes, not filtered)
-  const activeHomes = useMemo(() =>
-    homes.filter((h) => !['sold', 'passed'].includes(h.stage)), [homes])
-
-  const queueCards: QueueCardDef[] = useMemo(() => {
-    const needArv    = activeHomes.filter((h) => !h.funnel.arv).length
-    const needRehab  = activeHomes.filter((h) => h.funnel.arv && !(analyses.get(h.id)?.rehabEst)).length
-    const thinMargin = activeHomes.filter((h) => analyses.get(h.id)?.isThinMargin).length
-    const strong     = activeHomes.filter((h) => (analyses.get(h.id)?.score ?? 0) >= 72).length
-    const solid      = homes.filter((h) => h.stage === 'solid-candidate').length
-    return [
-      {
-        key: 'need-arv',
-        label: 'Need ARV',
-        shortLabel: 'ARV',
-        count: needArv,
-        sub: needArv > 0 ? 'Start with these first' : 'All have ARV',
-        color: '#2563eb',
-        bg: '#eff6ff',
-      },
-      {
-        key: 'need-rehab',
-        label: 'Need Rehab Est.',
-        shortLabel: 'Rehab',
-        count: needRehab,
-        sub: needRehab > 0 ? 'Calculate rehab costs' : 'All estimates in',
-        color: '#7c3aed',
-        bg: '#faf5ff',
-      },
-      {
-        key: 'thin-margin',
-        label: 'Thin Margin',
-        shortLabel: 'Thin',
-        count: thinMargin,
-        sub: thinMargin > 0 ? 'Spread may not cover costs' : 'No margin warnings',
-        color: '#b91c1c',
-        bg: '#fef2f2',
-      },
-      {
-        key: 'strong',
-        label: 'Strong Deals',
-        shortLabel: 'Strong',
-        count: strong,
-        sub: strong > 0 ? 'High score — prioritize' : 'No strong deals yet',
-        color: '#15803d',
-        bg: '#f0fdf4',
-      },
-      {
-        key: 'solid',
-        label: 'Ready to Offer',
-        shortLabel: 'Offer',
-        count: solid,
-        sub: solid > 0 ? 'Move quickly on these' : 'No offers pending',
-        color: '#b45309',
-        bg: '#fffbeb',
-      },
-    ]
-  }, [activeHomes, analyses, homes])
 
   // Filtered + sorted homes
   const filtered = useMemo(() => {
@@ -1433,12 +1304,6 @@ export function FunnelBoard({ homes, onSelect: _onSelect, onCreate, onStageChang
       }
       // Source filter
       if (sourceFilter !== 'all' && h.source !== sourceFilter) return false
-      // Queue filter
-      if (queueFilter === 'need-arv')    return !h.funnel.arv && !['sold', 'passed'].includes(h.stage)
-      if (queueFilter === 'need-rehab')  return !!h.funnel.arv && !(analyses.get(h.id)?.rehabEst) && !['sold', 'passed'].includes(h.stage)
-      if (queueFilter === 'thin-margin') return !!analyses.get(h.id)?.isThinMargin
-      if (queueFilter === 'strong')      return (analyses.get(h.id)?.score ?? 0) >= 72
-      if (queueFilter === 'solid')       return h.stage === 'solid-candidate'
       return true
     })
     // Sort
@@ -1459,7 +1324,7 @@ export function FunnelBoard({ homes, onSelect: _onSelect, onCreate, onStageChang
       return 0
     })
     return result
-  }, [homes, search, sourceFilter, sortBy, queueFilter, analyses])
+  }, [homes, search, sourceFilter, sortBy, analyses])
 
   const byStage = useMemo(() => {
     const map = new Map<FunnelStage, HomeFile[]>()
@@ -1472,22 +1337,32 @@ export function FunnelBoard({ homes, onSelect: _onSelect, onCreate, onStageChang
     return map
   }, [filtered])
 
-  const priorityGroups = useMemo(() => {
-    const groups: Record<string, HomeFile[]> = {
-      'work-now': [], 'needs-review': [], 'watchlist': [], 'pass': [],
-    }
+  // Group all filtered homes by action group (priority view)
+  const actionGroups = useMemo(() => {
+    const groups = Object.fromEntries(ACTION_GROUP_ORDER.map((k) => [k, [] as HomeFile[]])) as Record<ActionGroupKey, HomeFile[]>
     for (const h of filtered) {
-      const pg = analyses.get(h.id)?.priorityGroup ?? 'needs-review'
-      groups[pg].push(h)
+      const ag = getActionGroup(h, analyses.get(h.id)!)
+      groups[ag].push(h)
     }
     return groups
   }, [filtered, analyses])
+
+  // Group stage-specific homes by action group (pipeline view)
+  const stageActionGroups = useMemo(() => {
+    const stageHomes = byStage.get(pipelineStage) ?? []
+    const groups = Object.fromEntries(ACTION_GROUP_ORDER.map((k) => [k, [] as HomeFile[]])) as Record<ActionGroupKey, HomeFile[]>
+    for (const h of stageHomes) {
+      const ag = getActionGroup(h, analyses.get(h.id)!)
+      groups[ag].push(h)
+    }
+    return groups
+  }, [byStage, pipelineStage, analyses])
 
   const liveSummaryHome = summaryHome
     ? (homes.find((h) => h.id === summaryHome.id) ?? summaryHome)
     : null
 
-  const displayHomes   = queueFilter ? filtered : (byStage.get(pipelineStage) ?? [])
+  const displayHomes     = byStage.get(pipelineStage) ?? []
   const currentStageMeta = getStageMeta(pipelineStage)
   const totalCounts    = useMemo(() => {
     const m = new Map<FunnelStage, number>()
@@ -1523,7 +1398,7 @@ export function FunnelBoard({ homes, onSelect: _onSelect, onCreate, onStageChang
       <section className="cpipeline">
         {FUNNEL_STAGES.map((stage) => {
           const count  = totalCounts.get(stage.id) ?? 0
-          const active = stage.id === pipelineStage && viewMode === 'pipeline' && !queueFilter
+          const active = stage.id === pipelineStage && viewMode === 'pipeline'
           return (
             <button
               key={stage.id}
@@ -1532,7 +1407,6 @@ export function FunnelBoard({ homes, onSelect: _onSelect, onCreate, onStageChang
               onClick={() => {
                 setPipelineStage(stage.id)
                 setViewMode('pipeline')
-                setQueueFilter(null)
               }}
             >
               <span className="cpipe-count">{count}</span>
@@ -1543,155 +1417,102 @@ export function FunnelBoard({ homes, onSelect: _onSelect, onCreate, onStageChang
         })}
       </section>
 
-      {/* ── 2. Today's deal queue ── */}
-      <DealQueue
-        cards={queueCards}
-        activeFilter={queueFilter}
-        onFilter={(f) => {
-          setQueueFilter(f)
-          if (f) setViewMode('pipeline')
-        }}
-      />
-
-      {/* ── 3. Command bar ── */}
+      {/* ── 2. Command bar ── */}
       <CommandBar
         search={search} setSearch={setSearch}
         sourceFilter={sourceFilter} setSourceFilter={setSourceFilter}
         sortBy={sortBy} setSortBy={setSortBy}
-        viewMode={viewMode} setViewMode={(v) => { setViewMode(v); setQueueFilter(null) }}
+        viewMode={viewMode} setViewMode={setViewMode}
         totalShown={viewMode === 'priority' ? filtered.length : displayHomes.length}
         onAdd={() => setShowIntake(true)}
       />
 
-      {/* ── 4. Property grid ── */}
-      {viewMode === 'priority' ? (
+      {/* ── 3. Property grid grouped by action ── */}
+      <div className="pipeline-view">
 
-        /* Priority view — grouped by work-now / needs-review / watchlist / pass */
-        <div className="priority-view">
-          {(['work-now', 'needs-review', 'watchlist', 'pass'] as const).map((gk) => (
-            <PriorityGroup
-              key={gk}
-              groupKey={gk}
-              homes={priorityGroups[gk]}
-              analyses={analyses}
-              onSummary={setSummaryHome}
-              streetViewStatus={streetViewStatus}
-            />
-          ))}
-          {filtered.length === 0 && (
+        {/* Shared header: stage info (pipeline) or all-props count (priority) + layout toggle */}
+        <div className="pipeline-view-header">
+          {viewMode === 'pipeline' ? (
+            <>
+              <div className="pipeline-view-stage-dot" style={{ background: currentStageMeta.color }} />
+              <h2 className="pipeline-view-title">{currentStageMeta.label}</h2>
+              <span className="pipeline-view-count">{displayHomes.length}</span>
+            </>
+          ) : (
+            <>
+              <h2 className="pipeline-view-title">All Properties</h2>
+              <span className="pipeline-view-count">{filtered.length}</span>
+            </>
+          )}
+          <div className="pipeline-view-layout-toggle">
+            <span className="pvlt-label">View:</span>
+            <button
+              className={`pvlt-btn${cardLayout === 'grid' ? ' pvlt-btn--active' : ''}`}
+              onClick={() => setCardLayout('grid')}
+              title="Grid view"
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="0" y="0" width="6" height="6" rx="1" fill="currentColor"/><rect x="8" y="0" width="6" height="6" rx="1" fill="currentColor"/><rect x="0" y="8" width="6" height="6" rx="1" fill="currentColor"/><rect x="8" y="8" width="6" height="6" rx="1" fill="currentColor"/></svg>
+            </button>
+            <button
+              className={`pvlt-btn${cardLayout === 'list' ? ' pvlt-btn--active' : ''}`}
+              onClick={() => setCardLayout('list')}
+              title="List view"
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="0" y="1" width="14" height="2" rx="1" fill="currentColor"/><rect x="0" y="6" width="14" height="2" rx="1" fill="currentColor"/><rect x="0" y="11" width="14" height="2" rx="1" fill="currentColor"/></svg>
+            </button>
+          </div>
+        </div>
+
+        {/* Action group sections */}
+        {(viewMode === 'pipeline' ? displayHomes.length === 0 : filtered.length === 0) ? (
+          viewMode === 'pipeline' ? (
+            <div className="stage-empty">
+              <div className="stage-empty-icon">
+                {pipelineStage === 'lead' ? '📥' :
+                 pipelineStage === 'arv-calculated' ? '📐' :
+                 pipelineStage === 'rehab-calculated' ? '🔨' :
+                 pipelineStage === 'solid-candidate' ? '🎯' :
+                 pipelineStage === 'under-contract' ? '📋' :
+                 pipelineStage === 'rehab' ? '🏗️' :
+                 pipelineStage === 'listed' ? '🏠' :
+                 pipelineStage === 'sold' ? '🏆' : '⏭️'}
+              </div>
+              <h3>No properties in {currentStageMeta.label}</h3>
+              <p>
+                {pipelineStage === 'lead'
+                  ? 'Add a property to get started — it will land here as a new lead.'
+                  : pipelineStage === 'arv-calculated'
+                  ? 'Calculate ARV on a New Lead to move it here.'
+                  : pipelineStage === 'rehab-calculated'
+                  ? 'Once rehab costs are estimated, move leads here.'
+                  : pipelineStage === 'solid-candidate'
+                  ? 'Move your best deals here once numbers look solid.'
+                  : `Move candidates here once they reach this stage.`}
+              </p>
+              {pipelineStage === 'lead' && (
+                <button className="btn btn-primary btn-sm" onClick={() => setShowIntake(true)}>+ Add Property</button>
+              )}
+            </div>
+          ) : (
             <div className="board-empty">
               <p>No properties match your filters.</p>
               <button className="btn btn-primary btn-sm" onClick={() => setShowIntake(true)}>+ Add Property</button>
             </div>
-          )}
-        </div>
-
-      ) : (
-
-        /* Pipeline view — cards for selected stage */
-        <div className="pipeline-view">
-          {queueFilter ? (
-            /* Queue filter active — show matching cards across all stages */
-            <>
-              <div className="pipeline-view-header">
-                <div className="pipeline-view-stage-dot" style={{ background: '#374151' }} />
-                <h2 className="pipeline-view-title">
-                  {queueCards.find((c) => c.key === queueFilter)?.label ?? 'Filtered'}
-                </h2>
-                <span className="pipeline-view-count">{filtered.length}</span>
-                <button className="pipeline-view-clear" onClick={() => setQueueFilter(null)}>✕ Clear</button>
-              </div>
-              <div className={`deals-list-wrap${cardLayout === 'list' ? ' deals-list-wrap--active' : ''}`}>
-                {cardLayout === 'list' && <DealsListHeader />}
-                <div className={`deals-grid${cardLayout === 'list' ? ' deals-grid--list' : ''}`}>
-                  {filtered.map((h) => (
-                    <DealCard
-                      key={h.id}
-                      home={h}
-                      analysis={analyses.get(h.id)!}
-                      onSummary={() => setSummaryHome(h)}
-                      streetViewStatus={streetViewStatus}
-                      layout={cardLayout}
-                    />
-                  ))}
-                </div>
-              </div>
-            </>
-          ) : (
-            /* Stage selected */
-            <>
-              <div className="pipeline-view-header">
-                <div className="pipeline-view-stage-dot" style={{ background: currentStageMeta.color }} />
-                <h2 className="pipeline-view-title">{currentStageMeta.label}</h2>
-                <span className="pipeline-view-count">{displayHomes.length}</span>
-                <div className="pipeline-view-layout-toggle">
-                  <span className="pvlt-label">View:</span>
-                  <button
-                    className={`pvlt-btn${cardLayout === 'grid' ? ' pvlt-btn--active' : ''}`}
-                    onClick={() => setCardLayout('grid')}
-                    title="Grid view"
-                  >
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="0" y="0" width="6" height="6" rx="1" fill="currentColor"/><rect x="8" y="0" width="6" height="6" rx="1" fill="currentColor"/><rect x="0" y="8" width="6" height="6" rx="1" fill="currentColor"/><rect x="8" y="8" width="6" height="6" rx="1" fill="currentColor"/></svg>
-                  </button>
-                  <button
-                    className={`pvlt-btn${cardLayout === 'list' ? ' pvlt-btn--active' : ''}`}
-                    onClick={() => setCardLayout('list')}
-                    title="List view"
-                  >
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="0" y="1" width="14" height="2" rx="1" fill="currentColor"/><rect x="0" y="6" width="14" height="2" rx="1" fill="currentColor"/><rect x="0" y="11" width="14" height="2" rx="1" fill="currentColor"/></svg>
-                  </button>
-                </div>
-              </div>
-
-              {displayHomes.length === 0 ? (
-                <div className="stage-empty">
-                  <div className="stage-empty-icon">
-                    {pipelineStage === 'lead' ? '📥' :
-                     pipelineStage === 'arv-calculated' ? '📐' :
-                     pipelineStage === 'rehab-calculated' ? '🔨' :
-                     pipelineStage === 'solid-candidate' ? '🎯' :
-                     pipelineStage === 'under-contract' ? '📋' :
-                     pipelineStage === 'rehab' ? '🏗️' :
-                     pipelineStage === 'listed' ? '🏠' :
-                     pipelineStage === 'sold' ? '🏆' : '⏭️'}
-                  </div>
-                  <h3>No properties in {currentStageMeta.label}</h3>
-                  <p>
-                    {pipelineStage === 'lead'
-                      ? 'Add a property to get started — it will land here as a new lead.'
-                      : pipelineStage === 'arv-calculated'
-                      ? 'Calculate ARV on a New Lead to move it here.'
-                      : pipelineStage === 'rehab-calculated'
-                      ? 'Once rehab costs are estimated, move leads here.'
-                      : pipelineStage === 'solid-candidate'
-                      ? 'Move your best deals here once numbers look solid.'
-                      : `Move candidates here once they reach this stage.`}
-                  </p>
-                  {pipelineStage === 'lead' && (
-                    <button className="btn btn-primary btn-sm" onClick={() => setShowIntake(true)}>+ Add Property</button>
-                  )}
-                </div>
-              ) : (
-                <div className={`deals-list-wrap${cardLayout === 'list' ? ' deals-list-wrap--active' : ''}`}>
-                  {cardLayout === 'list' && <DealsListHeader />}
-                  <div className={`deals-grid${cardLayout === 'list' ? ' deals-grid--list' : ''}`}>
-                    {displayHomes.map((h) => (
-                      <DealCard
-                        key={h.id}
-                        home={h}
-                        analysis={analyses.get(h.id)!}
-                        onSummary={() => setSummaryHome(h)}
-                        streetViewStatus={streetViewStatus}
-                        layout={cardLayout}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      )}
+          )
+        ) : (
+          ACTION_GROUP_ORDER.map((gk) => (
+            <ActionGroupSection
+              key={gk}
+              groupKey={gk}
+              homes={viewMode === 'pipeline' ? stageActionGroups[gk] : actionGroups[gk]}
+              analyses={analyses}
+              onSummary={setSummaryHome}
+              streetViewStatus={streetViewStatus}
+              cardLayout={cardLayout}
+            />
+          ))
+        )}
+      </div>
 
       {showIntake && (
         <PropertyIntake

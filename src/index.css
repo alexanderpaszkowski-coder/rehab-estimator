@@ -107,14 +107,6 @@ textarea { resize: vertical; }
 }
 .topnav-nav::-webkit-scrollbar { display: none; }
 
-.topnav-sep {
-  width: 1px;
-  height: 20px;
-  background: var(--border);
-  flex-shrink: 0;
-  margin: 0 4px;
-}
-
 .topnav-item {
   display: inline-flex;
   align-items: center;
@@ -141,16 +133,6 @@ textarea { resize: vertical; }
   border-color: var(--accent);
   background: var(--accent-soft);
   color: var(--accent);
-}
-
-.topnav-count {
-  background: var(--accent);
-  color: #fff;
-  font-size: 0.62rem;
-  font-weight: 700;
-  padding: 1px 5px;
-  border-radius: 6px;
-  line-height: 1.4;
 }
 
 .topnav-step-num {
@@ -4371,20 +4353,20 @@ textarea { resize: vertical; }
     font-weight: 600;
   }
 
-  /* ── Command bar — single row; collapsible search icon ── */
+  /* ── Command bar — collapsible search icon + single row ── */
   .cmd-bar {
     flex-direction: column;
     align-items: stretch;
     flex-wrap: nowrap;
     overflow: visible;
-    gap: 4px;
-    padding: 5px var(--gutter);
+    gap: 6px;
+    padding: 8px var(--gutter);
   }
   .cmd-bar-main {
     display: flex;
     align-items: center;
     flex-wrap: nowrap;
-    gap: 4px;
+    gap: 6px;
     min-width: 0;
     width: 100%;
   }
@@ -4393,12 +4375,14 @@ textarea { resize: vertical; }
   .cmd-bar-search-row {
     display: block;
     width: 100%;
+    flex-shrink: 0;
   }
   .cmd-bar-search-row .cmd-bar-search {
     display: flex;
     flex: 1;
     min-width: 0;
     max-width: none;
+    width: 100%;
     height: var(--ctrl-h);
     padding: 0 8px;
   }
@@ -4406,21 +4390,25 @@ textarea { resize: vertical; }
   .fpill { flex-shrink: 0; }
   .fpill-btn {
     height: var(--ctrl-h);
-    padding: 0 9px;
-    font-size: 0.69rem;
+    padding: 0 8px;
+    font-size: 0.67rem;
     gap: 3px;
   }
-  /* Hide "Sort:" prefix — just show the value (saves ~28px) */
   .fpill-prefix { display: none; }
   .cmd-sep { display: none; }
-  /* View toggle stretches to fill left side of row 2 */
-  .cmd-view-toggle { flex: 1; }
-  .cmd-view-btn { flex: 1; padding: 0 9px; font-size: 0.69rem; height: var(--ctrl-h); }
+  .cmd-view-toggle { flex: 1; min-width: 0; }
+  .cmd-view-btn {
+    flex: 1;
+    padding: 0 6px;
+    font-size: 0.65rem;
+    height: var(--ctrl-h);
+    min-width: 0;
+  }
   .cmd-bar-right {
     width: auto;
-    margin-left: 0;
+    margin-left: auto;
     flex-shrink: 0;
-    gap: 5px;
+    gap: 0;
   }
   .cmd-count { display: none; }
   .cmd-bar-right .btn-sm { display: none; }

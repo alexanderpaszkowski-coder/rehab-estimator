@@ -268,8 +268,6 @@ export default function App() {
     return <Auth onAuthenticated={() => {}} />
   }
 
-  const pendingCount = homes.filter((h) => h.reviewStatus === 'pending').length
-
   return (
     <div className="app-layout">
 
@@ -282,29 +280,16 @@ export default function App() {
         </div>
 
         <nav className="topnav-nav">
-          <button
-            className={`topnav-item ${tab === 'funnel' ? 'active' : ''}`}
-            onClick={() => setTab('funnel')}
-          >
-            Properties
-            {pendingCount > 0 && <span className="topnav-count">{pendingCount}</span>}
-          </button>
-
-          {current && (
-            <>
-              <span className="topnav-sep" />
-              {WORKFLOW.map((item) => (
-                <button
-                  key={item.id}
-                  className={`topnav-item topnav-step-item ${tab === item.id ? 'active' : ''}`}
-                  onClick={() => setTab(item.id)}
-                >
-                  <span className="topnav-step-num">{item.step}</span>
-                  {item.label}
-                </button>
-              ))}
-            </>
-          )}
+          {current && WORKFLOW.map((item) => (
+            <button
+              key={item.id}
+              className={`topnav-item topnav-step-item ${tab === item.id ? 'active' : ''}`}
+              onClick={() => setTab(item.id)}
+            >
+              <span className="topnav-step-num">{item.step}</span>
+              {item.label}
+            </button>
+          ))}
         </nav>
 
         <div className="topnav-end">

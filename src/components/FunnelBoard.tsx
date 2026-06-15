@@ -33,13 +33,6 @@ type SortOption = 'score' | 'spread' | 'newest' | 'arv' | 'ending-soon'
 type ViewMode = 'pipeline' | 'priority'
 type QueueFilter = 'need-arv' | 'need-rehab' | 'thin-margin' | 'strong' | 'solid' | null
 
-const REVIEW_META: Record<string, { label: string; color: string; bg: string }> = {
-  pending:  { label: 'New',      color: '#b45309',        bg: '#fffbeb' },
-  reviewed: { label: 'Reviewed', color: '#1d4ed8',        bg: '#eff6ff' },
-  approved: { label: 'Approved', color: 'var(--success)', bg: 'var(--success-soft)' },
-  passed:   { label: 'Passed',   color: '#6b7280',        bg: '#f9fafb' },
-}
-
 const SOURCE_DOMAIN: Partial<Record<PropertySource, string>> = {
   'auction.com':  'auction.com',
   'realtor.com':  'realtor.com',
@@ -444,8 +437,6 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
   const netMargin = spread !== null && rehabEst ? spread - rehabEst : null
   const passes = passesQuickScreen(funnel)
   const score = screenScore(funnel)
-  const stageMeta = getStageMeta(home.stage)
-  const reviewMeta = REVIEW_META[home.reviewStatus] ?? REVIEW_META.pending
   const customLabel = home.source === 'other' ? home.sourceCustom : undefined
   const p = home.property
 
@@ -470,19 +461,21 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
 
   const notesText = [quickNotes, home.notes].filter(Boolean).join('\n\n') || null
 
-  const specChips: { label: string; cls?: string }[] = []
-  if (p.livingArea > 0) specChips.push({ label: `${p.livingArea.toLocaleString()} SF`, cls: 'grey' })
-  if (p.bedrooms > 0) specChips.push({ label: `${p.bedrooms} bed`, cls: 'grey' })
-  if (bathLabel) specChips.push({ label: bathLabel, cls: 'grey' })
-  if (funnel.yearBuilt) specChips.push({ label: `Built ${funnel.yearBuilt}`, cls: 'grey' })
-  if (occupancy === 'vacant') specChips.push({ label: 'Vacant', cls: 'green' })
-  if (occupancy === 'occupied') specChips.push({ label: 'Occupied', cls: 'red' })
-  if (inTargetArea === 'yes') specChips.push({ label: 'In area', cls: 'green' })
-  if (inTargetArea === 'maybe') specChips.push({ label: 'Maybe area', cls: 'yellow' })
-  if (inTargetArea === 'no') specChips.push({ label: 'Out of area', cls: 'red' })
-  if (rehabLevel) specChips.push({ label: `${rehabLevel} rehab`, cls: 'grey' })
+  const heroSpecChips: { label: string; cls?: string }[] = []
+  if (p.livingArea > 0) heroSpecChips.push({ label: `${p.livingArea.toLocaleString()} SF`, cls: 'grey' })
+  if (p.bedrooms > 0) heroSpecChips.push({ label: `${p.bedrooms} bed`, cls: 'grey' })
+  if (bathLabel) heroSpecChips.push({ label: bathLabel, cls: 'grey' })
+  if (funnel.yearBuilt) heroSpecChips.push({ label: `Built ${funnel.yearBuilt}`, cls: 'grey' })
+
+  const contextChips: { label: string; cls?: string }[] = []
+  if (occupancy === 'vacant') contextChips.push({ label: 'Vacant', cls: 'green' })
+  if (occupancy === 'occupied') contextChips.push({ label: 'Occupied', cls: 'red' })
+  if (inTargetArea === 'yes') contextChips.push({ label: 'In area', cls: 'green' })
+  if (inTargetArea === 'maybe') contextChips.push({ label: 'Maybe area', cls: 'yellow' })
+  if (inTargetArea === 'no') contextChips.push({ label: 'Out of area', cls: 'red' })
+  if (rehabLevel) contextChips.push({ label: `${rehabLevel} rehab`, cls: 'grey' })
   if (isAuction && auctionType) {
-    specChips.push({ label: auctionType === 'bank-owned' ? 'Bank owned' : 'Auction', cls: 'grey' })
+    contextChips.push({ label: auctionType === 'bank-owned' ? 'Bank owned' : 'Auction', cls: 'grey' })
   }
 
   const detailItems: { label: string; value: string }[] = []
@@ -509,16 +502,15 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
               <div className="summary-hero-addr-block">
                 <div className="summary-hero-addr-row">
                   <h2 className="summary-address">{home.address}</h2>
-                  <span className="lead-badge summary-hero-badge"
-                    style={{ background: reviewMeta.bg, color: reviewMeta.color }}>
-                    {reviewMeta.label}
-                  </span>
-                  <span className="summary-stage-pill" style={{ background: 'var(--surface-2)', color: stageMeta.color }}>
-                    <span className="summary-meta-dot" style={{ background: stageMeta.color }} />
-                    {stageMeta.label}
-                  </span>
                 </div>
                 <p className="summary-city">{[home.city, home.state, home.zip].filter(Boolean).join(', ')}</p>
+                {heroSpecChips.length > 0 && (
+                  <div className="summary-hero-spec-chips">
+                    {heroSpecChips.map((c) => (
+                      <span key={c.label} className={`screen-chip ${c.cls ?? 'grey'}`}>{c.label}</span>
+                    ))}
+                  </div>
+                )}
               </div>
               <StagePicker stage={home.stage} onChange={onStageChange} />
             </div>
@@ -588,9 +580,9 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
                       <span className={`ov-metric-value${netAccent ? ` accent-${netAccent}` : ''}`}>{formatCurrency(netMargin)}</span>
                     </div>
                   )}
-                  {(specChips.length > 0 || score > 0) && (
+                  {(contextChips.length > 0 || score > 0) && (
                     <div className="ov-spec-chips">
-                      {specChips.map((c) => (
+                      {contextChips.map((c) => (
                         <span key={c.label} className={`screen-chip ${c.cls ?? 'grey'}`}>{c.label}</span>
                       ))}
                       {score > 0 && (
@@ -789,7 +781,7 @@ function DealCard({
 
   return (
     <div
-      className={`dcard${flipping ? ' dcard--flip' : ''}${analysis.scoreTier === 'weak' ? ' dcard--weak' : ''}${analysis.scoreTier === 'strong' ? ' dcard--strong' : ''}`}
+      className={`dcard${flipping ? ' dcard--flip' : ''}${analysis.scoreTier === 'strong' ? ' dcard--strong' : ''}`}
       onClick={handleClick}
     >
       {/* Photo / no-photo header */}

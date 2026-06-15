@@ -1040,24 +1040,15 @@ textarea { resize: vertical; }
   gap: 6px;
   flex-wrap: wrap;
 }
-.summary-hero-badge {
-  font-size: 0.6rem !important;
-  padding: 2px 7px !important;
-  border-radius: 4px !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.02em !important;
-  flex-shrink: 0;
-}
-.summary-stage-pill {
-  display: inline-flex;
-  align-items: center;
+.summary-hero-spec-chips {
+  display: flex;
+  flex-wrap: wrap;
   gap: 4px;
-  font-size: 0.62rem;
-  font-weight: 600;
+  margin-top: 4px;
+}
+.summary-hero-spec-chips .screen-chip {
+  font-size: 0.67rem;
   padding: 2px 7px;
-  border-radius: 20px;
-  flex-shrink: 0;
-  letter-spacing: 0.01em;
 }
 
 .summary-metrics {
@@ -2747,8 +2738,6 @@ textarea { resize: vertical; }
   box-shadow: 0 6px 20px rgba(21,128,61,.14), 0 0 0 1.5px #86efac;
   border-color: #86efac;
 }
-.dcard--weak { opacity: 0.58; }
-.dcard--weak:hover { opacity: 0.82; }
 .dcard--flip { animation: card-flip-anim .25s ease-in-out; }
 @keyframes card-flip-anim {
   0%   { transform: perspective(700px) rotateY(0deg) scale(1); }

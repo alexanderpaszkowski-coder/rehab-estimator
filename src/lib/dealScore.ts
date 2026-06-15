@@ -65,7 +65,6 @@ function computeStructuredTags(home: HomeFile, analysis: {
 
   // ── Status tags ──────────────────────────────────────
   const status: Tag[] = []
-  if (home.stage === 'lead' && home.reviewStatus === 'pending') status.push(t('New', 'status', 1))
   if (!f.arv) status.push(t('ARV Needed', 'status', 2))
   if (f.arv && !analysis.rehabEst) status.push(t('Rehab Needed', 'status', 3))
   if (home.stage === 'solid-candidate') status.push(t('Offer Ready', 'status', 0))

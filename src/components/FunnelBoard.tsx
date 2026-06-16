@@ -1062,24 +1062,28 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
                       <span>{askingPrice ? fmt(oc.financingTotal) : '—'}</span>
                     </div>
                   )}
-                  <div className="ocost-summary-row ocost-summary-row--net">
-                    <span>True net profit</span>
-                    <span className="ocost-net-value">
+                </div>
+
+                {/* ── Bottom results strip ── */}
+                <div className="ocost-footer-strip">
+                  <div className="ocost-footer-item">
+                    <span className="ocost-footer-label">True Net Profit</span>
+                    <span className={`ocost-footer-value${oc.trueNet !== null && oc.trueNet >= 0 ? ' ocost-footer-value--profit' : ''}`}>
                       {oc.trueNet !== null ? fmt(oc.trueNet) : '—'}
                     </span>
                   </div>
-
-                  {/* Capital & returns */}
-                  <div className="ocost-summary-row ocost-summary-row--capital">
-                    <span>Cash invested (capital)</span>
-                    <span>{(askingPrice || arv) ? fmt(oc.cashInvested) : '—'}</span>
+                  <div className="ocost-footer-item">
+                    <span className="ocost-footer-label">Cash Invested</span>
+                    <span className="ocost-footer-value">
+                      {(askingPrice || arv) ? fmt(oc.cashInvested) : '—'}
+                    </span>
                   </div>
-                  <div className="ocost-summary-row ocost-summary-row--roi">
-                    <span>Cash-on-cash ROI</span>
-                    <span className="ocost-roi-value">
+                  <div className="ocost-footer-item">
+                    <span className="ocost-footer-label">Cash-on-Cash ROI</span>
+                    <span className={`ocost-footer-value${oc.roi !== null ? ' ocost-footer-value--roi' : ''}`}>
                       {oc.roi !== null ? `${(oc.roi * 100).toFixed(0)}%` : '—'}
                       {oc.annualizedRoi !== null && (
-                        <span className="ocost-roi-annual"> · {(oc.annualizedRoi * 100).toFixed(0)}%/yr</span>
+                        <span className="ocost-footer-sub"> · {(oc.annualizedRoi * 100).toFixed(0)}%/yr</span>
                       )}
                     </span>
                   </div>

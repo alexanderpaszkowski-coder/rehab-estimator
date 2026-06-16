@@ -4397,13 +4397,13 @@ textarea { resize: vertical; }
   padding: 2px 8px;
 }
 
-/* ── Other Costs tab — 2-col non-scrollable layout ─────────────────── */
+/* ── Other Costs tab — 2-col + footer, no scroll ────────────────────── */
 .other-costs-panel {
   display: grid;
-  grid-template-columns: 1fr 220px;
-  grid-template-areas: "left waterfall";
-  grid-template-rows: 1fr;
-  gap: 8px;
+  grid-template-columns: 1fr 210px;
+  grid-template-areas: "left waterfall" "footer footer";
+  grid-template-rows: 1fr auto;
+  gap: 6px;
   height: 100%;
   overflow: hidden;
   padding: 8px;
@@ -4411,17 +4411,14 @@ textarea { resize: vertical; }
 }
 .modal-edit-panel.other-costs-panel { padding: 8px; }
 
-/* Left column wraps financing + transaction stacked */
+/* Left column wraps financing + transaction stacked — no scroll */
 .ocost-left-col {
   grid-area: left;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  overflow-y: auto;
-  overflow-x: hidden;
+  gap: 5px;
+  overflow: hidden;
   min-height: 0;
-  scrollbar-width: thin;
-  scrollbar-color: var(--border) transparent;
 }
 
 .ocost-section--financing,
@@ -4431,15 +4428,15 @@ textarea { resize: vertical; }
 .ocost-section {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 9px 11px 7px;
+  border-radius: 8px;
+  padding: 7px 10px 6px;
   flex-shrink: 0;
 }
 
 .ocost-section--summary {
-  background: #1e293b;
-  border-color: #334155;
-  color: #f1f5f9;
+  background: var(--surface-2);
+  border-color: var(--border);
+  color: var(--text);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -4449,7 +4446,7 @@ textarea { resize: vertical; }
   display: flex;
   align-items: center;
   gap: 7px;
-  margin-bottom: 7px;
+  margin-bottom: 5px;
 }
 
 .ocost-section-icon {
@@ -4551,8 +4548,8 @@ textarea { resize: vertical; }
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: #64748b;
-  margin-bottom: 6px;
+  color: var(--text-muted);
+  margin-bottom: 5px;
 }
 .ocost-summary-row span:last-child { font-family: var(--mono); }
 
@@ -4561,70 +4558,108 @@ textarea { resize: vertical; }
   justify-content: space-between;
   align-items: baseline;
   font-size: 0.7rem;
-  color: #94a3b8;
+  color: var(--text-muted);
   padding: 3px 0;
-  border-bottom: 1px solid #2d3d50;
+  border-bottom: 1px solid var(--border);
   gap: 8px;
   white-space: nowrap;
 }
 .ocost-summary-row span:first-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ocost-summary-row:last-child { border-bottom: none; }
 
-.ocost-summary-pos { color: #f1f5f9; font-weight: 700; font-family: var(--mono); }
+.ocost-summary-pos { color: var(--text); font-weight: 700; font-family: var(--mono); }
 
 .ocost-summary-row--placeholder { opacity: 0.6; }
 
 .ocost-tbd {
   font-style: italic;
-  color: #64748b;
+  color: var(--text-subtle);
   font-family: var(--mono);
   font-size: 0.72rem;
 }
 
-.ocost-summary-row--net {
-  color: #f1f5f9;
-  font-size: 0.86rem;
-  font-weight: 700;
-  padding-top: 7px;
-  margin-top: 3px;
-  border-top: 1.5px solid #475569;
-  border-bottom: none;
+/* Footer strip — net profit, capital, ROI */
+.ocost-footer-strip {
+  grid-area: footer;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
 }
-
-.ocost-net-value {
-  color: #4ade80;
+.ocost-footer-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 10px;
+  border-right: 1px solid var(--border);
+  gap: 1px;
+}
+.ocost-footer-item:last-child { border-right: none; }
+.ocost-footer-label {
+  font-size: 0.58rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.ocost-footer-value {
   font-family: var(--mono);
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--text);
+  white-space: nowrap;
+}
+.ocost-footer-value--profit { color: var(--success); }
+.ocost-footer-value--roi { color: var(--success); }
+.ocost-footer-sub {
+  font-size: 0.62rem;
+  color: var(--text-subtle);
+  font-family: var(--mono);
+  font-weight: 500;
 }
 
 .ocost-net-note {
   font-size: 0.65rem;
-  color: #64748b;
+  color: var(--text-subtle);
   font-weight: 400;
   font-style: italic;
   margin-left: 4px;
   font-family: var(--font);
 }
 
-/* ── Loan type toggle ─────────────────────────────────────────────── */
+/* ── Loan type toggle — segmented control ─────────────────────────── */
 .ocost-loan-types {
   display: flex;
-  gap: 3px;
-  margin-bottom: 7px;
+  gap: 0;
+  margin-bottom: 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--surface-2);
 }
 .ocost-loan-btn {
   flex: 1;
   padding: 4px 0;
   font-size: 0.65rem;
   font-weight: 600;
-  border: 1px solid var(--border);
-  border-radius: 5px;
-  background: var(--surface-2);
+  border: none;
+  border-right: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
   color: var(--text-muted);
   cursor: pointer;
   transition: all 0.12s;
   white-space: nowrap;
 }
-.ocost-loan-btn:hover { background: var(--surface-2); color: var(--text); }
+.ocost-loan-btn:last-child { border-right: none; }
+.ocost-loan-btn:hover { background: var(--surface-3); color: var(--text); }
 .ocost-loan-btn--active {
   background: var(--accent);
   border-color: var(--accent);
@@ -4647,10 +4682,10 @@ textarea { resize: vertical; }
   align-items: center;
   font-size: 0.7rem;
   color: var(--text);
-  padding: 4px 9px;
+  padding: 3px 8px;
   border-bottom: 1px solid var(--border);
   gap: 6px;
-  min-height: 28px;
+  min-height: 24px;
 }
 .ocost-field-row:last-child { border-bottom: none; }
 .ocost-field-row--total {
@@ -4711,29 +4746,34 @@ textarea { resize: vertical; }
   font-family: var(--mono);
 }
 
-/* Loan basis toggle (inside fields) */
-.ocost-field-row--basis { min-height: 30px; }
+/* Loan basis toggle (inside fields) — segmented control */
+.ocost-field-row--basis { min-height: 26px; }
 .ocost-basis-toggle {
   display: flex;
-  gap: 2px;
+  gap: 0;
   flex-shrink: 0;
-}
-.ocost-basis-btn {
-  padding: 2px 7px;
-  font-size: 0.6rem;
-  font-weight: 600;
   border: 1px solid var(--border);
   border-radius: 4px;
+  overflow: hidden;
   background: var(--surface-2);
+}
+.ocost-basis-btn {
+  padding: 2px 6px;
+  font-size: 0.6rem;
+  font-weight: 600;
+  border: none;
+  border-right: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
   color: var(--text-muted);
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.12s;
 }
-.ocost-basis-btn:hover { color: var(--text); }
+.ocost-basis-btn:last-child { border-right: none; }
+.ocost-basis-btn:hover { background: var(--surface-3); color: var(--text); }
 .ocost-basis-btn--active {
   background: var(--accent);
-  border-color: var(--accent);
   color: #fff;
 }
 .ocost-field-row--derived { background: var(--surface-2); }
@@ -4751,19 +4791,19 @@ textarea { resize: vertical; }
   vertical-align: middle;
 }
 
-/* Capital & ROI rows in waterfall */
+/* Capital & ROI rows in waterfall (kept for possible reuse) */
 .ocost-summary-row--capital {
-  margin-top: 6px;
-  padding-top: 6px;
-  border-top: 1px dashed #475569;
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px dashed var(--border-strong);
 }
-/* Light mode: use green (success) for ROI — dark mode: keep sky-blue */
-.ocost-roi-value { color: #16a34a; font-weight: 700; font-family: var(--mono); }
-.ocost-roi-annual { color: #64748b; font-weight: 500; font-size: 0.68rem; }
+.ocost-roi-value { color: var(--success); font-weight: 700; font-family: var(--mono); }
+.ocost-roi-annual { color: var(--text-subtle); font-weight: 500; font-size: 0.68rem; }
 [data-theme="dark"] .ocost-roi-value { color: #38bdf8; }
 
 /* ── Dark mode overrides for Other Costs ─────────────────────────── */
 [data-theme="dark"] .ocost-section { background: var(--surface); }
+[data-theme="dark"] .ocost-section--summary { background: var(--surface-2); }
 [data-theme="dark"] .ocost-section-icon {
   background: var(--surface-2);
   border-color: var(--border);
@@ -4774,11 +4814,14 @@ textarea { resize: vertical; }
 [data-theme="dark"] .ocost-fields { background: var(--surface-2); }
 [data-theme="dark"] .ocost-pct-input { background: var(--surface-3); border-color: var(--border); }
 [data-theme="dark"] .ocost-field-row--total { background: var(--surface-3); }
-[data-theme="dark"] .ocost-loan-btn { background: var(--surface-2); }
+[data-theme="dark"] .ocost-loan-types { background: var(--surface-2); }
 [data-theme="dark"] .ocost-loan-btn--active { background: var(--accent); }
-[data-theme="dark"] .ocost-basis-btn { background: var(--surface-3); }
+[data-theme="dark"] .ocost-basis-toggle { background: var(--surface-3); }
 [data-theme="dark"] .ocost-basis-btn--active { background: var(--accent); }
 [data-theme="dark"] .ocost-field-row--derived { background: var(--surface-3); }
+[data-theme="dark"] .ocost-footer-strip { background: var(--surface-2); }
+[data-theme="dark"] .ocost-footer-value--profit,
+[data-theme="dark"] .ocost-footer-value--roi { color: #4ade80; }
 
 /* ── SOW Grid (compact card boxes) ────────────────────────────────── */
 .sow-grid-layout {

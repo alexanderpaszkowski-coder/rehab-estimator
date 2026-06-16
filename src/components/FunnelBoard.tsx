@@ -849,6 +849,8 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
             return (
               <div className="modal-edit-panel other-costs-panel">
 
+                <div className="ocost-left-col">
+
                 {/* ── Financing ── */}
                 <div className="ocost-section ocost-section--financing">
                   <div className="ocost-section-header">
@@ -1026,6 +1028,8 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
                     </div>
                   </div>
                 </div>
+
+                </div>{/* end .ocost-left-col */}
 
                 {/* ── Deal Waterfall ── */}
                 <div className="ocost-section ocost-section--summary">

@@ -4397,76 +4397,89 @@ textarea { resize: vertical; }
   padding: 2px 8px;
 }
 
-/* ── Other Costs tab — compact non-scrollable grid ────────────────── */
+/* ── Other Costs tab — 2-col non-scrollable layout ─────────────────── */
 .other-costs-panel {
   display: grid;
-  grid-template-columns: 1fr 0.92fr;
-  grid-template-areas:
-    "financing   waterfall"
-    "transaction waterfall";
-  grid-template-rows: auto 1fr;
+  grid-template-columns: 1fr 220px;
+  grid-template-areas: "left waterfall";
+  grid-template-rows: 1fr;
   gap: 8px;
   height: 100%;
   overflow: hidden;
   padding: 8px;
+  box-sizing: border-box;
 }
 .modal-edit-panel.other-costs-panel { padding: 8px; }
 
-.ocost-section--financing   { grid-area: financing; }
-.ocost-section--transaction { grid-area: transaction; }
+/* Left column wraps financing + transaction stacked */
+.ocost-left-col {
+  grid-area: left;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.ocost-section--financing,
+.ocost-section--transaction { /* no grid-area — inside .ocost-left-col */ }
 .ocost-section--summary     { grid-area: waterfall; }
 
 .ocost-section {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 10px 12px;
-  min-height: 0;
-  overflow: hidden;
+  padding: 9px 11px 7px;
+  flex-shrink: 0;
 }
 
 .ocost-section--summary {
   background: #1e293b;
-  border-color: #1e293b;
+  border-color: #334155;
   color: #f1f5f9;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .ocost-section-header {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
+  gap: 7px;
+  margin-bottom: 7px;
 }
 
 .ocost-section-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 7px;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
   background: var(--surface-2);
-  border: 1.5px solid var(--border);
+  border: 1px solid var(--border);
   color: var(--text-muted);
   flex-shrink: 0;
 }
-.ocost-section-icon svg { width: 14px; height: 14px; }
+.ocost-section-icon svg { width: 13px; height: 13px; }
 
 .ocost-section-header-text { flex: 1; min-width: 0; }
 
 .ocost-section-title {
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   font-weight: 700;
   color: var(--text);
   letter-spacing: -0.01em;
+  line-height: 1.2;
 }
 
 .ocost-section-sub {
-  font-size: 0.64rem;
+  font-size: 0.62rem;
   color: var(--text-muted);
-  margin-top: 0;
+  line-height: 1.2;
 }
 
 .ocost-coming-soon {
@@ -4534,12 +4547,12 @@ textarea { resize: vertical; }
 
 /* ── Summary waterfall card ──────────────────────────────────────── */
 .ocost-summary-label {
-  font-size: 0.58rem;
+  font-size: 0.56rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: #64748b;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 .ocost-summary-row span:last-child { font-family: var(--mono); }
 
@@ -4547,12 +4560,14 @@ textarea { resize: vertical; }
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   color: #94a3b8;
   padding: 3px 0;
-  border-bottom: 1px solid #334155;
-  gap: 12px;
+  border-bottom: 1px solid #2d3d50;
+  gap: 8px;
+  white-space: nowrap;
 }
+.ocost-summary-row span:first-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ocost-summary-row:last-child { border-bottom: none; }
 
 .ocost-summary-pos { color: #f1f5f9; font-weight: 700; font-family: var(--mono); }
@@ -4594,16 +4609,16 @@ textarea { resize: vertical; }
 .ocost-loan-types {
   display: flex;
   gap: 3px;
-  margin-bottom: 8px;
+  margin-bottom: 7px;
 }
 .ocost-loan-btn {
   flex: 1;
   padding: 4px 0;
-  font-size: 0.68rem;
+  font-size: 0.65rem;
   font-weight: 600;
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-xs);
-  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--surface-2);
   color: var(--text-muted);
   cursor: pointer;
   transition: all 0.12s;
@@ -4622,7 +4637,7 @@ textarea { resize: vertical; }
   flex-direction: column;
   gap: 0;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 7px;
   overflow: hidden;
   background: var(--surface);
 }
@@ -4630,12 +4645,12 @@ textarea { resize: vertical; }
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   color: var(--text);
-  padding: 3px 9px;
+  padding: 4px 9px;
   border-bottom: 1px solid var(--border);
-  gap: 8px;
-  min-height: 27px;
+  gap: 6px;
+  min-height: 28px;
 }
 .ocost-field-row:last-child { border-bottom: none; }
 .ocost-field-row--total {
@@ -4644,9 +4659,12 @@ textarea { resize: vertical; }
 }
 .ocost-field-label {
   color: var(--text-muted);
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   flex: 1;
   min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .ocost-field-inputs {
   display: flex;
@@ -4655,54 +4673,57 @@ textarea { resize: vertical; }
   flex-shrink: 0;
 }
 .ocost-pct-input {
-  width: 46px;
-  padding: 2px 5px;
-  font-size: 0.72rem;
+  width: 44px;
+  padding: 2px 4px;
+  font-size: 0.7rem;
   font-family: var(--mono);
   font-weight: 600;
-  border: 1.5px solid var(--border);
-  border-radius: 5px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
   background: var(--surface-2);
   color: var(--text);
   text-align: right;
   outline: none;
+  flex-shrink: 0;
 }
-.ocost-pct-input:focus { border-color: var(--accent); background: var(--surface); }
-.ocost-num-input { width: 38px; }
+.ocost-pct-input:focus { border-color: var(--accent); }
+.ocost-num-input { width: 36px; }
 .ocost-field-unit {
-  font-size: 0.62rem;
+  font-size: 0.6rem;
   color: var(--text-subtle);
   white-space: nowrap;
+  flex-shrink: 0;
 }
 .ocost-field-result {
   font-family: var(--mono);
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 600;
   color: var(--text-muted);
-  min-width: 58px;
+  min-width: 54px;
   text-align: right;
+  flex-shrink: 0;
 }
 .ocost-field-result--carry { color: var(--warning); }
 .ocost-field-result--total {
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   font-weight: 800;
   color: var(--text);
   font-family: var(--mono);
 }
 
 /* Loan basis toggle (inside fields) */
-.ocost-field-row--basis { padding-top: 4px; padding-bottom: 4px; }
+.ocost-field-row--basis { min-height: 30px; }
 .ocost-basis-toggle {
   display: flex;
   gap: 2px;
   flex-shrink: 0;
 }
 .ocost-basis-btn {
-  padding: 2px 6px;
+  padding: 2px 7px;
   font-size: 0.6rem;
   font-weight: 600;
-  border: 1.5px solid var(--border);
-  border-radius: 5px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
   background: var(--surface-2);
   color: var(--text-muted);
   cursor: pointer;
@@ -4736,8 +4757,10 @@ textarea { resize: vertical; }
   padding-top: 6px;
   border-top: 1px dashed #475569;
 }
-.ocost-roi-value { color: #38bdf8; font-weight: 700; font-family: var(--mono); }
-.ocost-roi-annual { color: #64748b; font-weight: 500; font-size: 0.7rem; }
+/* Light mode: use green (success) for ROI — dark mode: keep sky-blue */
+.ocost-roi-value { color: #16a34a; font-weight: 700; font-family: var(--mono); }
+.ocost-roi-annual { color: #64748b; font-weight: 500; font-size: 0.68rem; }
+[data-theme="dark"] .ocost-roi-value { color: #38bdf8; }
 
 /* ── Dark mode overrides for Other Costs ─────────────────────────── */
 [data-theme="dark"] .ocost-section { background: var(--surface); }

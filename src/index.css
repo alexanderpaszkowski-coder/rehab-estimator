@@ -1213,8 +1213,8 @@ textarea { resize: vertical; }
 /* Wider in edit mode to fit forms comfortably — always at full height */
 .summary-modal--editing {
   max-width: 920px;
-  min-height: 78vh;
-  height: 78vh;
+  min-height: 86vh;
+  height: 86vh;
 }
 
 .summary-mls-photo {
@@ -4685,11 +4685,14 @@ textarea { resize: vertical; }
   gap: 0;
   border: 1px solid var(--border);
   border-radius: 6px;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   background: var(--surface);
   flex: 1;
   justify-content: space-between;
+  scrollbar-width: none;
 }
+.ocost-fields::-webkit-scrollbar { display: none; }
 .ocost-field-row {
   display: flex;
   justify-content: space-between;

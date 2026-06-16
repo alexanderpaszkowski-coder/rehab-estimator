@@ -1,4 +1,5 @@
 import type { HomeFile } from '../types'
+import { getListingUrl } from './listingRefresh'
 import { SOW_TEMPLATE } from './defaults'
 import { calcBlendedRehab, calcSowTotals, formatCurrency, getSystemQty, num } from './calculations'
 import { getSourceLabel, getStageMeta } from './funnel'
@@ -173,4 +174,26 @@ export function copySummary(home: HomeFile): string {
     )
   }
   return lines.join('\n')
+}
+
+/**
+ * Generates a ready-to-paste AI prompt for a full photo-based rehab analysis.
+ * Uses the listing URL when available; falls back to a Google search for the address.
+ */
+export function generateAiRehabPrompt(home: HomeFile): string {
+  const listingUrl = getListingUrl(home)
+  const addr = [home.address, home.city, home.state, home.zip].filter(Boolean).join(', ')
+  const urlLine = listingUrl ?? `https://www.google.com/search?q=${encodeURIComponent(addr + ' real estate listing')}`
+
+  return `${urlLine}
+
+Please take this property and analyze each individual listing photo. Using the information from the listing, determine the size of the property and each room. I need you to build out a scope of rehab costs by:
+
+1. Reviewing every listing photo and identifying condition issues by system (demo, roof, exterior, windows, doors, foundation, framing, insulation, drywall, paint, flooring, kitchen, bathrooms, plumbing, electrical, HVAC, basement, permits/general conditions, and hazmat if pre-1978).
+
+2. Searching the property address — ${addr} — on Google and pulling prior listing photos from sites like Realtor.com, Zillow, or Redfin to capture any historical condition details not visible in the current photos.
+
+3. Using the room dimensions from the listing's "More Details" section (most listings outline individual room sizes) to accurately size each scope line item.
+
+Based on all photo evidence and room sizing, provide a detailed line-item rehab estimate broken down by system, with a low/mid/high range per system and a total at the bottom.`
 }

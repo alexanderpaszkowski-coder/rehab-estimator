@@ -11,6 +11,7 @@ import type { DealAnalysis, Tag } from '../lib/dealScore'
 import { PropertyIntake } from './PropertyIntake'
 import { AuctionCountdown } from './AuctionCountdown'
 import { getListingUrl, isRefreshable } from '../lib/listingRefresh'
+import { generateAiRehabPrompt } from '../lib/copyContent'
 import { getAuctionDeadlineMs, getAuctionCountdown } from '../lib/auctionSchedule'
 import { FunnelDetails } from './FunnelDetails'
 import { PropertyInputs as PropertyInputsView } from './PropertyInputs'
@@ -93,6 +94,43 @@ const SOURCE_DOMAIN: Partial<Record<PropertySource, string>> = {
 }
 
 // ── Source logo ───────────────────────────────────────────────────────────────
+
+// ── AI Prompt copy buttons ────────────────────────────────────────────────────
+
+function AiPromptButtons({ home }: { home: HomeFile }) {
+  const [copied, setCopied] = useState<'claude' | 'gpt' | null>(null)
+
+  const copy = (ai: 'claude' | 'gpt') => {
+    const prompt = generateAiRehabPrompt(home)
+    navigator.clipboard.writeText(prompt).then(() => {
+      setCopied(ai)
+      setTimeout(() => setCopied(null), 2000)
+    })
+  }
+
+  return (
+    <div className="ai-prompt-btns">
+      <button
+        type="button"
+        className={`ai-prompt-btn${copied === 'claude' ? ' ai-prompt-btn--copied' : ''}`}
+        title="Copy rehab analysis prompt for Claude"
+        onClick={() => copy('claude')}
+      >
+        <img src="https://www.google.com/s2/favicons?domain=claude.ai&sz=32" width="13" height="13" alt="Claude" />
+        {copied === 'claude' ? 'Copied!' : 'Claude'}
+      </button>
+      <button
+        type="button"
+        className={`ai-prompt-btn${copied === 'gpt' ? ' ai-prompt-btn--copied' : ''}`}
+        title="Copy rehab analysis prompt for ChatGPT"
+        onClick={() => copy('gpt')}
+      >
+        <img src="https://www.google.com/s2/favicons?domain=chat.openai.com&sz=32" width="13" height="13" alt="ChatGPT" />
+        {copied === 'gpt' ? 'Copied!' : 'ChatGPT'}
+      </button>
+    </div>
+  )
+}
 
 function SourceLogo({ source, customLabel, size = 20 }: {
   source: PropertySource
@@ -413,6 +451,9 @@ function SummaryLinkActions({
             {home.propstreamUrl ? 'Edit PropStream' : 'Add PropStream link'}
           </button>
         )}
+
+        {/* ── AI Prompt copy buttons ── */}
+        <AiPromptButtons home={home} />
       </div>
 
       {showPropInput && onUpdateHome && (

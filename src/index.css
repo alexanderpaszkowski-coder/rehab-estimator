@@ -4404,12 +4404,120 @@ textarea { resize: vertical; }
   padding: 2px 8px;
 }
 
-/* ── Other Costs tab — 3-col + footer, no scroll ────────────────────── */
+/* ── Modal body: tab content + persistent right sidebar ─────────────── */
+.modal-body-with-sidebar {
+  display: flex;
+  flex-direction: row;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+.modal-body-with-sidebar .modal-tab-body {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ── Deal Waterfall sidebar ─────────────────────────────────────────── */
+.deal-waterfall-sidebar {
+  width: 210px;
+  flex-shrink: 0;
+  border-left: 1px solid var(--border);
+  background: var(--surface-2);
+  display: flex;
+  flex-direction: column;
+  padding: 14px 14px 12px;
+  gap: 0;
+  overflow: hidden;
+}
+.dwf-label {
+  font-size: 0.56rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+.dwf-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  animation: dwf-flash 0.5s ease-out;
+}
+.dwf-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 6px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.72rem;
+}
+.dwf-row:last-child { border-bottom: none; }
+.dwf-row-label { color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dwf-row-value { font-family: var(--mono); font-size: 0.72rem; font-weight: 600; color: var(--text); white-space: nowrap; flex-shrink: 0; }
+.dwf-row-value--pos { font-weight: 700; color: var(--text); }
+
+.dwf-divider {
+  height: 1px;
+  background: var(--border-strong);
+  margin: 10px 0 8px;
+}
+
+.dwf-net-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 10px;
+  animation: dwf-flash 0.5s ease-out;
+}
+.dwf-net-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text);
+}
+.dwf-net-value {
+  font-family: var(--mono);
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+.dwf-net-value--pos { color: var(--success); }
+.dwf-net-value--neg { color: var(--danger); }
+
+.dwf-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border-strong);
+  animation: dwf-flash 0.5s ease-out;
+}
+.dwf-stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 6px;
+}
+.dwf-stat-label { font-size: 0.65rem; color: var(--text-muted); }
+.dwf-stat-value { font-family: var(--mono); font-size: 0.75rem; font-weight: 700; color: var(--text); white-space: nowrap; }
+.dwf-stat-value--roi { color: var(--success); }
+.dwf-stat-annual { font-size: 0.65rem; font-weight: 500; color: var(--text-subtle); }
+
+@keyframes dwf-flash {
+  0%   { opacity: 0.4; transform: translateY(-2px); }
+  100% { opacity: 1;   transform: translateY(0); }
+}
+
+[data-theme="dark"] .deal-waterfall-sidebar { background: var(--surface-2); border-color: var(--border); }
+[data-theme="dark"] .dwf-net-value--pos { color: #4ade80; }
+[data-theme="dark"] .dwf-stat-value--roi { color: #4ade80; }
+
+/* ── Other Costs tab — 2-col (waterfall now lives in persistent sidebar) */
 .other-costs-panel {
   display: grid;
-  grid-template-columns: 1fr 1fr 210px;
-  grid-template-areas: "financing transaction waterfall" "footer footer footer";
-  grid-template-rows: 1fr auto;
+  grid-template-columns: 1fr 1fr;
+  grid-template-areas: "financing transaction";
+  grid-template-rows: 1fr;
   gap: 7px;
   height: 100%;
   overflow: hidden;
@@ -4418,12 +4526,11 @@ textarea { resize: vertical; }
 }
 .modal-edit-panel.other-costs-panel { padding: 8px; }
 
-/* Left column — kept for fallback but unused in 3-col layout */
+/* Left column — kept for fallback but unused in 2-col layout */
 .ocost-left-col { display: contents; }
 
 .ocost-section--financing  { grid-area: financing; }
 .ocost-section--transaction { grid-area: transaction; }
-.ocost-section--summary    { grid-area: waterfall; }
 
 .ocost-section {
   background: var(--surface);

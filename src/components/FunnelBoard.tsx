@@ -581,6 +581,16 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
     onUpdateHome?.({ ...home, ...patch, updatedAt: new Date().toISOString() })
   }
 
+  // Computed once at modal level — used by both Other Costs tab and the persistent sidebar
+  const oc = calcAllInCosts(home)
+  const fmt = formatCurrency
+
+  // Increment key whenever any dollar figure changes to trigger the flash animation
+  const waterfallFlashKey = useMemo(() => JSON.stringify([
+    arv, askingPrice, rehabEst,
+    oc.closingTotal, oc.financingTotal, oc.trueNet, oc.cashInvested, oc.roi,
+  ]), [arv, askingPrice, rehabEst, oc.closingTotal, oc.financingTotal, oc.trueNet, oc.cashInvested, oc.roi])
+
   useLockBodyScroll()
 
   return (
@@ -640,7 +650,8 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
           ))}
         </div>
 
-        {/* ── Tab content ── */}
+        {/* ── Tab content + persistent waterfall sidebar ── */}
+        <div className="modal-body-with-sidebar">
         <div className={`modal-tab-body${editTab === 'overview' ? ' modal-tab-body--overview' : ''}`}>
 
           {editTab === 'overview' && (
@@ -801,9 +812,7 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
           )}
 
           {editTab === 'other-costs' && (() => {
-            const oc = calcAllInCosts(home)
             const c = oc.costs
-            const fmt = formatCurrency
 
             const patchCosts = (patch: Partial<typeof c>) =>
               handleChange({ dealCosts: { ...home.dealCosts, ...patch } })
@@ -847,7 +856,7 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
             ]
 
             return (
-              <div className="modal-edit-panel other-costs-panel">
+              <div className="modal-edit-panel other-costs-panel other-costs-panel--2col">
 
                 {/* ── Financing ── */}
                 <div className="ocost-section ocost-section--financing">
@@ -1029,71 +1038,73 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
                   </div>
                 </div>
 
-                {/* ── Deal Waterfall ── */}
-                <div className="ocost-section ocost-section--summary">
-                  <div className="ocost-summary-label">Deal Waterfall</div>
-                  <div className="ocost-waterfall-rows">
-                    <div className="ocost-summary-row">
-                      <span>{getArvLabel(home.source)}</span>
-                      <span className="ocost-summary-pos">{arv ? fmt(arv) : '—'}</span>
-                    </div>
-                    <div className="ocost-summary-row">
-                      <span>− {getBidLabel(home.source, home.funnel)}</span>
-                      <span>{askingPrice ? fmt(askingPrice) : '—'}</span>
-                    </div>
-                    {spread !== null && (
-                      <div className="ocost-summary-row">
-                        <span>= Gross spread</span>
-                        <span className="ocost-summary-pos">{fmt(spread)}</span>
-                      </div>
-                    )}
-                    <div className="ocost-summary-row">
-                      <span>− Est. rehab</span>
-                      <span>{rehabEst ? fmt(rehabEst) : '—'}</span>
-                    </div>
-                    <div className="ocost-summary-row">
-                      <span>− Transaction costs</span>
-                      <span>{(askingPrice || arv) ? fmt(oc.closingTotal) : '—'}</span>
-                    </div>
-                    {c.loanType !== 'cash' && (
-                      <div className="ocost-summary-row">
-                        <span>− Financing ({c.loanType.toUpperCase()})</span>
-                        <span>{askingPrice ? fmt(oc.financingTotal) : '—'}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* ── Bottom results strip ── */}
-                <div className="ocost-footer-strip">
-                  <div className="ocost-footer-item">
-                    <span className="ocost-footer-label">True Net Profit</span>
-                    <span className={`ocost-footer-value${oc.trueNet !== null && oc.trueNet >= 0 ? ' ocost-footer-value--profit' : ''}`}>
-                      {oc.trueNet !== null ? fmt(oc.trueNet) : '—'}
-                    </span>
-                  </div>
-                  <div className="ocost-footer-item">
-                    <span className="ocost-footer-label">Cash Invested</span>
-                    <span className="ocost-footer-value">
-                      {(askingPrice || arv) ? fmt(oc.cashInvested) : '—'}
-                    </span>
-                  </div>
-                  <div className="ocost-footer-item">
-                    <span className="ocost-footer-label">Cash-on-Cash ROI</span>
-                    <span className={`ocost-footer-value${oc.roi !== null ? ' ocost-footer-value--roi' : ''}`}>
-                      {oc.roi !== null ? `${(oc.roi * 100).toFixed(0)}%` : '—'}
-                      {oc.annualizedRoi !== null && (
-                        <span className="ocost-footer-sub"> · {(oc.annualizedRoi * 100).toFixed(0)}%/yr</span>
-                      )}
-                    </span>
-                  </div>
-                </div>
-
               </div>
             )
           })()}
 
-        </div>
+        </div>{/* end modal-tab-body */}
+
+        {/* ── Persistent Deal Waterfall sidebar ── */}
+        {editTab !== 'overview' && (
+          <div className="deal-waterfall-sidebar">
+            <div className="dwf-label">Deal Waterfall</div>
+            <div className="dwf-rows" key={waterfallFlashKey}>
+              <div className="dwf-row">
+                <span className="dwf-row-label">{arvLabel}</span>
+                <span className="dwf-row-value dwf-row-value--pos">{arv ? fmt(arv) : '—'}</span>
+              </div>
+              <div className="dwf-row">
+                <span className="dwf-row-label">− {bidLabel}</span>
+                <span className="dwf-row-value">{askingPrice ? fmt(askingPrice) : '—'}</span>
+              </div>
+              {spread !== null && (
+                <div className="dwf-row">
+                  <span className="dwf-row-label">= Gross spread</span>
+                  <span className="dwf-row-value dwf-row-value--pos">{fmt(spread)}</span>
+                </div>
+              )}
+              <div className="dwf-row">
+                <span className="dwf-row-label">− Est. rehab</span>
+                <span className="dwf-row-value">{rehabEst ? fmt(rehabEst) : '—'}</span>
+              </div>
+              <div className="dwf-row">
+                <span className="dwf-row-label">− Transaction costs</span>
+                <span className="dwf-row-value">{(askingPrice || arv) ? fmt(oc.closingTotal) : '—'}</span>
+              </div>
+              {oc.costs.loanType !== 'cash' && (
+                <div className="dwf-row">
+                  <span className="dwf-row-label">− Financing ({oc.costs.loanType.toUpperCase()})</span>
+                  <span className="dwf-row-value">{askingPrice ? fmt(oc.financingTotal) : '—'}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="dwf-divider" />
+
+            <div className="dwf-net-row" key={`net-${waterfallFlashKey}`}>
+              <span className="dwf-net-label">True net profit</span>
+              <span className={`dwf-net-value${oc.trueNet !== null && oc.trueNet >= 0 ? ' dwf-net-value--pos' : ' dwf-net-value--neg'}`}>
+                {oc.trueNet !== null ? fmt(oc.trueNet) : '—'}
+              </span>
+            </div>
+
+            <div className="dwf-stats" key={`stats-${waterfallFlashKey}`}>
+              <div className="dwf-stat">
+                <span className="dwf-stat-label">Cash invested</span>
+                <span className="dwf-stat-value">{(askingPrice || arv) ? fmt(oc.cashInvested) : '—'}</span>
+              </div>
+              <div className="dwf-stat">
+                <span className="dwf-stat-label">Cash-on-cash</span>
+                <span className={`dwf-stat-value${oc.roi !== null ? ' dwf-stat-value--roi' : ''}`}>
+                  {oc.roi !== null ? `${(oc.roi * 100).toFixed(0)}%` : '—'}
+                  {oc.annualizedRoi !== null && <span className="dwf-stat-annual"> · {(oc.annualizedRoi * 100).toFixed(0)}%/yr</span>}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        </div>{/* end modal-body-with-sidebar */}
 
         {/* ── Footer ── */}
         <div className="summary-actions">

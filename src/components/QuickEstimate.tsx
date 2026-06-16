@@ -1,5 +1,5 @@
 import type { Condition, HomeFile, QuickSystem } from '../types'
-import { calcQuickEstimate, calcSowCategoryRaw, formatCurrency, getSystemQty, QE_TO_SOW_CATEGORY } from '../lib/calculations'
+import { calcQuickEstimate, calcSowCategoryRaw, calcSowItemsTotal, formatCurrency, getSystemQty, QE_SOW_ITEM_IDS, QE_TO_SOW_CATEGORY } from '../lib/calculations'
 import { CopyButton } from './CopyButton'
 import { copyQuickEstimate } from '../lib/copyContent'
 
@@ -65,7 +65,10 @@ export function QuickEstimate({ home, onChange }: Props) {
               const line = totals.lineCosts.find((l) => l.name === system.name)
               const sowCat = QE_TO_SOW_CATEGORY[system.id]
               const isConfirmed = !!(sowCat && home.sowFinalized?.[sowCat])
-              const confirmedCost = isConfirmed ? calcSowCategoryRaw(home, sowCat) : null
+              const itemIds = QE_SOW_ITEM_IDS[system.id]
+              const confirmedCost = isConfirmed
+                ? (itemIds ? calcSowItemsTotal(home, itemIds) : calcSowCategoryRaw(home, sowCat))
+                : null
               const displayCost = confirmedCost ?? line?.cost ?? 0
 
               if (isConfirmed) {

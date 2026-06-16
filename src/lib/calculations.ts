@@ -219,6 +219,20 @@ export const QE_TO_SOW_CATEGORY: Record<string, string> = {
   'qe-29': 'PERMITS, FEES & GENERAL CONDITIONS',
 }
 
+/**
+ * When multiple QE systems share a SOW category, this maps each QE system ID
+ * to the specific SOW line item IDs it is responsible for within that category.
+ * Systems not listed here cover all line items in their mapped category.
+ *
+ * DEMOLITION & SITE PREP split:
+ *   qe-5  → demo & dumpster line items  (sow-5 … sow-11)
+ *   qe-28 → hazmat line items           (sow-12 asbestos, sow-13 lead-safe)
+ */
+export const QE_SOW_ITEM_IDS: Record<string, string[]> = {
+  'qe-5':  ['sow-5', 'sow-6', 'sow-7', 'sow-8', 'sow-9', 'sow-10', 'sow-11'],
+  'qe-28': ['sow-12', 'sow-13'],
+}
+
 /** Compute the raw SOW line-item estimate total for one category (no contingency). */
 export function calcSowCategoryRaw(home: HomeFile, category: string): number {
   let total = 0
@@ -227,6 +241,20 @@ export function calcSowCategoryRaw(home: HomeFile, category: string): number {
     if ((item as SowLine).category !== category) continue
     const data = home.sowLines[(item as SowLine).id] ?? { qty: '', bid: '', actual: '', notes: '' }
     total += calcLineEstimate((item as SowLine).unitCost, data.qty, category, home.property)
+  }
+  return total
+}
+
+/** Compute the raw SOW estimate total for a specific set of line item IDs. */
+export function calcSowItemsTotal(home: HomeFile, itemIds: string[]): number {
+  const idSet = new Set(itemIds)
+  let total = 0
+  for (const item of SOW_TEMPLATE) {
+    if (item.type !== 'line') continue
+    const line = item as SowLine
+    if (!idSet.has(line.id)) continue
+    const data = home.sowLines[line.id] ?? { qty: '', bid: '', actual: '', notes: '' }
+    total += calcLineEstimate(line.unitCost, data.qty, line.category ?? '', home.property)
   }
   return total
 }

@@ -32,6 +32,11 @@
 
 /* ── Reset ─────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* Remove number input spinners globally */
+input[type="number"] { -moz-appearance: textfield; }
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 html, body, #root { height: 100%; }
 body {
   font-family: var(--font);
@@ -4716,12 +4721,6 @@ textarea { resize: vertical; }
   text-align: right;
   outline: none;
   flex-shrink: 0;
-  -moz-appearance: textfield;
-}
-.ocost-pct-input::-webkit-inner-spin-button,
-.ocost-pct-input::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
 }
 .ocost-pct-input:focus { border-color: var(--accent); }
 .ocost-num-input { width: 36px; }

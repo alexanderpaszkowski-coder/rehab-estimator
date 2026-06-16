@@ -4427,8 +4427,8 @@ textarea { resize: vertical; }
   padding: 10px 12px;
   display: flex;
   flex-direction: column;
-  min-height: 0;
-  overflow: hidden;
+  gap: 8px;
+  align-self: start;
 }
 
 .ocost-section--summary {
@@ -4437,7 +4437,8 @@ textarea { resize: vertical; }
   color: var(--text);
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  gap: 0;
+  align-self: start;
 }
 
 .ocost-section-header {
@@ -4557,12 +4558,10 @@ textarea { resize: vertical; }
   align-items: center;
   font-size: 0.7rem;
   color: var(--text-muted);
-  padding: 2px 0;
+  padding: 7px 0;
   border-bottom: 1px solid var(--border);
   gap: 8px;
   white-space: nowrap;
-  flex: 1;
-  min-height: 24px;
 }
 .ocost-summary-row span:first-child { line-height: 1.25; }
 .ocost-summary-row:last-child { border-bottom: none; }
@@ -4675,7 +4674,6 @@ textarea { resize: vertical; }
   border-radius: 6px;
   overflow: hidden;
   background: var(--surface);
-  flex: 1;
 }
 .ocost-field-row {
   display: flex;
@@ -4683,11 +4681,9 @@ textarea { resize: vertical; }
   align-items: center;
   font-size: 0.72rem;
   color: var(--text);
-  padding: 2px 10px;
+  padding: 6px 10px;
   border-bottom: 1px solid var(--border);
   gap: 8px;
-  flex: 1;
-  min-height: 28px;
 }
 .ocost-field-row:last-child { border-bottom: none; }
 .ocost-field-row--total {
@@ -4753,7 +4749,7 @@ textarea { resize: vertical; }
 }
 
 /* Loan basis toggle (inside fields) — segmented control */
-.ocost-field-row--basis { min-height: 26px; }
+.ocost-field-row--basis { padding: 5px 10px; }
 .ocost-basis-toggle {
   display: flex;
   gap: 0;

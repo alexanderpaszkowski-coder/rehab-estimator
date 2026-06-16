@@ -909,7 +909,9 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
                         </div>
                       </div>
                       <div className="ocost-field-row">
-                        <span className="ocost-field-label">Loan ratio</span>
+                        <span className="ocost-field-label">
+                          {c.loanBasis === 'purchase-rehab' ? 'Loan to cost (LTC)' : 'Loan to value (LTV)'}
+                        </span>
                         <span className="ocost-field-inputs">
                           {pctInput(c.loanAmountPct, (v) => patchCosts({ loanAmountPct: v }))}
                           <span className="ocost-field-unit">{basisLabel}</span>

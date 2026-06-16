@@ -880,15 +880,54 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
                     ))}
                   </div>
 
-                  {c.loanType !== 'cash' && (
+                  {c.loanType !== 'cash' && (() => {
+                    const basisLabel =
+                      c.loanBasis === 'purchase'       ? '% of purchase' :
+                      c.loanBasis === 'purchase-rehab' ? '% of purch.+rehab' :
+                      '% of ARV'
+                    const loanBases: { id: typeof c.loanBasis; label: string }[] = [
+                      { id: 'purchase',       label: 'Purchase' },
+                      { id: 'purchase-rehab', label: 'Purch. + Rehab' },
+                      { id: 'arv',            label: 'ARV' },
+                    ]
+                    return (
                     <div className="ocost-fields">
+                      {/* Loan basis selector */}
+                      <div className="ocost-field-row ocost-field-row--basis">
+                        <span className="ocost-field-label">Loan sized on</span>
+                        <div className="ocost-basis-toggle">
+                          {loanBases.map((lb) => (
+                            <button
+                              key={lb.id}
+                              type="button"
+                              className={`ocost-basis-btn${c.loanBasis === lb.id ? ' ocost-basis-btn--active' : ''}`}
+                              onClick={() => patchCosts({ loanBasis: lb.id })}
+                            >
+                              {lb.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                       <div className="ocost-field-row">
-                        <span className="ocost-field-label">Loan amount</span>
+                        <span className="ocost-field-label">Loan ratio</span>
                         <span className="ocost-field-inputs">
                           {pctInput(c.loanAmountPct, (v) => patchCosts({ loanAmountPct: v }))}
-                          <span className="ocost-field-unit">% of ask</span>
-                          {askingPrice ? <span className="ocost-field-result">{fmt(oc.loanAmount)}</span> : null}
+                          <span className="ocost-field-unit">{basisLabel}</span>
                         </span>
+                      </div>
+                      <div className="ocost-field-row">
+                        <span className="ocost-field-label">Max loan (ARV cap)</span>
+                        <span className="ocost-field-inputs">
+                          {pctInput(c.arvCapPct, (v) => patchCosts({ arvCapPct: v }))}
+                          <span className="ocost-field-unit">% of ARV</span>
+                        </span>
+                      </div>
+                      <div className="ocost-field-row ocost-field-row--derived">
+                        <span className="ocost-field-label">
+                          Loan amount
+                          {oc.loanCappedByArv && <span className="ocost-cap-flag" title="Reduced by the ARV cap">ARV-capped</span>}
+                        </span>
+                        <span className="ocost-field-result ocost-field-result--total">{(askingPrice || arv) ? fmt(oc.loanAmount) : '—'}</span>
                       </div>
                       {c.loanType === 'hml' && (
                         <div className="ocost-field-row">
@@ -896,7 +935,7 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
                           <span className="ocost-field-inputs">
                             {pctInput(c.pointsPct, (v) => patchCosts({ pointsPct: v }), 0.25)}
                             <span className="ocost-field-unit">% of loan</span>
-                            {askingPrice ? <span className="ocost-field-result">{fmt(oc.points)}</span> : null}
+                            {(askingPrice || arv) ? <span className="ocost-field-result">{fmt(oc.points)}</span> : null}
                           </span>
                         </div>
                       )}
@@ -912,15 +951,16 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
                         <span className="ocost-field-inputs">
                           {numInput(c.holdMonths, (v) => patchCosts({ holdMonths: v }), 1, 36)}
                           <span className="ocost-field-unit">months</span>
-                          {askingPrice ? <span className="ocost-field-result ocost-field-result--carry">{fmt(oc.interestCarry)}</span> : null}
+                          {(askingPrice || arv) ? <span className="ocost-field-result ocost-field-result--carry">{fmt(oc.interestCarry)}</span> : null}
                         </span>
                       </div>
                       <div className="ocost-field-row ocost-field-row--total">
                         <span className="ocost-field-label">Financing total</span>
-                        <span className="ocost-field-result ocost-field-result--total">{askingPrice ? fmt(oc.financingTotal) : '—'}</span>
+                        <span className="ocost-field-result ocost-field-result--total">{(askingPrice || arv) ? fmt(oc.financingTotal) : '—'}</span>
                       </div>
                     </div>
-                  )}
+                    )
+                  })()}
                   {c.loanType === 'cash' && (
                     <div className="ocost-fields">
                       <div className="ocost-field-row ocost-field-row--total">
@@ -973,10 +1013,10 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
                       </span>
                     </div>
                     <div className="ocost-field-row">
-                      <span className="ocost-field-label">Holding costs (tax, ins.)</span>
+                      <span className="ocost-field-label">Holding (tax, ins.) — {c.holdMonths}mo</span>
                       <span className="ocost-field-inputs">
-                        {pctInput(c.holdingCostsPct, (v) => patchCosts({ holdingCostsPct: v }))}
-                        <span className="ocost-field-unit">% of ARV</span>
+                        {pctInput(c.holdingAnnualPct, (v) => patchCosts({ holdingAnnualPct: v }))}
+                        <span className="ocost-field-unit">% / yr</span>
                         {arv ? <span className="ocost-field-result">{fmt(oc.holdingCosts)}</span> : null}
                       </span>
                     </div>
@@ -1022,6 +1062,21 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
                     <span>True net profit</span>
                     <span className="ocost-net-value">
                       {oc.trueNet !== null ? fmt(oc.trueNet) : '—'}
+                    </span>
+                  </div>
+
+                  {/* Capital & returns */}
+                  <div className="ocost-summary-row ocost-summary-row--capital">
+                    <span>Cash invested (capital)</span>
+                    <span>{(askingPrice || arv) ? fmt(oc.cashInvested) : '—'}</span>
+                  </div>
+                  <div className="ocost-summary-row ocost-summary-row--roi">
+                    <span>Cash-on-cash ROI</span>
+                    <span className="ocost-roi-value">
+                      {oc.roi !== null ? `${(oc.roi * 100).toFixed(0)}%` : '—'}
+                      {oc.annualizedRoi !== null && (
+                        <span className="ocost-roi-annual"> · {(oc.annualizedRoi * 100).toFixed(0)}%/yr</span>
+                      )}
                     </span>
                   </div>
                 </div>

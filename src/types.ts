@@ -134,6 +134,12 @@ export type ReviewStatus = 'pending' | 'reviewed' | 'approved' | 'passed'
 
 export type LoanType = 'hml' | 'heloc' | 'conventional' | 'cash'
 
+/** How the loan amount is sized */
+export type LoanBasis =
+  | 'purchase'        // % of purchase price (LTP)
+  | 'purchase-rehab'  // % of (purchase + rehab) (LTC) — finances rehab via draws
+  | 'arv'             // % of ARV (ARLV)
+
 export interface DealCosts {
   /** Buy-side closing costs as % of purchase price (default 0.02 = 2%) */
   buySideClosingPct: number
@@ -141,13 +147,17 @@ export interface DealCosts {
   agentCommissionPct: number
   /** Sell-side closing costs as % of ARV (default 0.01 = 1%) */
   sellSideClosingPct: number
-  /** Holding costs (taxes, insurance) as % of ARV (default 0.015 = 1.5%) */
-  holdingCostsPct: number
+  /** Holding costs (taxes, insurance, utilities) — ANNUAL % of ARV, prorated by hold period (default 0.025 = 2.5%/yr) */
+  holdingAnnualPct: number
   /** Financing type */
   loanType: LoanType
-  /** Loan amount as % of purchase price (default 0.75 = 75%) */
+  /** How the loan amount is sized (default 'purchase-rehab') */
+  loanBasis: LoanBasis
+  /** Loan amount as % of the chosen basis (default 0.85) */
   loanAmountPct: number
-  /** Origination points as % of loan amount — HML only (default 0.025 = 2.5%) */
+  /** Maximum loan as % of ARV — lender's ARV cap (default 0.70 = 70%) */
+  arvCapPct: number
+  /** Origination points as % of loan amount — HML only (default 0.02 = 2 pts) */
   pointsPct: number
   /** Annual interest rate (default 0.11 = 11%) */
   interestRatePct: number

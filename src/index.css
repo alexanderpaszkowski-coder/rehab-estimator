@@ -4673,6 +4673,55 @@ textarea { resize: vertical; }
   font-family: var(--mono);
 }
 
+/* Loan basis toggle (inside fields) */
+.ocost-field-row--basis { padding-top: 8px; padding-bottom: 8px; }
+.ocost-basis-toggle {
+  display: flex;
+  gap: 3px;
+  flex-shrink: 0;
+}
+.ocost-basis-btn {
+  padding: 3px 8px;
+  font-size: 0.66rem;
+  font-weight: 600;
+  border: 1.5px solid var(--border);
+  border-radius: 5px;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.12s;
+}
+.ocost-basis-btn:hover { color: var(--text); }
+.ocost-basis-btn--active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.ocost-field-row--derived { background: var(--surface-2); }
+.ocost-cap-flag {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 0.58rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--warning);
+  background: color-mix(in srgb, var(--warning) 14%, transparent);
+  border-radius: 4px;
+  padding: 1px 5px;
+  vertical-align: middle;
+}
+
+/* Capital & ROI rows in waterfall */
+.ocost-summary-row--capital {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed #475569;
+}
+.ocost-roi-value { color: #38bdf8; font-weight: 700; font-family: var(--mono); }
+.ocost-roi-annual { color: #64748b; font-weight: 500; font-size: 0.7rem; }
+
 /* ── Dark mode overrides for Other Costs ─────────────────────────── */
 [data-theme="dark"] .ocost-section { background: var(--surface); }
 [data-theme="dark"] .ocost-section-icon {
@@ -4687,6 +4736,9 @@ textarea { resize: vertical; }
 [data-theme="dark"] .ocost-field-row--total { background: var(--surface-3); }
 [data-theme="dark"] .ocost-loan-btn { background: var(--surface-2); }
 [data-theme="dark"] .ocost-loan-btn--active { background: var(--accent); }
+[data-theme="dark"] .ocost-basis-btn { background: var(--surface-3); }
+[data-theme="dark"] .ocost-basis-btn--active { background: var(--accent); }
+[data-theme="dark"] .ocost-field-row--derived { background: var(--surface-3); }
 
 /* ── SOW Grid (compact card boxes) ────────────────────────────────── */
 .sow-grid-layout {

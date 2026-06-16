@@ -340,6 +340,7 @@ export function calcBlendedRehab(home: HomeFile): BlendedRehabResult {
 
 export interface AllInCostResult {
   costs: DealCosts
+  rehab: number
   // Transaction & holding
   buySideClosing: number
   agentCommission: number
@@ -348,49 +349,106 @@ export interface AllInCostResult {
   closingTotal: number
   // Financing
   loanAmount: number
+  /** True when the requested loan was reduced by the ARV cap */
+  loanCappedByArv: boolean
+  /** Portion of the loan used for the purchase */
+  purchasePortion: number
+  /** Portion of the loan financing rehab (draws) */
+  rehabFinanced: number
   points: number
   interestCarry: number
   financingTotal: number
+  // Capital / returns
+  downPayment: number
+  /** Out-of-pocket cash to acquire + carry (capital, NOT a profit deduction) */
+  cashInvested: number
+  /** Cash-on-cash return = trueNet / cashInvested */
+  roi: number | null
+  /** Annualized cash-on-cash return */
+  annualizedRoi: number | null
   // Summary
   rehabPlusCosts: number   // rehab + closingTotal
   allIn: number            // rehabPlusCosts + financingTotal
   trueNet: number | null   // ARV − ask − allIn  (null if ARV or ask missing)
 }
 
+/**
+ * Full all-in cost + returns model.
+ *
+ * Loan sizing (hard money / financed deals):
+ *   basis = purchase | purchase+rehab | ARV  → × loanAmountPct
+ *   then capped at ARV × arvCapPct (the lender's max exposure).
+ *
+ * Interest carry is interest-only. The purchase portion is assumed drawn at
+ * close (full-term interest); the rehab portion funds via draws over the
+ * project, approximated as half-term interest.
+ *
+ * Holding costs are time-based: ARV × holdingAnnualPct × (holdMonths / 12).
+ */
 export function calcAllInCosts(home: HomeFile): AllInCostResult {
   const c: DealCosts = { ...DEFAULT_DEAL_COSTS, ...home.dealCosts }
   const ask = home.funnel.askingPrice ?? 0
   const arv = home.funnel.arv ?? 0
   const rehab = calcBlendedRehab(home).withContingency
+  const months = Math.max(0, c.holdMonths)
 
-  // Transaction costs
+  // ── Transaction & holding costs ──
   const buySideClosing  = Math.round(ask * c.buySideClosingPct)
   const agentCommission = Math.round(arv * c.agentCommissionPct)
   const sellSideClosing = Math.round(arv * c.sellSideClosingPct)
-  const holdingCosts    = Math.round(arv * c.holdingCostsPct)
+  const holdingCosts    = Math.round(arv * c.holdingAnnualPct * (months / 12))
   const closingTotal    = buySideClosing + agentCommission + sellSideClosing + holdingCosts
 
-  // Financing
+  // ── Financing ──
   let loanAmount = 0, points = 0, interestCarry = 0, financingTotal = 0
+  let loanCappedByArv = false
+  let purchasePortion = 0, rehabFinanced = 0
   if (c.loanType !== 'cash') {
-    loanAmount    = Math.round(ask * c.loanAmountPct)
-    points        = c.loanType === 'hml' ? Math.round(loanAmount * c.pointsPct) : 0
-    interestCarry = Math.round(loanAmount * c.interestRatePct * c.holdMonths / 12)
+    const basisAmount =
+      c.loanBasis === 'purchase'       ? ask :
+      c.loanBasis === 'purchase-rehab' ? ask + rehab :
+      /* arv */                          arv
+    const requestedLoan = basisAmount * c.loanAmountPct
+    const arvCap = arv > 0 ? arv * c.arvCapPct : Infinity
+    loanAmount = Math.round(Math.min(requestedLoan, arvCap))
+    loanCappedByArv = arv > 0 && requestedLoan > arvCap
+
+    // Split loan: purchase first, then rehab via draws
+    purchasePortion = Math.min(loanAmount, ask)
+    rehabFinanced   = Math.min(rehab, Math.max(0, loanAmount - ask))
+
+    points = c.loanType === 'hml' ? Math.round(loanAmount * c.pointsPct) : 0
+    // Interest-only: purchase full term, rehab draws ≈ half term
+    const purchaseInterest = purchasePortion * c.interestRatePct * (months / 12)
+    const rehabInterest    = rehabFinanced   * c.interestRatePct * (months / 12) * 0.5
+    interestCarry = Math.round(purchaseInterest + rehabInterest)
     financingTotal = points + interestCarry
   }
 
   const rehabPlusCosts = Math.round(rehab + closingTotal)
   const allIn = rehabPlusCosts + financingTotal
 
-  const hasArv = (home.funnel.arv ?? 0) > 0
-  const hasAsk = (home.funnel.askingPrice ?? 0) > 0
+  const hasArv = arv > 0
+  const hasAsk = ask > 0
   const spread = hasArv && hasAsk ? arv - ask : null
   const trueNet = spread !== null && rehab > 0 ? spread - allIn : null
 
+  // ── Capital required (out of pocket) ──
+  const downPayment = Math.max(0, ask - loanAmount)
+  const rehabOutOfPocket = rehab - rehabFinanced
+  const cashInvested = Math.round(
+    downPayment + points + buySideClosing + rehabOutOfPocket + holdingCosts,
+  )
+  const roi = trueNet !== null && cashInvested > 0 ? trueNet / cashInvested : null
+  const annualizedRoi = roi !== null && months > 0 ? roi * (12 / months) : null
+
   return {
     costs: c,
+    rehab,
     buySideClosing, agentCommission, sellSideClosing, holdingCosts, closingTotal,
-    loanAmount, points, interestCarry, financingTotal,
+    loanAmount, loanCappedByArv, purchasePortion, rehabFinanced,
+    points, interestCarry, financingTotal,
+    downPayment, cashInvested, roi, annualizedRoi,
     rehabPlusCosts, allIn, trueNet,
   }
 }

@@ -1205,9 +1205,11 @@ textarea { resize: vertical; }
 .summary-modal--mls {
   max-width: 680px;
 }
-/* Wider in edit mode to fit forms comfortably */
+/* Wider in edit mode to fit forms comfortably — always at full height */
 .summary-modal--editing {
-  max-width: 780px;
+  max-width: 920px;
+  min-height: 78vh;
+  height: 78vh;
 }
 
 .summary-mls-photo {
@@ -4400,10 +4402,10 @@ textarea { resize: vertical; }
 /* ── Other Costs tab — 3-col + footer, no scroll ────────────────────── */
 .other-costs-panel {
   display: grid;
-  grid-template-columns: 1fr 1fr 185px;
+  grid-template-columns: 1fr 1fr 210px;
   grid-template-areas: "financing transaction waterfall" "footer footer footer";
   grid-template-rows: 1fr auto;
-  gap: 6px;
+  gap: 7px;
   height: 100%;
   overflow: hidden;
   padding: 8px;
@@ -4422,7 +4424,7 @@ textarea { resize: vertical; }
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 7px 10px 8px;
+  padding: 10px 12px;
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -4562,7 +4564,7 @@ textarea { resize: vertical; }
   flex: 1;
   min-height: 24px;
 }
-.ocost-summary-row span:first-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ocost-summary-row span:first-child { line-height: 1.25; }
 .ocost-summary-row:last-child { border-bottom: none; }
 
 .ocost-summary-pos { color: var(--text); font-weight: 700; font-family: var(--mono); }
@@ -4679,13 +4681,13 @@ textarea { resize: vertical; }
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   color: var(--text);
-  padding: 2px 8px;
+  padding: 2px 10px;
   border-bottom: 1px solid var(--border);
-  gap: 6px;
+  gap: 8px;
   flex: 1;
-  min-height: 26px;
+  min-height: 28px;
 }
 .ocost-field-row:last-child { border-bottom: none; }
 .ocost-field-row--total {
@@ -4697,9 +4699,7 @@ textarea { resize: vertical; }
   font-size: 0.68rem;
   flex: 1;
   min-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.25;
 }
 .ocost-field-inputs {
   display: flex;

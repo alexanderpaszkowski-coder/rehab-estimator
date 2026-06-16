@@ -676,18 +676,25 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
                       <span className="ov-metric-value">{formatCurrency(askingPrice)}</span>
                     </div>
                   )}
-                  {spread !== null && (
+                  {rehabEst !== null ? (
+                    <>
+                      <div className="ov-metric">
+                        <span className="ov-metric-label">Rehab est.</span>
+                        <span className="ov-metric-value" style={{ color: 'var(--warning)' }}>{formatCurrency(rehabEst)}</span>
+                      </div>
+                      {netMargin !== null && (
+                        <div className="ov-metric ov-metric--net">
+                          <span className="ov-metric-label">Net margin</span>
+                          <span className={`ov-metric-value${netAccent ? ` accent-${netAccent}` : ''}`}>{formatCurrency(netMargin)}</span>
+                        </div>
+                      )}
+                    </>
+                  ) : spread !== null ? (
                     <div className="ov-metric">
                       <span className="ov-metric-label">Spread</span>
                       <span className={`ov-metric-value${spreadAccent ? ` accent-${spreadAccent}` : ''}`}>{formatCurrency(spread)}</span>
                     </div>
-                  )}
-                  {netMargin !== null && (
-                    <div className="ov-metric">
-                      <span className="ov-metric-label">Net margin</span>
-                      <span className={`ov-metric-value${netAccent ? ` accent-${netAccent}` : ''}`}>{formatCurrency(netMargin)}</span>
-                    </div>
-                  )}
+                  ) : null}
                 </div>
               </div>
 
@@ -1143,8 +1150,14 @@ function DealCard({
                 <span className="dcard-fin-value">{formatCurrency(home.funnel.askingPrice)}</span>
               </div>
             )}
-            {displayProfit !== null && (
+            {analysis.rehabEst !== null && (
               <div className="dcard-fin-row">
+                <span className="dcard-fin-label">Rehab est.</span>
+                <span className="dcard-fin-value" style={{ color: 'var(--warning)' }}>{formatCurrency(analysis.rehabEst)}</span>
+              </div>
+            )}
+            {displayProfit !== null && (
+              <div className={`dcard-fin-row${analysis.rehabEst !== null ? ' dcard-fin-row--net' : ''}`}>
                 <span className="dcard-fin-label">{displayProfit.label}</span>
                 <span
                   className="dcard-fin-value"

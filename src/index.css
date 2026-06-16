@@ -3630,6 +3630,11 @@ textarea { resize: vertical; }
   color: var(--text);
   letter-spacing: -0.01em;
 }
+.dcard-fin-row--net {
+  border-top: 1px solid var(--border);
+  margin-top: 3px;
+  padding-top: 5px;
+}
 
 /* chip rows */
 .dcard-chips {
@@ -4106,6 +4111,11 @@ textarea { resize: vertical; }
   gap: 8px;
 }
 .ov-metric:last-of-type { border-bottom: none; }
+.ov-metric--net {
+  margin-top: 4px;
+  border-top: 2px solid var(--border);
+  padding-top: 7px;
+}
 
 .ov-metric-label {
   font-size: 0.72rem;

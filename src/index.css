@@ -4397,11 +4397,11 @@ textarea { resize: vertical; }
   padding: 2px 8px;
 }
 
-/* ── Other Costs tab — 2-col + footer, no scroll ────────────────────── */
+/* ── Other Costs tab — 3-col + footer, no scroll ────────────────────── */
 .other-costs-panel {
   display: grid;
-  grid-template-columns: 1fr 210px;
-  grid-template-areas: "left waterfall" "footer footer";
+  grid-template-columns: 1fr 1fr 185px;
+  grid-template-areas: "financing transaction waterfall" "footer footer footer";
   grid-template-rows: 1fr auto;
   gap: 6px;
   height: 100%;
@@ -4411,31 +4411,27 @@ textarea { resize: vertical; }
 }
 .modal-edit-panel.other-costs-panel { padding: 8px; }
 
-/* Left column wraps financing + transaction stacked — no scroll */
-.ocost-left-col {
-  grid-area: left;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  overflow: hidden;
-  min-height: 0;
-}
+/* Left column — kept for fallback but unused in 3-col layout */
+.ocost-left-col { display: contents; }
 
-.ocost-section--financing,
-.ocost-section--transaction { /* no grid-area — inside .ocost-left-col */ }
-.ocost-section--summary     { grid-area: waterfall; }
+.ocost-section--financing  { grid-area: financing; }
+.ocost-section--transaction { grid-area: transaction; }
+.ocost-section--summary    { grid-area: waterfall; }
 
 .ocost-section {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 7px 10px 6px;
-  flex-shrink: 0;
+  padding: 7px 10px 8px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .ocost-section--summary {
-  background: var(--surface-2);
-  border-color: var(--border);
+  background: var(--surface-3);
+  border-color: var(--border-strong);
   color: var(--text);
   display: flex;
   flex-direction: column;
@@ -4556,13 +4552,15 @@ textarea { resize: vertical; }
 .ocost-summary-row {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: center;
   font-size: 0.7rem;
   color: var(--text-muted);
-  padding: 3px 0;
+  padding: 2px 0;
   border-bottom: 1px solid var(--border);
   gap: 8px;
   white-space: nowrap;
+  flex: 1;
+  min-height: 24px;
 }
 .ocost-summary-row span:first-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ocost-summary-row:last-child { border-bottom: none; }
@@ -4672,9 +4670,10 @@ textarea { resize: vertical; }
   flex-direction: column;
   gap: 0;
   border: 1px solid var(--border);
-  border-radius: 7px;
+  border-radius: 6px;
   overflow: hidden;
   background: var(--surface);
+  flex: 1;
 }
 .ocost-field-row {
   display: flex;
@@ -4682,10 +4681,11 @@ textarea { resize: vertical; }
   align-items: center;
   font-size: 0.7rem;
   color: var(--text);
-  padding: 3px 8px;
+  padding: 2px 8px;
   border-bottom: 1px solid var(--border);
   gap: 6px;
-  min-height: 24px;
+  flex: 1;
+  min-height: 26px;
 }
 .ocost-field-row:last-child { border-bottom: none; }
 .ocost-field-row--total {
@@ -4803,7 +4803,7 @@ textarea { resize: vertical; }
 
 /* ── Dark mode overrides for Other Costs ─────────────────────────── */
 [data-theme="dark"] .ocost-section { background: var(--surface); }
-[data-theme="dark"] .ocost-section--summary { background: var(--surface-2); }
+[data-theme="dark"] .ocost-section--summary { background: var(--surface-3); border-color: var(--border); }
 [data-theme="dark"] .ocost-section-icon {
   background: var(--surface-2);
   border-color: var(--border);

@@ -132,6 +132,29 @@ export interface PropertyInputs {
 
 export type ReviewStatus = 'pending' | 'reviewed' | 'approved' | 'passed'
 
+export type LoanType = 'hml' | 'heloc' | 'conventional' | 'cash'
+
+export interface DealCosts {
+  /** Buy-side closing costs as % of purchase price (default 0.02 = 2%) */
+  buySideClosingPct: number
+  /** Agent commissions as % of ARV (default 0.055 = 5.5%) */
+  agentCommissionPct: number
+  /** Sell-side closing costs as % of ARV (default 0.01 = 1%) */
+  sellSideClosingPct: number
+  /** Holding costs (taxes, insurance) as % of ARV (default 0.015 = 1.5%) */
+  holdingCostsPct: number
+  /** Financing type */
+  loanType: LoanType
+  /** Loan amount as % of purchase price (default 0.75 = 75%) */
+  loanAmountPct: number
+  /** Origination points as % of loan amount — HML only (default 0.025 = 2.5%) */
+  pointsPct: number
+  /** Annual interest rate (default 0.11 = 11%) */
+  interestRatePct: number
+  /** Hold period in months (default 7) */
+  holdMonths: number
+}
+
 export interface HomeFile {
   id: string
   address: string
@@ -159,6 +182,8 @@ export interface HomeFile {
   addedByName?: string
   /** Original listing URL used to import this property */
   listingUrl?: string
+  /** Transaction, holding & financing costs (defaults applied when absent) */
+  dealCosts?: Partial<DealCosts>
   /** Manually pasted PropStream search/property URL */
   propstreamUrl?: string
   /** Last time listing data was refreshed from source */

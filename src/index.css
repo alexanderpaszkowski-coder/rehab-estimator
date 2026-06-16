@@ -4573,6 +4573,106 @@ textarea { resize: vertical; }
   font-family: var(--font);
 }
 
+/* ── Loan type toggle ─────────────────────────────────────────────── */
+.ocost-loan-types {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 14px;
+}
+.ocost-loan-btn {
+  flex: 1;
+  padding: 5px 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-xs);
+  background: var(--surface);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.12s;
+  white-space: nowrap;
+}
+.ocost-loan-btn:hover { background: var(--surface-2); color: var(--text); }
+.ocost-loan-btn--active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+/* ── Editable field rows ──────────────────────────────────────────── */
+.ocost-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: 1.5px solid var(--border);
+  border-radius: 9px;
+  overflow: hidden;
+  background: var(--surface);
+}
+.ocost-field-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.78rem;
+  color: var(--text);
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--border);
+  gap: 8px;
+  min-height: 36px;
+}
+.ocost-field-row:last-child { border-bottom: none; }
+.ocost-field-row--total {
+  background: var(--surface-2);
+  font-weight: 700;
+}
+.ocost-field-label {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  flex: 1;
+  min-width: 0;
+}
+.ocost-field-inputs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.ocost-pct-input {
+  width: 52px;
+  padding: 3px 6px;
+  font-size: 0.78rem;
+  font-family: var(--mono);
+  font-weight: 600;
+  border: 1.5px solid var(--border);
+  border-radius: 5px;
+  background: var(--surface-2);
+  color: var(--text);
+  text-align: right;
+  outline: none;
+}
+.ocost-pct-input:focus { border-color: var(--accent); background: var(--surface); }
+.ocost-num-input { width: 42px; }
+.ocost-field-unit {
+  font-size: 0.68rem;
+  color: var(--text-subtle);
+  white-space: nowrap;
+}
+.ocost-field-result {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  min-width: 64px;
+  text-align: right;
+}
+.ocost-field-result--carry { color: var(--warning); }
+.ocost-field-result--total {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--text);
+  font-family: var(--mono);
+}
+
 /* ── Dark mode overrides for Other Costs ─────────────────────────── */
 [data-theme="dark"] .ocost-section { background: var(--surface); }
 [data-theme="dark"] .ocost-section-icon {
@@ -4582,6 +4682,11 @@ textarea { resize: vertical; }
 [data-theme="dark"] .ocost-fields-placeholder { background: var(--surface-2); }
 [data-theme="dark"] .ocost-placeholder-row { background: transparent; }
 [data-theme="dark"] .ocost-placeholder-row--total { background: var(--surface-3); }
+[data-theme="dark"] .ocost-fields { background: var(--surface-2); }
+[data-theme="dark"] .ocost-pct-input { background: var(--surface-3); border-color: var(--border); }
+[data-theme="dark"] .ocost-field-row--total { background: var(--surface-3); }
+[data-theme="dark"] .ocost-loan-btn { background: var(--surface-2); }
+[data-theme="dark"] .ocost-loan-btn--active { background: var(--accent); }
 
 /* ── SOW Grid (compact card boxes) ────────────────────────────────── */
 .sow-grid-layout {

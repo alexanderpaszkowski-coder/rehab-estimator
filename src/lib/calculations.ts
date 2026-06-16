@@ -1,7 +1,8 @@
-import { FINISH_CATEGORIES, FINISH_FACTORS, SOW_TEMPLATE } from './defaults'
+import { DEFAULT_DEAL_COSTS, FINISH_CATEGORIES, FINISH_FACTORS, SOW_TEMPLATE } from './defaults'
 import type {
   CategorySummary,
   Condition,
+  DealCosts,
   HomeFile,
   PropertyInputs,
   QuickSystem,
@@ -334,6 +335,63 @@ export function calcBlendedRehab(home: HomeFile): BlendedRehabResult {
     withContingency,
     perSf,
     sowOverrideCategories,
+  }
+}
+
+export interface AllInCostResult {
+  costs: DealCosts
+  // Transaction & holding
+  buySideClosing: number
+  agentCommission: number
+  sellSideClosing: number
+  holdingCosts: number
+  closingTotal: number
+  // Financing
+  loanAmount: number
+  points: number
+  interestCarry: number
+  financingTotal: number
+  // Summary
+  rehabPlusCosts: number   // rehab + closingTotal
+  allIn: number            // rehabPlusCosts + financingTotal
+  trueNet: number | null   // ARV − ask − allIn  (null if ARV or ask missing)
+}
+
+export function calcAllInCosts(home: HomeFile): AllInCostResult {
+  const c: DealCosts = { ...DEFAULT_DEAL_COSTS, ...home.dealCosts }
+  const ask = home.funnel.askingPrice ?? 0
+  const arv = home.funnel.arv ?? 0
+  const rehab = calcBlendedRehab(home).withContingency
+
+  // Transaction costs
+  const buySideClosing  = Math.round(ask * c.buySideClosingPct)
+  const agentCommission = Math.round(arv * c.agentCommissionPct)
+  const sellSideClosing = Math.round(arv * c.sellSideClosingPct)
+  const holdingCosts    = Math.round(arv * c.holdingCostsPct)
+  const closingTotal    = buySideClosing + agentCommission + sellSideClosing + holdingCosts
+
+  // Financing
+  let loanAmount = 0, points = 0, interestCarry = 0, financingTotal = 0
+  if (c.loanType !== 'cash') {
+    loanAmount    = Math.round(ask * c.loanAmountPct)
+    points        = c.loanType === 'hml' ? Math.round(loanAmount * c.pointsPct) : 0
+    interestCarry = Math.round(loanAmount * c.interestRatePct * c.holdMonths / 12)
+    financingTotal = points + interestCarry
+  }
+
+  const rehabPlusCosts = Math.round(rehab + closingTotal)
+  const allIn = rehabPlusCosts + financingTotal
+
+  const hasArv = (home.funnel.arv ?? 0) > 0
+  const hasAsk = (home.funnel.askingPrice ?? 0) > 0
+  const spread = hasArv && hasAsk ? arv - ask : null
+  const trueNet = spread !== null && rehab > 0 ? spread - allIn : null
+
+  return {
+    costs: c,
+    buySideClosing, agentCommission, sellSideClosing, holdingCosts, closingTotal,
+    loanAmount, points, interestCarry, financingTotal,
+    rehabPlusCosts, allIn, trueNet,
   }
 }
 

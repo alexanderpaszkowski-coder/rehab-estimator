@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useLockBodyScroll } from '../lib/useLockBodyScroll'
 import type { FunnelStage, HomeFile, IntakeData, PropertyInputs as PropertyInputsType, PropertySource, QuickSystem } from '../types'
-import { formatCurrency, calcBlendedRehab } from '../lib/calculations'
+import { formatCurrency, calcBlendedRehab, calcAllInCosts } from '../lib/calculations'
 import {
   AUCTION_SOURCES, FUNNEL_STAGES, MLS_SOURCES, getSourceLabel, getStageMeta,
   getArvLabel, getBidLabel,
@@ -679,20 +679,30 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
                       <span className="ov-metric-value">{formatCurrency(askingPrice)}</span>
                     </div>
                   )}
-                  {rehabEst !== null ? (
-                    <>
-                      <div className="ov-metric">
-                        <span className="ov-metric-label">Rehab est.</span>
-                        <span className="ov-metric-value" style={{ color: 'var(--warning)' }}>{formatCurrency(rehabEst)}</span>
-                      </div>
-                      {netMargin !== null && (
-                        <div className="ov-metric ov-metric--net">
-                          <span className="ov-metric-label">Net margin</span>
-                          <span className={`ov-metric-value${netAccent ? ` accent-${netAccent}` : ''}`}>{formatCurrency(netMargin)}</span>
+                  {rehabEst !== null ? (() => {
+                    const allIn = calcAllInCosts(home)
+                    const finCost = allIn.financingTotal
+                    return (
+                      <>
+                        <div className="ov-metric">
+                          <span className="ov-metric-label">Rehab + Costs</span>
+                          <span className="ov-metric-value" style={{ color: 'var(--warning)' }}>{formatCurrency(allIn.rehabPlusCosts)}</span>
                         </div>
-                      )}
-                    </>
-                  ) : spread !== null ? (
+                        {finCost > 0 && (
+                          <div className="ov-metric">
+                            <span className="ov-metric-label">Financing</span>
+                            <span className="ov-metric-value" style={{ color: 'var(--warning)' }}>{formatCurrency(finCost)}</span>
+                          </div>
+                        )}
+                        {netMargin !== null && (
+                          <div className="ov-metric ov-metric--net">
+                            <span className="ov-metric-label">True Net</span>
+                            <span className={`ov-metric-value${netAccent ? ` accent-${netAccent}` : ''}`}>{formatCurrency(netMargin)}</span>
+                          </div>
+                        )}
+                      </>
+                    )
+                  })() : spread !== null ? (
                     <div className="ov-metric">
                       <span className="ov-metric-label">Spread</span>
                       <span className={`ov-metric-value${spreadAccent ? ` accent-${spreadAccent}` : ''}`}>{formatCurrency(spread)}</span>
@@ -791,21 +801,55 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
           )}
 
           {editTab === 'other-costs' && (() => {
-            const hmlLow  = askingPrice ? Math.round(askingPrice * 0.03) : null
-            const hmlHigh = askingPrice ? Math.round(askingPrice * 0.06) : null
-            const buySideLow  = askingPrice ? Math.round(askingPrice * 0.01) : null
-            const buySideHigh = askingPrice ? Math.round(askingPrice * 0.02) : null
-            const agentLow  = arv ? Math.round(arv * 0.05) : null
-            const agentHigh = arv ? Math.round(arv * 0.06) : null
-            const closingLow  = (buySideLow  && agentLow)  ? buySideLow  + agentLow  : null
-            const closingHigh = (buySideHigh && agentHigh) ? buySideHigh + agentHigh : null
-            const fmt = (n: number | null) => n ? formatCurrency(n) : '—'
-            const fmtRange = (lo: number | null, hi: number | null) =>
-              lo && hi ? `${fmt(lo)} – ${fmt(hi)}` : '—'
+            const oc = calcAllInCosts(home)
+            const c = oc.costs
+            const fmt = formatCurrency
+
+            const patchCosts = (patch: Partial<typeof c>) =>
+              handleChange({ dealCosts: { ...home.dealCosts, ...patch } })
+            const pctInput = (
+              value: number,
+              onChange: (v: number) => void,
+              step = 0.1,
+            ) => (
+              <input
+                type="number"
+                className="ocost-pct-input"
+                value={(value * 100).toFixed(step < 0.1 ? 2 : 1)}
+                step={step}
+                min={0}
+                max={100}
+                onChange={(e) => onChange(parseFloat(e.target.value || '0') / 100)}
+              />
+            )
+            const numInput = (
+              value: number,
+              onChange: (v: number) => void,
+              min = 0,
+              max = 999,
+            ) => (
+              <input
+                type="number"
+                className="ocost-pct-input ocost-num-input"
+                value={value}
+                step={1}
+                min={min}
+                max={max}
+                onChange={(e) => onChange(parseInt(e.target.value || '0', 10))}
+              />
+            )
+
+            const loanTypes: { id: typeof c.loanType; label: string }[] = [
+              { id: 'hml',          label: 'Hard Money' },
+              { id: 'heloc',        label: 'HELOC'       },
+              { id: 'conventional', label: 'Conventional'},
+              { id: 'cash',         label: 'Cash'        },
+            ]
+
             return (
               <div className="modal-edit-panel other-costs-panel">
 
-                {/* ── Hard Money Costs ── */}
+                {/* ── Financing ── */}
                 <div className="ocost-section">
                   <div className="ocost-section-header">
                     <span className="ocost-section-icon">
@@ -817,36 +861,77 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
                       </svg>
                     </span>
                     <div className="ocost-section-header-text">
-                      <div className="ocost-section-title">Hard Money Costs</div>
-                      <div className="ocost-section-sub">Points, origination fees &amp; interest carry</div>
-                    </div>
-                    <span className="ocost-coming-soon">Coming soon</span>
-                  </div>
-                  <div className="ocost-fields-placeholder">
-                    <div className="ocost-placeholder-row">
-                      <span className="ocost-placeholder-label">Loan amount</span>
-                      <span className="ocost-placeholder-est">{askingPrice ? fmt(askingPrice) : '—'}</span>
-                    </div>
-                    <div className="ocost-placeholder-row">
-                      <span className="ocost-placeholder-label">Points (origination)</span>
-                      <span className="ocost-placeholder-est">{askingPrice ? '2 – 3 pts' : '—'}</span>
-                    </div>
-                    <div className="ocost-placeholder-row">
-                      <span className="ocost-placeholder-label">Interest rate</span>
-                      <span className="ocost-placeholder-est">10 – 12% / yr</span>
-                    </div>
-                    <div className="ocost-placeholder-row">
-                      <span className="ocost-placeholder-label">Hold period (months)</span>
-                      <span className="ocost-placeholder-est">6 – 9 mo</span>
-                    </div>
-                    <div className="ocost-placeholder-row ocost-placeholder-row--total">
-                      <span className="ocost-placeholder-label">Est. HML cost</span>
-                      <span className="ocost-placeholder-range">{fmtRange(hmlLow, hmlHigh)}</span>
+                      <div className="ocost-section-title">Financing</div>
+                      <div className="ocost-section-sub">Loan type, points &amp; interest carry</div>
                     </div>
                   </div>
+
+                  {/* Loan type toggle */}
+                  <div className="ocost-loan-types">
+                    {loanTypes.map((lt) => (
+                      <button
+                        key={lt.id}
+                        type="button"
+                        className={`ocost-loan-btn${c.loanType === lt.id ? ' ocost-loan-btn--active' : ''}`}
+                        onClick={() => patchCosts({ loanType: lt.id })}
+                      >
+                        {lt.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {c.loanType !== 'cash' && (
+                    <div className="ocost-fields">
+                      <div className="ocost-field-row">
+                        <span className="ocost-field-label">Loan amount</span>
+                        <span className="ocost-field-inputs">
+                          {pctInput(c.loanAmountPct, (v) => patchCosts({ loanAmountPct: v }))}
+                          <span className="ocost-field-unit">% of ask</span>
+                          {askingPrice ? <span className="ocost-field-result">{fmt(oc.loanAmount)}</span> : null}
+                        </span>
+                      </div>
+                      {c.loanType === 'hml' && (
+                        <div className="ocost-field-row">
+                          <span className="ocost-field-label">Points (origination)</span>
+                          <span className="ocost-field-inputs">
+                            {pctInput(c.pointsPct, (v) => patchCosts({ pointsPct: v }), 0.25)}
+                            <span className="ocost-field-unit">% of loan</span>
+                            {askingPrice ? <span className="ocost-field-result">{fmt(oc.points)}</span> : null}
+                          </span>
+                        </div>
+                      )}
+                      <div className="ocost-field-row">
+                        <span className="ocost-field-label">Interest rate</span>
+                        <span className="ocost-field-inputs">
+                          {pctInput(c.interestRatePct, (v) => patchCosts({ interestRatePct: v }), 0.25)}
+                          <span className="ocost-field-unit">% / yr</span>
+                        </span>
+                      </div>
+                      <div className="ocost-field-row">
+                        <span className="ocost-field-label">Hold period</span>
+                        <span className="ocost-field-inputs">
+                          {numInput(c.holdMonths, (v) => patchCosts({ holdMonths: v }), 1, 36)}
+                          <span className="ocost-field-unit">months</span>
+                          {askingPrice ? <span className="ocost-field-result ocost-field-result--carry">{fmt(oc.interestCarry)}</span> : null}
+                        </span>
+                      </div>
+                      <div className="ocost-field-row ocost-field-row--total">
+                        <span className="ocost-field-label">Financing total</span>
+                        <span className="ocost-field-result ocost-field-result--total">{askingPrice ? fmt(oc.financingTotal) : '—'}</span>
+                      </div>
+                    </div>
+                  )}
+                  {c.loanType === 'cash' && (
+                    <div className="ocost-fields">
+                      <div className="ocost-field-row ocost-field-row--total">
+                        <span className="ocost-field-label">Financing total</span>
+                        <span className="ocost-field-result ocost-field-result--total">$0</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                {/* ── Closing Costs & Fees ── */}
+                {/* ── Transaction & Holding Costs ── */}
                 <div className="ocost-section">
                   <div className="ocost-section-header">
                     <span className="ocost-section-icon">
@@ -855,63 +940,88 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
                         <polyline points="14 2 14 8 20 8"/>
                         <line x1="16" y1="13" x2="8" y2="13"/>
                         <line x1="16" y1="17" x2="8" y2="17"/>
-                        <line x1="10" y1="9" x2="8" y2="9"/>
                       </svg>
                     </span>
                     <div className="ocost-section-header-text">
-                      <div className="ocost-section-title">Closing Costs &amp; Fees</div>
-                      <div className="ocost-section-sub">Title, transfer taxes, agent commissions, misc.</div>
+                      <div className="ocost-section-title">Transaction &amp; Holding Costs</div>
+                      <div className="ocost-section-sub">Closing, agent commissions &amp; carry</div>
                     </div>
-                    <span className="ocost-coming-soon">Coming soon</span>
                   </div>
-                  <div className="ocost-fields-placeholder">
-                    <div className="ocost-placeholder-row">
-                      <span className="ocost-placeholder-label">Buy-side closing costs</span>
-                      <span className="ocost-placeholder-est">{fmtRange(buySideLow, buySideHigh)}</span>
+                  <div className="ocost-fields">
+                    <div className="ocost-field-row">
+                      <span className="ocost-field-label">Buy-side closing</span>
+                      <span className="ocost-field-inputs">
+                        {pctInput(c.buySideClosingPct, (v) => patchCosts({ buySideClosingPct: v }))}
+                        <span className="ocost-field-unit">% of ask</span>
+                        {askingPrice ? <span className="ocost-field-result">{fmt(oc.buySideClosing)}</span> : null}
+                      </span>
                     </div>
-                    <div className="ocost-placeholder-row">
-                      <span className="ocost-placeholder-label">Sell-side closing costs</span>
-                      <span className="ocost-placeholder-est">{arv ? fmt(Math.round(arv * 0.01)) : '—'}</span>
+                    <div className="ocost-field-row">
+                      <span className="ocost-field-label">Agent commission</span>
+                      <span className="ocost-field-inputs">
+                        {pctInput(c.agentCommissionPct, (v) => patchCosts({ agentCommissionPct: v }))}
+                        <span className="ocost-field-unit">% of ARV</span>
+                        {arv ? <span className="ocost-field-result">{fmt(oc.agentCommission)}</span> : null}
+                      </span>
                     </div>
-                    <div className="ocost-placeholder-row">
-                      <span className="ocost-placeholder-label">Agent commissions</span>
-                      <span className="ocost-placeholder-est">{fmtRange(agentLow, agentHigh)}</span>
+                    <div className="ocost-field-row">
+                      <span className="ocost-field-label">Sell-side closing</span>
+                      <span className="ocost-field-inputs">
+                        {pctInput(c.sellSideClosingPct, (v) => patchCosts({ sellSideClosingPct: v }))}
+                        <span className="ocost-field-unit">% of ARV</span>
+                        {arv ? <span className="ocost-field-result">{fmt(oc.sellSideClosing)}</span> : null}
+                      </span>
                     </div>
-                    <div className="ocost-placeholder-row">
-                      <span className="ocost-placeholder-label">Holding costs (taxes, ins.)</span>
-                      <span className="ocost-placeholder-est">{arv ? fmt(Math.round(arv * 0.015)) : '—'}</span>
+                    <div className="ocost-field-row">
+                      <span className="ocost-field-label">Holding costs (tax, ins.)</span>
+                      <span className="ocost-field-inputs">
+                        {pctInput(c.holdingCostsPct, (v) => patchCosts({ holdingCostsPct: v }))}
+                        <span className="ocost-field-unit">% of ARV</span>
+                        {arv ? <span className="ocost-field-result">{fmt(oc.holdingCosts)}</span> : null}
+                      </span>
                     </div>
-                    <div className="ocost-placeholder-row ocost-placeholder-row--total">
-                      <span className="ocost-placeholder-label">Est. closing &amp; hold total</span>
-                      <span className="ocost-placeholder-range">{fmtRange(closingLow, closingHigh)}</span>
+                    <div className="ocost-field-row ocost-field-row--total">
+                      <span className="ocost-field-label">Transaction total</span>
+                      <span className="ocost-field-result ocost-field-result--total">{(askingPrice || arv) ? fmt(oc.closingTotal) : '—'}</span>
                     </div>
                   </div>
                 </div>
 
-                {/* ── True net profit summary ── */}
+                {/* ── Deal Waterfall ── */}
                 <div className="ocost-section ocost-section--summary">
                   <div className="ocost-summary-label">Deal Waterfall</div>
                   <div className="ocost-summary-row">
-                    <span>Gross spread (ARV − ask)</span>
-                    <span className="ocost-summary-pos">{spread !== null ? formatCurrency(spread) : '—'}</span>
+                    <span>{getArvLabel(home.source)}</span>
+                    <span className="ocost-summary-pos">{arv ? fmt(arv) : '—'}</span>
                   </div>
                   <div className="ocost-summary-row">
+                    <span>− {getBidLabel(home.source, home.funnel)}</span>
+                    <span>{askingPrice ? fmt(askingPrice) : '—'}</span>
+                  </div>
+                  {spread !== null && (
+                    <div className="ocost-summary-row">
+                      <span>= Gross spread</span>
+                      <span className="ocost-summary-pos">{fmt(spread)}</span>
+                    </div>
+                  )}
+                  <div className="ocost-summary-row">
                     <span>− Est. rehab</span>
-                    <span>{rehabEst ? formatCurrency(rehabEst) : '—'}</span>
+                    <span>{rehabEst ? fmt(rehabEst) : '—'}</span>
                   </div>
-                  <div className="ocost-summary-row ocost-summary-row--placeholder">
-                    <span>− Hard money costs</span>
-                    <span className="ocost-tbd">{hmlLow && hmlHigh ? `~${fmtRange(hmlLow, hmlHigh)}` : 'TBD'}</span>
+                  <div className="ocost-summary-row">
+                    <span>− Transaction costs</span>
+                    <span>{(askingPrice || arv) ? fmt(oc.closingTotal) : '—'}</span>
                   </div>
-                  <div className="ocost-summary-row ocost-summary-row--placeholder">
-                    <span>− Closing &amp; holding costs</span>
-                    <span className="ocost-tbd">{closingLow && closingHigh ? `~${fmtRange(closingLow, closingHigh)}` : 'TBD'}</span>
-                  </div>
+                  {c.loanType !== 'cash' && (
+                    <div className="ocost-summary-row">
+                      <span>− Financing ({c.loanType.toUpperCase()})</span>
+                      <span>{askingPrice ? fmt(oc.financingTotal) : '—'}</span>
+                    </div>
+                  )}
                   <div className="ocost-summary-row ocost-summary-row--net">
                     <span>True net profit</span>
                     <span className="ocost-net-value">
-                      {netMargin !== null ? formatCurrency(netMargin) : '—'}
-                      <span className="ocost-net-note"> (excl. HML &amp; closing)</span>
+                      {oc.trueNet !== null ? fmt(oc.trueNet) : '—'}
                     </span>
                   </div>
                 </div>
@@ -954,8 +1064,8 @@ function DealsListHeader({ arvLabel, bidLabel }: { arvLabel: string; bidLabel: s
       <span className="deals-list-col deals-list-col--addr">Address</span>
       <span className="deals-list-col deals-list-col--fin deals-list-col--arv">{arvLabel}</span>
       <span className="deals-list-col deals-list-col--fin deals-list-col--ask">{bidLabel}</span>
-      <span className="deals-list-col deals-list-col--fin deals-list-col--rehab">Rehab</span>
-      <span className="deals-list-col deals-list-col--fin deals-list-col--net">Net</span>
+      <span className="deals-list-col deals-list-col--fin deals-list-col--rehab">All-in Cost</span>
+      <span className="deals-list-col deals-list-col--fin deals-list-col--net">True Net</span>
       <span className="deals-list-col deals-list-col--go" />
     </div>
   )
@@ -1056,11 +1166,13 @@ function DealCard({
         <div className="dcard-list-fin dcard-list-fin--ask">
           {home.funnel.askingPrice ? formatCurrency(home.funnel.askingPrice) : <span className="dcard-list-dash">—</span>}
         </div>
-        {/* Rehab */}
+        {/* All-in cost (rehab + transaction costs + financing) */}
         <div className="dcard-list-fin dcard-list-fin--rehab">
-          {analysis.rehabEst ? <span style={{ color: 'var(--warning)' }}>{formatCurrency(analysis.rehabEst)}</span> : <span className="dcard-list-dash">—</span>}
+          {analysis.rehabPlusCosts !== null
+            ? <span style={{ color: 'var(--warning)' }}>{formatCurrency(analysis.rehabPlusCosts + (analysis.financingCost ?? 0))}</span>
+            : <span className="dcard-list-dash">—</span>}
         </div>
-        {/* Net margin */}
+        {/* True net */}
         <div className="dcard-list-fin dcard-list-fin--net">
           {netVal !== null ? <span style={{ color: netColor, fontWeight: 700 }}>{formatCurrency(netVal)}</span> : <span className="dcard-list-dash">—</span>}
         </div>
@@ -1135,14 +1247,20 @@ function DealCard({
                 <span className="dcard-fin-value">{formatCurrency(home.funnel.askingPrice)}</span>
               </div>
             )}
-            {analysis.rehabEst !== null && (
+            {analysis.rehabPlusCosts !== null && (
               <div className="dcard-fin-row">
-                <span className="dcard-fin-label">Rehab est.</span>
-                <span className="dcard-fin-value" style={{ color: 'var(--warning)' }}>{formatCurrency(analysis.rehabEst)}</span>
+                <span className="dcard-fin-label">Rehab + Costs</span>
+                <span className="dcard-fin-value" style={{ color: 'var(--warning)' }}>{formatCurrency(analysis.rehabPlusCosts)}</span>
+              </div>
+            )}
+            {(analysis.financingCost ?? 0) > 0 && (
+              <div className="dcard-fin-row">
+                <span className="dcard-fin-label">Financing</span>
+                <span className="dcard-fin-value" style={{ color: 'var(--warning)' }}>{formatCurrency(analysis.financingCost!)}</span>
               </div>
             )}
             {displayProfit !== null && (
-              <div className={`dcard-fin-row${analysis.rehabEst !== null ? ' dcard-fin-row--net' : ''}`}>
+              <div className={`dcard-fin-row${analysis.rehabPlusCosts !== null ? ' dcard-fin-row--net' : ''}`}>
                 <span className="dcard-fin-label">{displayProfit.label}</span>
                 <span
                   className="dcard-fin-value"

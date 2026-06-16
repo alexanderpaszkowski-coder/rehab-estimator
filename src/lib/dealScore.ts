@@ -1,6 +1,6 @@
 import type { HomeFile } from '../types'
 import { AUCTION_SOURCES } from './funnel'
-import { calcBlendedRehab } from './calculations'
+import { calcAllInCosts, calcBlendedRehab } from './calculations'
 
 export type NextActionKey =
   | 'calculate-arv'
@@ -42,8 +42,13 @@ export interface DealAnalysis {
   tags: StructuredTags
   isThinMargin: boolean
   spread: number | null
+  /** True net profit after rehab + all transaction & financing costs */
   netMargin: number | null
   rehabEst: number | null
+  /** Rehab + transaction/holding costs (shown as "Rehab + Costs" on cards) */
+  rehabPlusCosts: number | null
+  /** Financing costs (HML/HELOC/etc.) */
+  financingCost: number | null
 }
 
 // ── Tag helpers ───────────────────────────────────────────────────────────────
@@ -140,7 +145,12 @@ export function analyzeDeal(home: HomeFile): DealAnalysis {
   const rehabEst = quick.withContingency > 0 ? quick.withContingency : null
 
   const spread = f.arv && f.askingPrice ? f.arv - f.askingPrice : null
-  const netMargin = spread !== null && rehabEst ? spread - rehabEst : null
+
+  // Full cost breakdown
+  const allIn = calcAllInCosts(home)
+  const rehabPlusCosts = rehabEst !== null ? allIn.rehabPlusCosts : null
+  const financingCost  = rehabEst !== null ? allIn.financingTotal : null
+  const netMargin = allIn.trueNet
   const spreadPct = f.arv && spread !== null ? spread / f.arv : null
   const isThinMargin = spreadPct !== null && spreadPct < 0.15
 
@@ -255,5 +265,6 @@ export function analyzeDeal(home: HomeFile): DealAnalysis {
     priorityGroup,
     tags,
     isThinMargin, spread, netMargin, rehabEst,
+    rehabPlusCosts, financingCost,
   }
 }

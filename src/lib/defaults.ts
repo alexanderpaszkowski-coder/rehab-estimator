@@ -1,6 +1,6 @@
 import templateData from '../data/template.json'
 import { DEFAULT_FUNNEL, normalizeStage } from './funnel'
-import type { FunnelScreen, HomeFile, IntakeData, PropertyInputs, QuickSystem, SowItem } from '../types'
+import type { DealCosts, FunnelScreen, HomeFile, IntakeData, PropertyInputs, QuickSystem, SowItem } from '../types'
 
 const template = templateData as {
   quickEstimateSystems: QuickSystem[]
@@ -21,6 +21,18 @@ export const FINISH_CATEGORIES = new Set([
   'Interior Doors, Trim & Closets',
   'Exterior & Curb Appeal',
 ])
+
+export const DEFAULT_DEAL_COSTS: DealCosts = {
+  buySideClosingPct:  0.02,
+  agentCommissionPct: 0.055,
+  sellSideClosingPct: 0.01,
+  holdingCostsPct:    0.015,
+  loanType:           'hml',
+  loanAmountPct:      0.75,
+  pointsPct:          0.025,
+  interestRatePct:    0.11,
+  holdMonths:         7,
+}
 
 export const DEFAULT_PROPERTY: PropertyInputs = {
   livingArea: 0,
@@ -112,6 +124,7 @@ export function migrateHome(raw: Partial<HomeFile> & { address: string }): HomeF
     quickEstimate: raw.quickEstimate ?? base.quickEstimate,
     sowLines: { ...base.sowLines, ...raw.sowLines },
     sowFinalized: raw.sowFinalized ?? {},
+    dealCosts: raw.dealCosts ?? {},
     submittedBy: raw.submittedBy ?? 'reviewer',
     reviewStatus: raw.reviewStatus ?? 'pending',
     reviewNotes: raw.reviewNotes ?? '',

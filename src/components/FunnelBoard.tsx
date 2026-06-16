@@ -1032,34 +1032,36 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
                 {/* ── Deal Waterfall ── */}
                 <div className="ocost-section ocost-section--summary">
                   <div className="ocost-summary-label">Deal Waterfall</div>
-                  <div className="ocost-summary-row">
-                    <span>{getArvLabel(home.source)}</span>
-                    <span className="ocost-summary-pos">{arv ? fmt(arv) : '—'}</span>
-                  </div>
-                  <div className="ocost-summary-row">
-                    <span>− {getBidLabel(home.source, home.funnel)}</span>
-                    <span>{askingPrice ? fmt(askingPrice) : '—'}</span>
-                  </div>
-                  {spread !== null && (
+                  <div className="ocost-waterfall-rows">
                     <div className="ocost-summary-row">
-                      <span>= Gross spread</span>
-                      <span className="ocost-summary-pos">{fmt(spread)}</span>
+                      <span>{getArvLabel(home.source)}</span>
+                      <span className="ocost-summary-pos">{arv ? fmt(arv) : '—'}</span>
                     </div>
-                  )}
-                  <div className="ocost-summary-row">
-                    <span>− Est. rehab</span>
-                    <span>{rehabEst ? fmt(rehabEst) : '—'}</span>
-                  </div>
-                  <div className="ocost-summary-row">
-                    <span>− Transaction costs</span>
-                    <span>{(askingPrice || arv) ? fmt(oc.closingTotal) : '—'}</span>
-                  </div>
-                  {c.loanType !== 'cash' && (
                     <div className="ocost-summary-row">
-                      <span>− Financing ({c.loanType.toUpperCase()})</span>
-                      <span>{askingPrice ? fmt(oc.financingTotal) : '—'}</span>
+                      <span>− {getBidLabel(home.source, home.funnel)}</span>
+                      <span>{askingPrice ? fmt(askingPrice) : '—'}</span>
                     </div>
-                  )}
+                    {spread !== null && (
+                      <div className="ocost-summary-row">
+                        <span>= Gross spread</span>
+                        <span className="ocost-summary-pos">{fmt(spread)}</span>
+                      </div>
+                    )}
+                    <div className="ocost-summary-row">
+                      <span>− Est. rehab</span>
+                      <span>{rehabEst ? fmt(rehabEst) : '—'}</span>
+                    </div>
+                    <div className="ocost-summary-row">
+                      <span>− Transaction costs</span>
+                      <span>{(askingPrice || arv) ? fmt(oc.closingTotal) : '—'}</span>
+                    </div>
+                    {c.loanType !== 'cash' && (
+                      <div className="ocost-summary-row">
+                        <span>− Financing ({c.loanType.toUpperCase()})</span>
+                        <span>{askingPrice ? fmt(oc.financingTotal) : '—'}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* ── Bottom results strip ── */}

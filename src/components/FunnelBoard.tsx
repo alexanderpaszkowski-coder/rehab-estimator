@@ -31,7 +31,7 @@ interface Props {
   streetViewStatus?: Record<string, 'fetching' | 'failed'>
 }
 
-type SortOption = 'score' | 'spread' | 'newest' | 'arv' | 'ending-soon'
+type SortOption = 'spread' | 'newest' | 'arv' | 'ending-soon'
 type ViewMode = 'on-market' | 'off-market'
 
 const OFF_MARKET_SOURCES: PropertySource[] = [
@@ -219,8 +219,7 @@ const SOURCE_PILL_OPTIONS = [
 ]
 
 const SORT_PILL_OPTIONS = [
-  { value: 'score',        label: 'Deal Score',      shortLabel: 'Score'    },
-  { value: 'spread',       label: 'Spread',          shortLabel: 'Spread'   },
+  { value: 'spread',       label: 'Net Margin',      shortLabel: 'Net'      },
   { value: 'ending-soon',  label: 'Ending Soonest',  shortLabel: 'Soonest'  },
   { value: 'arv',          label: 'ARV',             shortLabel: 'ARV'      },
   { value: 'newest',       label: 'Newest',          shortLabel: 'Newest'   },
@@ -948,20 +947,15 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
 
 // ── Deal card (compact, data-rich) ────────────────────────────────────────────
 
-const SCORE_META: Record<string, { color: string; border: string; bg: string }> = {
-  strong:  { color: '#15803d', border: '#bbf7d0', bg: '#f0fdf4' },
-  good:    { color: '#2563eb', border: '#bfdbfe', bg: '#eff6ff' },
-  caution: { color: '#475569', border: '#cbd5e1', bg: '#f1f5f9' },
-  weak:    { color: '#9ca3af', border: '#e5e7eb', bg: '#f9fafb' },
-}
-
-function DealsListHeader() {
+function DealsListHeader({ arvLabel, bidLabel }: { arvLabel: string; bidLabel: string }) {
   return (
     <div className="deals-list-header" aria-hidden="true">
       <span className="deals-list-col deals-list-col--photo" />
       <span className="deals-list-col deals-list-col--addr">Address</span>
-      <span className="deals-list-col deals-list-col--val">Spread</span>
-      <span className="deals-list-col deals-list-col--score">Score</span>
+      <span className="deals-list-col deals-list-col--fin deals-list-col--arv">{arvLabel}</span>
+      <span className="deals-list-col deals-list-col--fin deals-list-col--ask">{bidLabel}</span>
+      <span className="deals-list-col deals-list-col--fin deals-list-col--rehab">Rehab</span>
+      <span className="deals-list-col deals-list-col--fin deals-list-col--net">Net</span>
       <span className="deals-list-col deals-list-col--go" />
     </div>
   )
@@ -984,7 +978,6 @@ function DealCard({
   const arvLabel = getArvLabel(home.source)
   const bidLabel = getBidLabel(home.source, home.funnel)
   const customLabel = home.source === 'other' ? home.sourceCustom : undefined
-  const sm = SCORE_META[analysis.scoreTier]
   const photoPending = !home.photoUrl
   const photoFetchStatus = streetViewStatus?.[home.id]
 
@@ -1015,24 +1008,23 @@ function DealCard({
     setTimeout(() => { setFlipping(false); onSummary() }, 270)
   }
 
-  // On cards show net margin (spread − rehab) when we have rehab numbers; raw spread otherwise
+  // Grid card: show net margin (spread − rehab) when we have rehab numbers; raw spread otherwise
   const displayProfit = analysis.netMargin !== null
     ? { raw: analysis.netMargin, label: 'Net' }
     : analysis.spread !== null
     ? { raw: analysis.spread, label: 'Spread' }
     : null
-  const listVal = displayProfit !== null
-    ? { label: displayProfit.label, value: formatCurrency(displayProfit.raw), color: displayProfit.raw > 75_000 ? 'var(--success)' : displayProfit.raw > 25_000 ? 'var(--warning)' : 'var(--danger)' }
-    : home.funnel.arv
-    ? { label: arvLabel, value: formatCurrency(home.funnel.arv), color: 'var(--text)' }
-    : home.funnel.askingPrice
-    ? { label: bidLabel, value: formatCurrency(home.funnel.askingPrice), color: 'var(--text)' }
-    : null
 
   if (layout === 'list') {
+    const netColor = analysis.netMargin !== null
+      ? analysis.netMargin > 75_000 ? 'var(--success)' : analysis.netMargin > 25_000 ? 'var(--warning)' : 'var(--danger)'
+      : analysis.spread !== null
+      ? analysis.spread > 75_000 ? 'var(--success)' : analysis.spread > 25_000 ? 'var(--warning)' : 'var(--danger)'
+      : 'var(--text-muted)'
+    const netVal = analysis.netMargin ?? analysis.spread
     return (
       <div
-        className={`dcard dcard--list-row${flipping ? ' dcard--flip' : ''}${analysis.scoreTier === 'strong' ? ' dcard--strong' : ''}`}
+        className={`dcard dcard--list-row${flipping ? ' dcard--flip' : ''}`}
         onClick={handleClick}
       >
         <div className={`dcard-list-thumb${photoPending ? ' dcard-list-thumb--pending' : ''}`}>
@@ -1056,18 +1048,21 @@ function DealCard({
             {[home.city, home.state].filter(Boolean).join(', ') || 'No location'}
           </span>
         </div>
-        <div className="dcard-list-val" title={listVal?.label}>
-          {listVal ? (
-            <span className="dcard-list-val-num" style={{ color: listVal.color }}>{listVal.value}</span>
-          ) : (
-            <span className="dcard-list-val-empty">—</span>
-          )}
+        {/* ARV */}
+        <div className="dcard-list-fin dcard-list-fin--arv">
+          {home.funnel.arv ? formatCurrency(home.funnel.arv) : <span className="dcard-list-dash">—</span>}
         </div>
-        <div
-          className="dcard-list-score"
-          style={{ color: sm.color, background: sm.bg, borderColor: sm.border }}
-        >
-          {analysis.score}
+        {/* Ask / Starting Bid */}
+        <div className="dcard-list-fin dcard-list-fin--ask">
+          {home.funnel.askingPrice ? formatCurrency(home.funnel.askingPrice) : <span className="dcard-list-dash">—</span>}
+        </div>
+        {/* Rehab */}
+        <div className="dcard-list-fin dcard-list-fin--rehab">
+          {analysis.rehabEst ? <span style={{ color: 'var(--warning)' }}>{formatCurrency(analysis.rehabEst)}</span> : <span className="dcard-list-dash">—</span>}
+        </div>
+        {/* Net margin */}
+        <div className="dcard-list-fin dcard-list-fin--net">
+          {netVal !== null ? <span style={{ color: netColor, fontWeight: 700 }}>{formatCurrency(netVal)}</span> : <span className="dcard-list-dash">—</span>}
         </div>
         <svg className="dcard-list-chevron" width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
           <path d="M3 2.5 6.5 5 3 7.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -1078,7 +1073,7 @@ function DealCard({
 
   return (
     <div
-      className={`dcard${flipping ? ' dcard--flip' : ''}${analysis.scoreTier === 'strong' ? ' dcard--strong' : ''}`}
+      className={`dcard${flipping ? ' dcard--flip' : ''}`}
       onClick={handleClick}
     >
       {/* Photo / no-photo header */}
@@ -1090,13 +1085,6 @@ function DealCard({
             <div className="dcard-photo-skeleton" aria-hidden="true" />
           )}
           <div className="dcard-photo-overlay">
-            <div
-              className="dcard-score dcard-score--photo"
-              style={{ color: sm.color, background: sm.bg, borderColor: sm.border }}
-            >
-              <span className="dcard-score-num">{analysis.score}</span>
-              <span className="dcard-score-label">{analysis.scoreLabel}</span>
-            </div>
             <SourceLogo source={home.source} customLabel={customLabel} size={26} />
           </div>
           {photoPending && photoFetchStatus === 'fetching' && (
@@ -1112,13 +1100,6 @@ function DealCard({
         </div>
       ) : (
         <div className="dcard-no-photo">
-          <div
-            className="dcard-score dcard-score--nophoto"
-            style={{ color: sm.color, background: sm.bg, borderColor: sm.border }}
-          >
-            <span className="dcard-score-num">{analysis.score}</span>
-            <span className="dcard-score-label">{analysis.scoreLabel}</span>
-          </div>
           <SourceLogo source={home.source} customLabel={customLabel} size={26} />
         </div>
       )}
@@ -1394,7 +1375,12 @@ function ActionGroupSection({
         <span className="priority-group-desc">{meta.sub}</span>
       </div>
       <div className={`deals-list-wrap${cardLayout === 'list' ? ' deals-list-wrap--active' : ''}`}>
-        {cardLayout === 'list' && <DealsListHeader />}
+        {cardLayout === 'list' && (
+          <DealsListHeader
+            arvLabel={homes[0] ? getArvLabel(homes[0].source) : 'ARV'}
+            bidLabel={homes[0] ? getBidLabel(homes[0].source, homes[0].funnel) : 'Ask'}
+          />
+        )}
         <div className={`deals-grid${cardLayout === 'list' ? ' deals-grid--list' : ''}`}>
           {homes.map((h) => (
             <DealCard
@@ -1571,8 +1557,7 @@ export function FunnelBoard({ homes, onSelect: _onSelect, onCreate, onStageChang
     // Sort
     result = [...result].sort((a, b) => {
       const da = analyses.get(a.id)!, db = analyses.get(b.id)!
-      if (sortBy === 'score')   return db.score - da.score
-      if (sortBy === 'spread')  return (db.spread ?? -Infinity) - (da.spread ?? -Infinity)
+      if (sortBy === 'spread')  return ((db.netMargin ?? db.spread) ?? -Infinity) - ((da.netMargin ?? da.spread) ?? -Infinity)
       if (sortBy === 'newest')  return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       if (sortBy === 'arv')     return (b.funnel.arv ?? 0) - (a.funnel.arv ?? 0)
       if (sortBy === 'ending-soon') {

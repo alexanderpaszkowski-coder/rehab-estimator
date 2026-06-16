@@ -97,8 +97,7 @@ function computeStructuredTags(home: HomeFile, analysis: {
   if (f.sellerMotivated === 'yes') opportunity.push(t('Motivated Seller', 'opportunity', 2))
   if (f.rehabLevel === 'Light') opportunity.push(t('Cosmetic Rehab', 'opportunity', 3))
   if (f.inTargetArea === 'yes') opportunity.push(t('In Target Area', 'opportunity', 4))
-  if (analysis.score >= 75) opportunity.push(t('High Score', 'opportunity', 5))
-  if (f.titleClear === 'yes') opportunity.push(t('Clear Title', 'opportunity', 6))
+  if (f.titleClear === 'yes') opportunity.push(t('Clear Title', 'opportunity', 5))
 
   // ── Action tags ──────────────────────────────────────
   const action: Tag[] = []

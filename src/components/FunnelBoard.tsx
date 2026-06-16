@@ -597,7 +597,48 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
     <div className="modal-overlay" onClick={onClose}>
       <div className={`summary-modal summary-modal--mls${editTab !== 'overview' ? ' summary-modal--editing' : ''}`} onClick={(e) => e.stopPropagation()}>
 
-        {/* ── Tab strip (with stage picker pinned right) ── */}
+        {/* ── Hero — overview tab only ── */}
+        {editTab === 'overview' && (
+          <div className="summary-hero summary-hero--sticky">
+            <div className="summary-hero-info">
+              <div className="summary-hero-top">
+                <div className="summary-hero-addr-block">
+                  <div className="summary-hero-addr-row">
+                    <h2 className="summary-address">{home.address}</h2>
+                    {listingStatusPill && (
+                      <span className={`screen-chip listing-status-chip ${listingStatusPill.cls}`}>
+                        {listingStatusPill.label}
+                      </span>
+                    )}
+                  </div>
+                  <p className="summary-city">{[home.city, home.state, home.zip].filter(Boolean).join(', ')}</p>
+                  {heroSpecChips.length > 0 && (
+                    <div className="summary-hero-spec-chips">
+                      {heroSpecChips.map((c) => (
+                        <span key={c.label} className={`screen-chip ${c.cls ?? 'grey'}`}>{c.label}</span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <StagePicker stage={home.stage} onChange={onStageChange} />
+              </div>
+              <div className="summary-hero-meta">
+                <SourceLogo source={home.source} customLabel={customLabel} size={14} />
+                <span>{getSourceLabel(home)}</span>
+                <span className="summary-hero-dot">·</span>
+                <span>{formatShortDate(home.createdAt)}</span>
+                {home.addedByName && (
+                  <>
+                    <span className="summary-hero-dot">·</span>
+                    <span>Added by <strong>{home.addedByName}</strong></span>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Tab strip (with stage picker pinned right on non-overview) ── */}
         <div className="modal-tab-strip">
           {EDIT_TABS.map((t) => (
             <button
@@ -609,17 +650,21 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
               {t.label}
             </button>
           ))}
-          <div className="modal-tab-strip-spacer" />
-          <div className="modal-tab-strip-stage">
-            <StagePicker stage={home.stage} onChange={onStageChange} />
-          </div>
+          {editTab !== 'overview' && (
+            <>
+              <div className="modal-tab-strip-spacer" />
+              <div className="modal-tab-strip-stage">
+                <StagePicker stage={home.stage} onChange={onStageChange} />
+              </div>
+            </>
+          )}
         </div>
 
         {/* ── Persistent left sidebar (address + deal waterfall) + tab content ── */}
         <div className="modal-body-with-sidebar">
 
-        {/* Left sidebar: always visible */}
-        <div className="deal-waterfall-sidebar">
+        {/* Left sidebar: non-overview tabs only */}
+        {editTab !== 'overview' && <div className="deal-waterfall-sidebar">
           {/* ── Property identity block ── */}
           <div className="dwf-property-block">
             <div className="dwf-address-row">
@@ -649,8 +694,7 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
             )}
           </div>
 
-          {editTab !== 'overview' && (
-            <>
+          <>
               <div className="dwf-section-divider" />
               <div className="dwf-label">Deal Waterfall</div>
               <div className="dwf-rows" key={waterfallFlashKey}>
@@ -706,9 +750,8 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
                   </span>
                 </div>
               </div>
-            </>
-          )}
-        </div>
+          </>
+        </div>}
 
         <div className={`modal-tab-body${editTab === 'overview' ? ' modal-tab-body--overview' : ''}`}>
 

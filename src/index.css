@@ -1233,7 +1233,7 @@ textarea { resize: vertical; }
 }
 
 .summary-hero {
-  display: none; /* content moved to left sidebar */
+  display: flex;
   gap: 14px;
   padding: 16px 20px 14px;
   border-bottom: 1px solid var(--border);

@@ -36,8 +36,10 @@ export function getArvLabel(source: PropertySource): string {
   return 'ARV'
 }
 
-export function getBidLabel(source: PropertySource): string {
-  if (AUCTION_SOURCES.includes(source)) return 'Starting Bid'
+export function getBidLabel(source: PropertySource, funnel?: Pick<FunnelScreen, 'priceIsCurrentBid'>): string {
+  if (AUCTION_SOURCES.includes(source)) {
+    return funnel?.priceIsCurrentBid ? 'Current Bid' : 'Starting Bid'
+  }
   if (MLS_SOURCES.includes(source))     return 'List Price'
   if (source === 'new-western')          return 'Purchase Price'
   return 'Asking'

@@ -422,10 +422,14 @@ function SummaryLinkActions({
             disabled={refreshing}
             onClick={() => void onRefresh(home)}
           >
-            <svg width="13" height="13" viewBox="-0.5 -0.5 14 14" fill="none" aria-hidden="true">
-              <path d="M11 6.5A4.5 4.5 0 102.8 4.2M2.8 4.2V1.5M2.8 4.2H5.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+            {/* Two-arrow sync icon */}
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M13.5 2.5A6.5 6.5 0 0 0 2 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              <path d="M11.5 2.5h2v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M2.5 13.5A6.5 6.5 0 0 0 14 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              <path d="M4.5 13.5h-2v-2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
-            {refreshing ? 'Refreshing…' : canRefreshPhoto ? 'Fetch Photo' : 'Refresh'}
+            {refreshing ? 'Syncing…' : canRefreshPhoto ? 'Fetch Photo' : 'Sync'}
           </button>
         )}
         {home.propstreamUrl && !showPropInput && (
@@ -526,7 +530,7 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
   }
 
   const arvLabel = getArvLabel(home.source)
-  const bidLabel = getBidLabel(home.source)
+  const bidLabel = getBidLabel(home.source, home.funnel)
   const isAuction = AUCTION_SOURCES.includes(home.source)
   const funnel = home.funnel
   const { arv, askingPrice, maxOffer, startingCreditBid, quickNotes } = funnel
@@ -978,7 +982,7 @@ function DealCard({
 }) {
   const [flipping, setFlipping] = useState(false)
   const arvLabel = getArvLabel(home.source)
-  const bidLabel = getBidLabel(home.source)
+  const bidLabel = getBidLabel(home.source, home.funnel)
   const customLabel = home.source === 'other' ? home.sourceCustom : undefined
   const sm = SCORE_META[analysis.scoreTier]
   const photoPending = !home.photoUrl

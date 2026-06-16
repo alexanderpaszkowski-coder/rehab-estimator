@@ -51,6 +51,8 @@ export async function refreshListingHome(home: HomeFile): Promise<HomeFile> {
       ...home.funnel,
       ...(scraped.estimatePrice ? { arv: scraped.estimatePrice } : {}),
       ...(scraped.openingBid ? { askingPrice: scraped.openingBid } : {}),
+      // Track whether the price came from a live "current bid" field
+      priceIsCurrentBid: scraped.isCurrentBid ?? home.funnel.priceIsCurrentBid ?? false,
       ...(scraped.listingType ? { auctionType: scraped.listingType } : {}),
       ...(scraped.startingCreditBid ? { startingCreditBid: scraped.startingCreditBid } : {}),
       ...(scraped.occupancy ? { occupancy: scraped.occupancy } : {}),

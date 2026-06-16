@@ -56,6 +56,8 @@ export interface FunnelScreen {
   auctionEndAt: string | null
   /** True when auction.com shows "Coming Soon" with no dates */
   auctionComingSoon: boolean
+  /** True when a refresh detected an active "current bid" (bidding is live and price has moved) */
+  priceIsCurrentBid?: boolean
 }
 
 export interface PropertyField {

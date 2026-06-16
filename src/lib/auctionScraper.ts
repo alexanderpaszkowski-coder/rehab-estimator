@@ -14,8 +14,10 @@ export interface AuctionScrapedData {
   zip?: string
   /** Auction.com Estimate Price — maps to funnel.arv */
   estimatePrice?: number
-  /** Starting Bid — maps to funnel.askingPrice */
+  /** Starting/Opening Bid — maps to funnel.askingPrice */
   openingBid?: number
+  /** True when the scraped price came from a "current bid" field (active auction with bids placed) */
+  isCurrentBid?: boolean
   /** Only present when listingType === 'auction' */
   startingCreditBid?: number
   listingType?: 'auction' | 'bank-owned'
@@ -161,13 +163,23 @@ export async function scrapeAuctionListing(url: string): Promise<AuctionScrapedD
     photoUrl: parsePhoto(text),
   }
 
-  // Opening bid / Starting bid
-  result.openingBid = firstMoney(text, [
-    /opening\s+bid[\s\S]{0,10}?(\$[\d,]+)/im,
-    /starting\s+bid[\s\S]{0,10}?(\$[\d,]+)/im,
-    /minimum\s+bid[\s\S]{0,10}?(\$[\d,]+)/im,
+  // Current bid (live auction with bids placed) — check first, higher priority
+  const currentBidVal = firstMoney(text, [
     /current\s+bid[\s\S]{0,10}?(\$[\d,]+)/im,
+    /high\s+bid[\s\S]{0,10}?(\$[\d,]+)/im,
   ])
+  if (currentBidVal) {
+    result.openingBid = currentBidVal
+    result.isCurrentBid = true
+  } else {
+    // Opening / starting bid (auction hasn't received bids yet)
+    result.openingBid = firstMoney(text, [
+      /opening\s+bid[\s\S]{0,10}?(\$[\d,]+)/im,
+      /starting\s+bid[\s\S]{0,10}?(\$[\d,]+)/im,
+      /minimum\s+bid[\s\S]{0,10}?(\$[\d,]+)/im,
+    ])
+    result.isCurrentBid = false
+  }
 
   // Estimate price — "Est. MarketValue" (no space) or "Est. Market Value"
   result.estimatePrice = firstMoney(text, [

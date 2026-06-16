@@ -97,7 +97,7 @@ const SOURCE_DOMAIN: Partial<Record<PropertySource, string>> = {
 
 // ── AI Prompt copy buttons ────────────────────────────────────────────────────
 
-function AiPromptButtons({ home }: { home: HomeFile }) {
+export function AiPromptButtons({ home }: { home: HomeFile }) {
   const [copied, setCopied] = useState<'claude' | 'gpt' | null>(null)
 
   const copy = (ai: 'claude' | 'gpt') => {
@@ -452,8 +452,8 @@ function SummaryLinkActions({
           </button>
         )}
 
-        {/* ── AI Prompt copy buttons ── */}
-        <AiPromptButtons home={home} />
+        {/* AI Prompt copy buttons — hidden until prompt is finalized */}
+        {/* <AiPromptButtons home={home} /> */}
       </div>
 
       {showPropInput && onUpdateHome && (

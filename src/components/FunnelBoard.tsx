@@ -597,46 +597,7 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
     <div className="modal-overlay" onClick={onClose}>
       <div className={`summary-modal summary-modal--mls${editTab !== 'overview' ? ' summary-modal--editing' : ''}`} onClick={(e) => e.stopPropagation()}>
 
-        {/* ── Sticky hero (address + stage + meta) ── */}
-        <div className="summary-hero summary-hero--sticky">
-          <div className="summary-hero-info">
-            <div className="summary-hero-top">
-              <div className="summary-hero-addr-block">
-                <div className="summary-hero-addr-row">
-                  <h2 className="summary-address">{home.address}</h2>
-                  {listingStatusPill && (
-                    <span className={`screen-chip listing-status-chip ${listingStatusPill.cls}`}>
-                      {listingStatusPill.label}
-                    </span>
-                  )}
-                </div>
-                <p className="summary-city">{[home.city, home.state, home.zip].filter(Boolean).join(', ')}</p>
-                {heroSpecChips.length > 0 && (
-                  <div className="summary-hero-spec-chips">
-                    {heroSpecChips.map((c) => (
-                      <span key={c.label} className={`screen-chip ${c.cls ?? 'grey'}`}>{c.label}</span>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <StagePicker stage={home.stage} onChange={onStageChange} />
-            </div>
-            <div className="summary-hero-meta">
-              <SourceLogo source={home.source} customLabel={customLabel} size={14} />
-              <span>{getSourceLabel(home)}</span>
-              <span className="summary-hero-dot">·</span>
-              <span>{formatShortDate(home.createdAt)}</span>
-              {home.addedByName && (
-                <>
-                  <span className="summary-hero-dot">·</span>
-                  <span>Added by <strong>{home.addedByName}</strong></span>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* ── Tab strip ── */}
+        {/* ── Tab strip (with stage picker pinned right) ── */}
         <div className="modal-tab-strip">
           {EDIT_TABS.map((t) => (
             <button
@@ -648,10 +609,107 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
               {t.label}
             </button>
           ))}
+          <div className="modal-tab-strip-spacer" />
+          <div className="modal-tab-strip-stage">
+            <StagePicker stage={home.stage} onChange={onStageChange} />
+          </div>
         </div>
 
-        {/* ── Tab content + persistent waterfall sidebar ── */}
+        {/* ── Persistent left sidebar (address + deal waterfall) + tab content ── */}
         <div className="modal-body-with-sidebar">
+
+        {/* Left sidebar: always visible */}
+        <div className="deal-waterfall-sidebar">
+          {/* ── Property identity block ── */}
+          <div className="dwf-property-block">
+            <div className="dwf-address-row">
+              <h2 className="dwf-address">{home.address}</h2>
+              {listingStatusPill && (
+                <span className={`screen-chip listing-status-chip ${listingStatusPill.cls}`}>
+                  {listingStatusPill.label}
+                </span>
+              )}
+            </div>
+            <p className="dwf-city">{[home.city, home.state, home.zip].filter(Boolean).join(', ')}</p>
+            {heroSpecChips.length > 0 && (
+              <div className="dwf-spec-chips">
+                {heroSpecChips.map((c) => (
+                  <span key={c.label} className={`screen-chip ${c.cls ?? 'grey'}`}>{c.label}</span>
+                ))}
+              </div>
+            )}
+            <div className="dwf-meta-row">
+              <SourceLogo source={home.source} customLabel={customLabel} size={12} />
+              <span>{getSourceLabel(home)}</span>
+              <span className="dwf-meta-dot">·</span>
+              <span>{formatShortDate(home.createdAt)}</span>
+            </div>
+            {home.addedByName && (
+              <div className="dwf-added-by">Added by <strong>{home.addedByName}</strong></div>
+            )}
+          </div>
+
+          {editTab !== 'overview' && (
+            <>
+              <div className="dwf-section-divider" />
+              <div className="dwf-label">Deal Waterfall</div>
+              <div className="dwf-rows" key={waterfallFlashKey}>
+                <div className="dwf-row">
+                  <span className="dwf-row-label">{arvLabel}</span>
+                  <span className="dwf-row-value dwf-row-value--pos">{arv ? fmt(arv) : '—'}</span>
+                </div>
+                <div className="dwf-row">
+                  <span className="dwf-row-label">− {bidLabel}</span>
+                  <span className="dwf-row-value">{askingPrice ? fmt(askingPrice) : '—'}</span>
+                </div>
+                {spread !== null && (
+                  <div className="dwf-row">
+                    <span className="dwf-row-label">= Gross spread</span>
+                    <span className="dwf-row-value dwf-row-value--pos">{fmt(spread)}</span>
+                  </div>
+                )}
+                <div className="dwf-row">
+                  <span className="dwf-row-label">− Est. rehab</span>
+                  <span className="dwf-row-value">{rehabEst ? fmt(rehabEst) : '—'}</span>
+                </div>
+                <div className="dwf-row">
+                  <span className="dwf-row-label">− Transaction costs</span>
+                  <span className="dwf-row-value">{(askingPrice || arv) ? fmt(oc.closingTotal) : '—'}</span>
+                </div>
+                {oc.costs.loanType !== 'cash' && (
+                  <div className="dwf-row">
+                    <span className="dwf-row-label">− Financing ({oc.costs.loanType.toUpperCase()})</span>
+                    <span className="dwf-row-value">{askingPrice ? fmt(oc.financingTotal) : '—'}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="dwf-divider" />
+
+              <div className="dwf-net-row" key={`net-${waterfallFlashKey}`}>
+                <span className="dwf-net-label">True net profit</span>
+                <span className={`dwf-net-value${oc.trueNet !== null && oc.trueNet >= 0 ? ' dwf-net-value--pos' : ' dwf-net-value--neg'}`}>
+                  {oc.trueNet !== null ? fmt(oc.trueNet) : '—'}
+                </span>
+              </div>
+
+              <div className="dwf-stats" key={`stats-${waterfallFlashKey}`}>
+                <div className="dwf-stat">
+                  <span className="dwf-stat-label">Cash invested</span>
+                  <span className="dwf-stat-value">{(askingPrice || arv) ? fmt(oc.cashInvested) : '—'}</span>
+                </div>
+                <div className="dwf-stat">
+                  <span className="dwf-stat-label">Cash-on-cash</span>
+                  <span className={`dwf-stat-value${oc.roi !== null ? ' dwf-stat-value--roi' : ''}`}>
+                    {oc.roi !== null ? `${(oc.roi * 100).toFixed(0)}%` : '—'}
+                    {oc.annualizedRoi !== null && <span className="dwf-stat-annual"> · {(oc.annualizedRoi * 100).toFixed(0)}%/yr</span>}
+                  </span>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+
         <div className={`modal-tab-body${editTab === 'overview' ? ' modal-tab-body--overview' : ''}`}>
 
           {editTab === 'overview' && (
@@ -1043,66 +1101,6 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
           })()}
 
         </div>{/* end modal-tab-body */}
-
-        {/* ── Persistent Deal Waterfall sidebar ── */}
-        {editTab !== 'overview' && (
-          <div className="deal-waterfall-sidebar">
-            <div className="dwf-label">Deal Waterfall</div>
-            <div className="dwf-rows" key={waterfallFlashKey}>
-              <div className="dwf-row">
-                <span className="dwf-row-label">{arvLabel}</span>
-                <span className="dwf-row-value dwf-row-value--pos">{arv ? fmt(arv) : '—'}</span>
-              </div>
-              <div className="dwf-row">
-                <span className="dwf-row-label">− {bidLabel}</span>
-                <span className="dwf-row-value">{askingPrice ? fmt(askingPrice) : '—'}</span>
-              </div>
-              {spread !== null && (
-                <div className="dwf-row">
-                  <span className="dwf-row-label">= Gross spread</span>
-                  <span className="dwf-row-value dwf-row-value--pos">{fmt(spread)}</span>
-                </div>
-              )}
-              <div className="dwf-row">
-                <span className="dwf-row-label">− Est. rehab</span>
-                <span className="dwf-row-value">{rehabEst ? fmt(rehabEst) : '—'}</span>
-              </div>
-              <div className="dwf-row">
-                <span className="dwf-row-label">− Transaction costs</span>
-                <span className="dwf-row-value">{(askingPrice || arv) ? fmt(oc.closingTotal) : '—'}</span>
-              </div>
-              {oc.costs.loanType !== 'cash' && (
-                <div className="dwf-row">
-                  <span className="dwf-row-label">− Financing ({oc.costs.loanType.toUpperCase()})</span>
-                  <span className="dwf-row-value">{askingPrice ? fmt(oc.financingTotal) : '—'}</span>
-                </div>
-              )}
-            </div>
-
-            <div className="dwf-divider" />
-
-            <div className="dwf-net-row" key={`net-${waterfallFlashKey}`}>
-              <span className="dwf-net-label">True net profit</span>
-              <span className={`dwf-net-value${oc.trueNet !== null && oc.trueNet >= 0 ? ' dwf-net-value--pos' : ' dwf-net-value--neg'}`}>
-                {oc.trueNet !== null ? fmt(oc.trueNet) : '—'}
-              </span>
-            </div>
-
-            <div className="dwf-stats" key={`stats-${waterfallFlashKey}`}>
-              <div className="dwf-stat">
-                <span className="dwf-stat-label">Cash invested</span>
-                <span className="dwf-stat-value">{(askingPrice || arv) ? fmt(oc.cashInvested) : '—'}</span>
-              </div>
-              <div className="dwf-stat">
-                <span className="dwf-stat-label">Cash-on-cash</span>
-                <span className={`dwf-stat-value${oc.roi !== null ? ' dwf-stat-value--roi' : ''}`}>
-                  {oc.roi !== null ? `${(oc.roi * 100).toFixed(0)}%` : '—'}
-                  {oc.annualizedRoi !== null && <span className="dwf-stat-annual"> · {(oc.annualizedRoi * 100).toFixed(0)}%/yr</span>}
-                </span>
-              </div>
-            </div>
-          </div>
-        )}
 
         </div>{/* end modal-body-with-sidebar */}
 

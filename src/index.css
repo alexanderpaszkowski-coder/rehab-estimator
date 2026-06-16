@@ -1233,7 +1233,7 @@ textarea { resize: vertical; }
 }
 
 .summary-hero {
-  display: flex;
+  display: none; /* content moved to left sidebar */
   gap: 14px;
   padding: 16px 20px 14px;
   border-bottom: 1px solid var(--border);
@@ -4404,7 +4404,7 @@ textarea { resize: vertical; }
   padding: 2px 8px;
 }
 
-/* ── Modal body: tab content + persistent right sidebar ─────────────── */
+/* ── Modal body: left sidebar + tab content ──────────────────────────── */
 .modal-body-with-sidebar {
   display: flex;
   flex-direction: row;
@@ -4417,17 +4417,81 @@ textarea { resize: vertical; }
   min-width: 0;
 }
 
-/* ── Deal Waterfall sidebar ─────────────────────────────────────────── */
+/* ── Stage picker in tab strip ───────────────────────────────────────── */
+.modal-tab-strip-spacer { flex: 1; }
+.modal-tab-strip-stage {
+  display: flex;
+  align-items: center;
+  padding-right: 12px;
+}
+.modal-tab-strip-stage .stage-picker-btn {
+  font-size: 0.72rem;
+  padding: 4px 10px;
+}
+
+/* ── Deal Waterfall sidebar (LEFT) ───────────────────────────────────── */
 .deal-waterfall-sidebar {
-  width: 210px;
+  width: 220px;
   flex-shrink: 0;
-  border-left: 1px solid var(--border);
+  border-right: 1px solid var(--border);
   background: var(--surface-2);
   display: flex;
   flex-direction: column;
-  padding: 14px 14px 12px;
+  padding: 16px 14px 14px;
   gap: 0;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+}
+.deal-waterfall-sidebar::-webkit-scrollbar { display: none; }
+
+/* ── Property identity block at top of sidebar ────────────────────────── */
+.dwf-property-block {
+  margin-bottom: 4px;
+}
+.dwf-address-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 3px;
+}
+.dwf-address {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+.dwf-city {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+.dwf-spec-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+.dwf-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.65rem;
+  color: var(--text-subtle);
+  flex-wrap: wrap;
+}
+.dwf-meta-dot { opacity: 0.4; }
+.dwf-added-by {
+  font-size: 0.65rem;
+  color: var(--text-subtle);
+  margin-top: 2px;
+}
+.dwf-section-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 12px 0 10px;
 }
 .dwf-label {
   font-size: 0.56rem;

@@ -4397,59 +4397,76 @@ textarea { resize: vertical; }
   padding: 2px 8px;
 }
 
-/* ── Other Costs tab ──────────────────────────────────────────────── */
+/* ── Other Costs tab — compact non-scrollable grid ────────────────── */
 .other-costs-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
+  display: grid;
+  grid-template-columns: 1fr 0.92fr;
+  grid-template-areas:
+    "financing   waterfall"
+    "transaction waterfall";
+  grid-template-rows: auto 1fr;
+  gap: 8px;
+  height: 100%;
+  overflow: hidden;
+  padding: 8px;
 }
+.modal-edit-panel.other-costs-panel { padding: 8px; }
+
+.ocost-section--financing   { grid-area: financing; }
+.ocost-section--transaction { grid-area: transaction; }
+.ocost-section--summary     { grid-area: waterfall; }
 
 .ocost-section {
   background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  min-height: 0;
+  overflow: hidden;
 }
-.ocost-section:last-child { border-bottom: none; }
 
 .ocost-section--summary {
   background: #1e293b;
-  border-bottom: none;
+  border-color: #1e293b;
   color: #f1f5f9;
+  display: flex;
+  flex-direction: column;
 }
 
 .ocost-section-header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 14px;
+  gap: 8px;
+  margin-bottom: 8px;
 }
 
 .ocost-section-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 9px;
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
   background: var(--surface-2);
   border: 1.5px solid var(--border);
   color: var(--text-muted);
   flex-shrink: 0;
 }
+.ocost-section-icon svg { width: 14px; height: 14px; }
 
 .ocost-section-header-text { flex: 1; min-width: 0; }
 
 .ocost-section-title {
-  font-size: 0.84rem;
+  font-size: 0.78rem;
   font-weight: 700;
   color: var(--text);
   letter-spacing: -0.01em;
 }
 
 .ocost-section-sub {
-  font-size: 0.7rem;
+  font-size: 0.64rem;
   color: var(--text-muted);
-  margin-top: 1px;
+  margin-top: 0;
 }
 
 .ocost-coming-soon {
@@ -4517,12 +4534,12 @@ textarea { resize: vertical; }
 
 /* ── Summary waterfall card ──────────────────────────────────────── */
 .ocost-summary-label {
-  font-size: 0.6rem;
+  font-size: 0.58rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: #64748b;
-  margin-bottom: 10px;
+  margin-bottom: 4px;
 }
 .ocost-summary-row span:last-child { font-family: var(--mono); }
 
@@ -4530,9 +4547,9 @@ textarea { resize: vertical; }
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   color: #94a3b8;
-  padding: 5px 0;
+  padding: 3px 0;
   border-bottom: 1px solid #334155;
   gap: 12px;
 }
@@ -4551,10 +4568,10 @@ textarea { resize: vertical; }
 
 .ocost-summary-row--net {
   color: #f1f5f9;
-  font-size: 0.84rem;
+  font-size: 0.86rem;
   font-weight: 700;
-  padding-top: 10px;
-  margin-top: 2px;
+  padding-top: 7px;
+  margin-top: 3px;
   border-top: 1.5px solid #475569;
   border-bottom: none;
 }
@@ -4576,13 +4593,13 @@ textarea { resize: vertical; }
 /* ── Loan type toggle ─────────────────────────────────────────────── */
 .ocost-loan-types {
   display: flex;
-  gap: 4px;
-  margin-bottom: 14px;
+  gap: 3px;
+  margin-bottom: 8px;
 }
 .ocost-loan-btn {
   flex: 1;
-  padding: 5px 0;
-  font-size: 0.72rem;
+  padding: 4px 0;
+  font-size: 0.68rem;
   font-weight: 600;
   border: 1.5px solid var(--border);
   border-radius: var(--radius-xs);
@@ -4604,8 +4621,8 @@ textarea { resize: vertical; }
   display: flex;
   flex-direction: column;
   gap: 0;
-  border: 1.5px solid var(--border);
-  border-radius: 9px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
   overflow: hidden;
   background: var(--surface);
 }
@@ -4613,12 +4630,12 @@ textarea { resize: vertical; }
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   color: var(--text);
-  padding: 7px 12px;
+  padding: 3px 9px;
   border-bottom: 1px solid var(--border);
   gap: 8px;
-  min-height: 36px;
+  min-height: 27px;
 }
 .ocost-field-row:last-child { border-bottom: none; }
 .ocost-field-row--total {
@@ -4627,7 +4644,7 @@ textarea { resize: vertical; }
 }
 .ocost-field-label {
   color: var(--text-muted);
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   flex: 1;
   min-width: 0;
 }
@@ -4638,9 +4655,9 @@ textarea { resize: vertical; }
   flex-shrink: 0;
 }
 .ocost-pct-input {
-  width: 52px;
-  padding: 3px 6px;
-  font-size: 0.78rem;
+  width: 46px;
+  padding: 2px 5px;
+  font-size: 0.72rem;
   font-family: var(--mono);
   font-weight: 600;
   border: 1.5px solid var(--border);
@@ -4651,38 +4668,38 @@ textarea { resize: vertical; }
   outline: none;
 }
 .ocost-pct-input:focus { border-color: var(--accent); background: var(--surface); }
-.ocost-num-input { width: 42px; }
+.ocost-num-input { width: 38px; }
 .ocost-field-unit {
-  font-size: 0.68rem;
+  font-size: 0.62rem;
   color: var(--text-subtle);
   white-space: nowrap;
 }
 .ocost-field-result {
   font-family: var(--mono);
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 600;
   color: var(--text-muted);
-  min-width: 64px;
+  min-width: 58px;
   text-align: right;
 }
 .ocost-field-result--carry { color: var(--warning); }
 .ocost-field-result--total {
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   font-weight: 800;
   color: var(--text);
   font-family: var(--mono);
 }
 
 /* Loan basis toggle (inside fields) */
-.ocost-field-row--basis { padding-top: 8px; padding-bottom: 8px; }
+.ocost-field-row--basis { padding-top: 4px; padding-bottom: 4px; }
 .ocost-basis-toggle {
   display: flex;
-  gap: 3px;
+  gap: 2px;
   flex-shrink: 0;
 }
 .ocost-basis-btn {
-  padding: 3px 8px;
-  font-size: 0.66rem;
+  padding: 2px 6px;
+  font-size: 0.6rem;
   font-weight: 600;
   border: 1.5px solid var(--border);
   border-radius: 5px;
@@ -4715,8 +4732,8 @@ textarea { resize: vertical; }
 
 /* Capital & ROI rows in waterfall */
 .ocost-summary-row--capital {
-  margin-top: 8px;
-  padding-top: 8px;
+  margin-top: 6px;
+  padding-top: 6px;
   border-top: 1px dashed #475569;
 }
 .ocost-roi-value { color: #38bdf8; font-weight: 700; font-family: var(--mono); }

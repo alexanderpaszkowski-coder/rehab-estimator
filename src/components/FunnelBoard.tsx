@@ -850,7 +850,7 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
               <div className="modal-edit-panel other-costs-panel">
 
                 {/* ── Financing ── */}
-                <div className="ocost-section">
+                <div className="ocost-section ocost-section--financing">
                   <div className="ocost-section-header">
                     <span className="ocost-section-icon">
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -972,7 +972,7 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
                 </div>
 
                 {/* ── Transaction & Holding Costs ── */}
-                <div className="ocost-section">
+                <div className="ocost-section ocost-section--transaction">
                   <div className="ocost-section-header">
                     <span className="ocost-section-icon">
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -983,7 +983,7 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
                       </svg>
                     </span>
                     <div className="ocost-section-header-text">
-                      <div className="ocost-section-title">Transaction &amp; Holding Costs</div>
+                      <div className="ocost-section-title">Transaction &amp; Holding</div>
                       <div className="ocost-section-sub">Closing, agent commissions &amp; carry</div>
                     </div>
                   </div>

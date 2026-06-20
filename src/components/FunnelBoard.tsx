@@ -595,50 +595,9 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className={`summary-modal summary-modal--mls${editTab !== 'overview' ? ' summary-modal--editing' : ''}`} onClick={(e) => e.stopPropagation()}>
+      <div className="summary-modal summary-modal--mls summary-modal--editing" onClick={(e) => e.stopPropagation()}>
 
-        {/* ── Hero — overview tab only ── */}
-        {editTab === 'overview' && (
-          <div className="summary-hero summary-hero--sticky">
-            <div className="summary-hero-info">
-              <div className="summary-hero-top">
-                <div className="summary-hero-addr-block">
-                  <div className="summary-hero-addr-row">
-                    <h2 className="summary-address">{home.address}</h2>
-                    {listingStatusPill && (
-                      <span className={`screen-chip listing-status-chip ${listingStatusPill.cls}`}>
-                        {listingStatusPill.label}
-                      </span>
-                    )}
-                  </div>
-                  <p className="summary-city">{[home.city, home.state, home.zip].filter(Boolean).join(', ')}</p>
-                  {heroSpecChips.length > 0 && (
-                    <div className="summary-hero-spec-chips">
-                      {heroSpecChips.map((c) => (
-                        <span key={c.label} className={`screen-chip ${c.cls ?? 'grey'}`}>{c.label}</span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <StagePicker stage={home.stage} onChange={onStageChange} />
-              </div>
-              <div className="summary-hero-meta">
-                <SourceLogo source={home.source} customLabel={customLabel} size={14} />
-                <span>{getSourceLabel(home)}</span>
-                <span className="summary-hero-dot">·</span>
-                <span>{formatShortDate(home.createdAt)}</span>
-                {home.addedByName && (
-                  <>
-                    <span className="summary-hero-dot">·</span>
-                    <span>Added by <strong>{home.addedByName}</strong></span>
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ── Tab strip (with stage picker pinned right on non-overview) ── */}
+        {/* ── Tab strip (stage picker always pinned right) ── */}
         <div className="modal-tab-strip">
           {EDIT_TABS.map((t) => (
             <button
@@ -650,21 +609,67 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
               {t.label}
             </button>
           ))}
-          {editTab !== 'overview' && (
-            <>
-              <div className="modal-tab-strip-spacer" />
-              <div className="modal-tab-strip-stage">
-                <StagePicker stage={home.stage} onChange={onStageChange} />
+          <div className="modal-tab-strip-spacer" />
+          <div className="modal-tab-strip-stage">
+            <StagePicker stage={home.stage} onChange={onStageChange} />
+          </div>
+        </div>
+
+        {/* ── Mobile-only compact header (sidebar is hidden on mobile) ── */}
+        <div className="modal-mobile-header">
+          <div className="modal-mobile-header-top">
+            <div className="modal-mobile-header-info">
+              <div className="dwf-address-row">
+                <h2 className="dwf-address">{home.address}</h2>
+                {listingStatusPill && (
+                  <span className={`screen-chip listing-status-chip ${listingStatusPill.cls}`}>
+                    {listingStatusPill.label}
+                  </span>
+                )}
               </div>
-            </>
-          )}
+              <p className="dwf-city">{[home.city, home.state, home.zip].filter(Boolean).join(', ')}</p>
+              {heroSpecChips.length > 0 && (
+                <div className="dwf-spec-chips">
+                  {heroSpecChips.map((c) => (
+                    <span key={c.label} className={`screen-chip ${c.cls ?? 'grey'}`}>{c.label}</span>
+                  ))}
+                </div>
+              )}
+              <div className="dwf-meta-row" style={{ marginTop: 4 }}>
+                <SourceLogo source={home.source} customLabel={customLabel} size={12} />
+                <span>{getSourceLabel(home)}</span>
+                <span className="dwf-meta-dot">·</span>
+                <span>{formatShortDate(home.createdAt)}</span>
+                {home.addedByName && (
+                  <>
+                    <span className="dwf-meta-dot">·</span>
+                    <span>Added by <strong>{home.addedByName}</strong></span>
+                  </>
+                )}
+              </div>
+            </div>
+            {home.photoUrl && (
+              <img className="modal-mobile-thumb" src={home.photoUrl} alt={home.address} />
+            )}
+          </div>
         </div>
 
         {/* ── Persistent left sidebar (address + deal waterfall) + tab content ── */}
         <div className="modal-body-with-sidebar">
 
-        {/* Left sidebar: non-overview tabs only */}
-        {editTab !== 'overview' && <div className="deal-waterfall-sidebar">
+        {/* Left sidebar: all tabs */}
+        <div className="deal-waterfall-sidebar">
+          {/* ── Property photo ── */}
+          {home.photoUrl ? (
+            <div className="dwf-photo">
+              <img src={home.photoUrl} alt={home.address} />
+            </div>
+          ) : (
+            <div className="dwf-photo dwf-photo--empty">
+              <SourceLogo source={home.source} customLabel={customLabel} size={28} />
+            </div>
+          )}
+
           {/* ── Property identity block ── */}
           <div className="dwf-property-block">
             <div className="dwf-address-row">
@@ -751,33 +756,15 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
                 </div>
               </div>
           </>
-        </div>}
+        </div>
 
         <div className={`modal-tab-body${editTab === 'overview' ? ' modal-tab-body--overview' : ''}`}>
 
           {editTab === 'overview' && (
             <div className="ov-layout">
 
-              {/* ── Photo left + metrics right ── */}
+              {/* ── Metrics + notes ── */}
               <div className="ov-top">
-                <div className="ov-photo-col">
-                  {home.photoUrl ? (
-                    <div className="ov-photo">
-                      <img src={home.photoUrl} alt={home.address} />
-                    </div>
-                  ) : (
-                    <div className="ov-photo ov-photo--empty">
-                      <SourceLogo source={home.source} customLabel={customLabel} size={36} />
-                    </div>
-                  )}
-                  <div className="ov-notes">
-                    {notesText
-                      ? <p>{notesText}</p>
-                      : <p className="ov-notes-empty">No notes</p>
-                    }
-                  </div>
-                </div>
-
                 <div className="ov-metrics">
                   {arv && (
                     <div className="ov-metric">
@@ -821,6 +808,12 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
                     </div>
                   ) : null}
                 </div>
+
+                {notesText && (
+                  <div className="ov-notes ov-notes--inline">
+                    <p>{notesText}</p>
+                  </div>
+                )}
               </div>
 
               {/* ── Listing links (above auction bar) ── */}

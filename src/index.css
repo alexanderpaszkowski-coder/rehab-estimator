@@ -3993,42 +3993,21 @@ textarea { resize: vertical; }
   align-items: flex-start;
 }
 
-.ov-photo-col {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  flex-shrink: 0;
-  width: 210px;
-  min-width: 0;
-}
-
-.ov-photo {
-  width: 100%;
-  height: 158px;
-  flex-shrink: 0;
-  border-radius: 10px;
-  overflow: hidden;
-  background: var(--surface-3);
-  border: 1px solid var(--border);
-}
-.ov-photo img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-.ov-photo--empty {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .ov-metrics {
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 0;
+}
+
+.ov-notes--inline {
+  flex-shrink: 0;
+  width: 200px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  padding-top: 2px;
 }
 
 .ov-metric {
@@ -4429,6 +4408,9 @@ textarea { resize: vertical; }
   padding: 4px 10px;
 }
 
+/* Mobile compact header — hidden on desktop (shown via mobile media query) */
+.modal-mobile-header { display: none; }
+
 /* ── Deal Waterfall sidebar (LEFT) ───────────────────────────────────── */
 .deal-waterfall-sidebar {
   width: 220px;
@@ -4488,6 +4470,29 @@ textarea { resize: vertical; }
   color: var(--text-subtle);
   margin-top: 2px;
 }
+/* ── Property photo in sidebar ────────────────────────────────────────── */
+.dwf-photo {
+  width: 100%;
+  height: 130px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+.dwf-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.dwf-photo--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .dwf-section-divider {
   height: 1px;
   background: var(--border);
@@ -5777,41 +5782,61 @@ textarea { resize: vertical; }
   .summary-modal--mls,
   .summary-modal--editing {
     max-width: 100%;
-    max-height: 90vh;
+    max-height: 92vh;
+    height: 92vh;
+    min-height: 0;
     border-radius: 16px;
   }
 
-  /* Tight sticky hero */
-  .summary-hero,
-  .summary-hero--mls { padding: 9px 14px 8px; gap: 8px; }
-  .summary-address { font-size: 0.95rem; }
-  .summary-city { font-size: 0.68rem; }
-  .summary-hero-spec-chips { margin-top: 2px; gap: 3px; }
-  .summary-hero-spec-chips .screen-chip { font-size: 0.6rem; padding: 2px 5px; }
-  .summary-hero-meta { font-size: 0.6rem; gap: 3px; }
-  .stage-picker-btn { font-size: 0.62rem; padding: 4px 8px 4px 7px; gap: 4px; }
-  .stage-picker-dot { width: 5px; height: 5px; }
+  /* ── Mobile compact header — shown on mobile, hidden on desktop ── */
+  .modal-mobile-header {
+    display: block;
+    padding: 9px 14px 8px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    flex-shrink: 0;
+  }
+  .modal-mobile-header-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .modal-mobile-header-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .modal-mobile-header .dwf-address { font-size: 0.9rem; }
+  .modal-mobile-header .dwf-city { font-size: 0.65rem; margin-bottom: 4px; }
+  .modal-mobile-header .dwf-spec-chips { gap: 3px; margin-bottom: 0; }
+  .modal-mobile-header .screen-chip { font-size: 0.6rem; padding: 2px 5px; }
+  .modal-mobile-thumb {
+    width: 56px;
+    height: 56px;
+    border-radius: 8px;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 1px solid var(--border);
+  }
+
+  /* Hide sidebar on mobile — info is in the compact header above */
+  .deal-waterfall-sidebar { display: none; }
 
   /* Tight tab strip */
   .modal-tab-strip { padding: 0 8px; }
   .modal-tab { padding: 7px 10px; font-size: 0.7rem; }
+  .modal-tab-strip-stage .stage-picker-btn { font-size: 0.62rem; padding: 4px 8px 4px 7px; gap: 4px; }
+  .stage-picker-dot { width: 5px; height: 5px; }
 
-  /* ov-top: small square thumbnail beside metrics — saves ~180px vs stacked layout */
+  /* ov-top: metrics + optional notes */
   .ov-top {
     flex-direction: row;
     padding: 8px 12px;
     gap: 10px;
     align-items: flex-start;
   }
-  .ov-photo-col { width: 82px; gap: 4px; }
-  .ov-photo {
-    width: 100%;
-    height: 82px;
-    border-radius: 7px;
-    flex-shrink: 0;
-  }
+  .ov-notes--inline { width: 140px; font-size: 0.62rem; }
   .ov-notes { font-size: 0.58rem; line-height: 1.35; }
-  .ov-notes-empty { font-size: 0.55rem; }
   .ov-metric { padding: 3px 0; gap: 6px; }
   .ov-metric-label { font-size: 0.62rem; }
   .ov-metric-value { font-size: 0.82rem; }
@@ -5855,6 +5880,22 @@ textarea { resize: vertical; }
   /* Footer */
   .summary-actions,
   .summary-modal--mls .summary-actions { padding: 8px 12px; gap: 6px; flex-wrap: nowrap; }
+
+  /* ── Other Costs panel — single column on mobile ── */
+  .other-costs-panel {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "financing"
+      "transaction";
+    grid-template-rows: auto auto;
+    height: auto;
+    overflow: visible;
+  }
+
+  /* ── Modal edit panels — let them scroll naturally ── */
+  .modal-edit-panel--sow,
+  .modal-edit-panel--budget,
+  .modal-edit-panel--estimate { height: auto; overflow: visible; }
 }
 
 /* ══════════════════════════════════════════════════════════════════════

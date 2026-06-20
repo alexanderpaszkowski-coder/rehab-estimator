@@ -1001,6 +1001,70 @@ textarea { resize: vertical; }
   height: auto;
 }
 
+/* ── Property tab — desktop non-scrolling 2×2 section grid ── */
+.modal-edit-panel--property {
+  padding: 10px 14px;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 8px;
+  align-content: start;
+}
+.modal-edit-panel--property .page-header { display: none; }
+.modal-edit-panel--property .card {
+  margin-bottom: 0;
+  padding: 8px 10px 10px;
+  box-shadow: none;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+}
+.modal-edit-panel--property .card h2 {
+  font-size: 0.6rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-muted);
+  margin-bottom: 7px;
+}
+/* Measurements (5 fields) and Counts (6 fields) → 2-col grid */
+.modal-edit-panel--property .card:nth-child(1) .field-grid,
+.modal-edit-panel--property .card:nth-child(2) .field-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 5px 10px;
+}
+/* Kitchen (3 fields) and Settings (3 fields) → 3-col grid (fits on 1 row) */
+.modal-edit-panel--property .card:nth-child(3) .field-grid,
+.modal-edit-panel--property .card:nth-child(4) .field-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 5px 10px;
+}
+.modal-edit-panel--property .field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.modal-edit-panel--property .field label {
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.modal-edit-panel--property .field .unit { display: none; }
+.modal-edit-panel--property .field input,
+.modal-edit-panel--property .field select {
+  padding: 4px 6px;
+  font-size: 0.72rem;
+  height: 28px;
+  border-radius: 5px;
+}
+.modal-edit-panel--property .hint { display: none; }
+
 /* ── Empty state ───────────────────────────────────── */
 .empty-state {
   text-align: center;

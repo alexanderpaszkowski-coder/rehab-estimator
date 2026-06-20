@@ -4897,6 +4897,74 @@ textarea { resize: vertical; }
   line-height: 1.4;
 }
 
+/* ── Sidebar action buttons — flex-grow to fill blank space at bottom ─── */
+.dwf-sidebar-actions {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding-top: 8px;
+  gap: 0;
+}
+.dwf-sidebar-actions .summary-link-actions {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+.dwf-sidebar-actions .dcard-actions {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.dwf-sidebar-actions .dcard-action-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-size: 0.71rem;
+  font-weight: 600;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  text-decoration: none;
+  min-height: 28px;
+  white-space: nowrap;
+}
+.dwf-sidebar-actions .dcard-action-btn:hover:not(:disabled) {
+  background: var(--surface-2);
+  border-color: var(--border-strong);
+}
+.dwf-sidebar-actions .dcard-action-btn--add {
+  border-style: dashed;
+  color: var(--text-muted);
+}
+.dwf-sidebar-actions .dcard-action-btn--propstream {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.dwf-sidebar-actions .dcard-action-btn svg { flex-shrink: 0; }
+/* PropStream input floats above the buttons when expanded */
+.dwf-sidebar-actions .propstream-input-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 6px;
+}
+.dwf-sidebar-actions .propstream-input { flex: 1; min-width: 0; font-size: 0.68rem; }
+.dwf-sidebar-actions .propstream-input-error { font-size: 0.62rem; color: var(--danger); margin-top: 2px; }
+
 .dwf-section-divider {
   height: 1px;
   background: var(--border);

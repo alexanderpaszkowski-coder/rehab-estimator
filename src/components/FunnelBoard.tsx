@@ -674,7 +674,7 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
             )}
           </div>
 
-          {/* ── Listing links, tags, and auction bar (moved from Overview panel) ── */}
+          {/* ── Listing links and tags (moved from Overview panel) ── */}
           <div className="dwf-sidebar-meta">
             <SummaryLinkActions
               home={home}
@@ -682,11 +682,6 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
               refreshing={refreshing}
               onUpdateHome={onUpdateHome}
             />
-            {home.source === 'auction.com' && (
-              <div className="dwf-auction-row">
-                <AuctionCountdown home={home} compact />
-              </div>
-            )}
             <TagGroups home={home} />
           </div>
 
@@ -753,6 +748,11 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
 
           {editTab === 'overview' && (
             <div className="ov-layout">
+              {home.source === 'auction.com' && (
+                <div className="ov-auction-row">
+                  <AuctionCountdown home={home} compact />
+                </div>
+              )}
               {onUpdateHome && (
                 <div className="modal-edit-panel modal-edit-panel--screen ov-screen-panel">
                   <FunnelDetails

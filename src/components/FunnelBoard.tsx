@@ -571,19 +571,20 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
     <div className="modal-overlay" onClick={onClose}>
       <div className="summary-modal summary-modal--mls summary-modal--editing" onClick={(e) => e.stopPropagation()}>
 
-        {/* ── Tab strip (stage picker always pinned right) ── */}
-        <div className="modal-tab-strip">
-          {EDIT_TABS.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              className={`modal-tab${editTab === t.id ? ' modal-tab--active' : ''}`}
-              onClick={() => setEditTab(t.id)}
-            >
-              {t.label}
-            </button>
-          ))}
-          <div className="modal-tab-strip-spacer" />
+        {/* ── Tab strip (stage picker sits outside the scroll container to avoid overflow clipping) ── */}
+        <div className="modal-tab-strip-wrap">
+          <div className="modal-tab-strip">
+            {EDIT_TABS.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                className={`modal-tab${editTab === t.id ? ' modal-tab--active' : ''}`}
+                onClick={() => setEditTab(t.id)}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
           <div className="modal-tab-strip-stage">
             <StagePicker stage={home.stage} onChange={onStageChange} />
           </div>

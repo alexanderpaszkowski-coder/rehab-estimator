@@ -4427,19 +4427,29 @@ textarea { resize: vertical; }
 }
 
 /* ── Modal tab strip ────────────────────────────────────────────────── */
-.modal-tab-strip {
+/* Wrap keeps sticky + stacking context; stage picker lives here as a sibling */
+.modal-tab-strip-wrap {
   display: flex;
-  overflow-x: auto;
-  scrollbar-width: none;
-  border-bottom: 1.5px solid var(--border);
-  background: var(--surface);
-  padding: 0 20px;
-  gap: 0;
+  align-items: stretch;
   flex-shrink: 0;
   position: sticky;
   top: 0;
   z-index: 2;
+  background: var(--surface);
+  border-bottom: 1.5px solid var(--border);
+}
+
+.modal-tab-strip {
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+  background: transparent;
+  padding: 0 0 0 20px;
+  gap: 0;
+  flex: 1;
+  min-width: 0;
   touch-action: pan-x;
+  border-bottom: none;
 }
 .modal-tab-strip::-webkit-scrollbar { display: none; }
 
@@ -4696,7 +4706,9 @@ textarea { resize: vertical; }
 .modal-tab-strip-stage {
   display: flex;
   align-items: center;
-  padding-right: 12px;
+  padding: 0 12px;
+  flex-shrink: 0;
+  /* overflow visible by default — dropdown is no longer clipped */
 }
 .modal-tab-strip-stage .stage-picker-btn {
   font-size: 0.72rem;
@@ -6137,8 +6149,9 @@ textarea { resize: vertical; }
   .deal-waterfall-sidebar { display: none; }
 
   /* Tight tab strip */
-  .modal-tab-strip { padding: 0 8px; }
+  .modal-tab-strip { padding: 0 4px; }
   .modal-tab { padding: 7px 10px; font-size: 0.7rem; }
+  .modal-tab-strip-stage { padding: 0 6px; }
   .modal-tab-strip-stage .stage-picker-btn { font-size: 0.62rem; padding: 4px 8px 4px 7px; gap: 4px; }
   .stage-picker-dot { width: 5px; height: 5px; }
 

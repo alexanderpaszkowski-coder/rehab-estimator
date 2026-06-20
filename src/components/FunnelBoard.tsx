@@ -489,11 +489,10 @@ function SummaryLinkActions({
 
 // ── Property summary modal ("back of card") ───────────────────────────────────
 
-type EditTab = 'overview' | 'screen' | 'property' | 'estimate' | 'sow' | 'budget' | 'other-costs'
+type EditTab = 'overview' | 'property' | 'estimate' | 'sow' | 'budget' | 'other-costs'
 
 const EDIT_TABS: { id: EditTab; label: string }[] = [
   { id: 'overview',    label: 'Overview'    },
-  { id: 'screen',      label: 'Screen'      },
   { id: 'property',    label: 'Property'    },
   { id: 'estimate',    label: 'Estimate'    },
   { id: 'sow',         label: 'SOW'         },
@@ -532,13 +531,11 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
 
   const arvLabel = getArvLabel(home.source)
   const bidLabel = getBidLabel(home.source, home.funnel)
-  const isAuction = AUCTION_SOURCES.includes(home.source)
   const funnel = home.funnel
-  const { arv, askingPrice, maxOffer, startingCreditBid, quickNotes } = funnel
+  const { arv, askingPrice } = funnel
   const spread = arv && askingPrice ? arv - askingPrice : null
   const quick = calcBlendedRehab(home)
   const rehabEst = quick.withContingency > 0 ? quick.withContingency : null
-  const netMargin = spread !== null && rehabEst ? spread - rehabEst : null
   const listingStatusPill = getListingStatusPill(home)
   const customLabel = home.source === 'other' ? home.sourceCustom : undefined
   const p = home.property
@@ -548,36 +545,11 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
     p.halfBaths ? `${p.halfBaths} half` : null,
   ].filter(Boolean).join(', ') || null
 
-  const rehabLines = quick.lineCosts
-    .filter((l) => l.cost > 0)
-    .sort((a, b) => b.cost - a.cost)
-    .slice(0, 3)
-
-  const spreadAccent = spread == null ? undefined
-    : spread > 100_000 ? 'positive' as const
-    : spread > 50_000  ? 'neutral' as const
-    : 'negative' as const
-  const netAccent = netMargin == null ? undefined
-    : netMargin > 50_000 ? 'positive' as const
-    : netMargin > 0     ? 'neutral' as const
-    : 'negative' as const
-
-  const notesText = [quickNotes, home.notes].filter(Boolean).join('\n\n') || null
-
   const heroSpecChips: { label: string; cls?: string }[] = []
   if (p.livingArea > 0) heroSpecChips.push({ label: `${p.livingArea.toLocaleString()} SF`, cls: 'grey' })
   if (p.bedrooms > 0) heroSpecChips.push({ label: `${p.bedrooms} bed`, cls: 'grey' })
   if (bathLabel) heroSpecChips.push({ label: bathLabel, cls: 'grey' })
   if (funnel.yearBuilt) heroSpecChips.push({ label: `Built ${funnel.yearBuilt}`, cls: 'grey' })
-
-  const detailItems: { label: string; value: string }[] = []
-  if (rehabEst) detailItems.push({ label: 'Est. rehab', value: formatCurrency(rehabEst) })
-  if (maxOffer) detailItems.push({ label: 'Max offer', value: formatCurrency(maxOffer) })
-  if (rehabEst && p.livingArea > 0) detailItems.push({ label: 'Rehab $/SF', value: formatCurrency(quick.perSf) })
-  if (isAuction && startingCreditBid) detailItems.push({ label: 'Credit bid', value: formatCurrency(startingCreditBid) })
-  if (funnel.titleClear === 'yes') detailItems.push({ label: 'Title', value: 'Clear' })
-  if (funnel.sellerMotivated === 'yes') detailItems.push({ label: 'Seller', value: 'Motivated' })
-  if (p.finishGrade) detailItems.push({ label: 'Finish', value: p.finishGrade })
 
   const handleChange = (patch: Partial<HomeFile>) => {
     onUpdateHome?.({ ...home, ...patch, updatedAt: new Date().toISOString() })
@@ -765,111 +737,34 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
           {editTab === 'overview' && (
             <div className="ov-layout">
 
-              {/* ── Metrics + notes ── */}
-              <div className="ov-top">
-                <div className="ov-metrics">
-                  {arv && (
-                    <div className="ov-metric">
-                      <span className="ov-metric-label">{arvLabel}</span>
-                      <span className="ov-metric-value">{formatCurrency(arv)}</span>
-                    </div>
-                  )}
-                  {askingPrice && (
-                    <div className="ov-metric">
-                      <span className="ov-metric-label">{bidLabel}</span>
-                      <span className="ov-metric-value">{formatCurrency(askingPrice)}</span>
-                    </div>
-                  )}
-                  {rehabEst !== null ? (() => {
-                    const allIn = calcAllInCosts(home)
-                    const finCost = allIn.financingTotal
-                    return (
-                      <>
-                        <div className="ov-metric">
-                          <span className="ov-metric-label">Rehab + Costs</span>
-                          <span className="ov-metric-value" style={{ color: 'var(--warning)' }}>{formatCurrency(allIn.rehabPlusCosts)}</span>
-                        </div>
-                        {finCost > 0 && (
-                          <div className="ov-metric">
-                            <span className="ov-metric-label">Financing</span>
-                            <span className="ov-metric-value" style={{ color: 'var(--warning)' }}>{formatCurrency(finCost)}</span>
-                          </div>
-                        )}
-                        {netMargin !== null && (
-                          <div className="ov-metric ov-metric--net">
-                            <span className="ov-metric-label">True Net</span>
-                            <span className={`ov-metric-value${netAccent ? ` accent-${netAccent}` : ''}`}>{formatCurrency(netMargin)}</span>
-                          </div>
-                        )}
-                      </>
-                    )
-                  })() : spread !== null ? (
-                    <div className="ov-metric">
-                      <span className="ov-metric-label">Spread</span>
-                      <span className={`ov-metric-value${spreadAccent ? ` accent-${spreadAccent}` : ''}`}>{formatCurrency(spread)}</span>
-                    </div>
-                  ) : null}
-                </div>
-
-                {notesText && (
-                  <div className="ov-notes ov-notes--inline">
-                    <p>{notesText}</p>
-                  </div>
-                )}
-              </div>
-
-              {/* ── Listing links (above auction bar) ── */}
+              {/* ── Listing links + auction bar ── */}
               <SummaryLinkActions
                 home={home}
                 onRefresh={onRefresh}
                 refreshing={refreshing}
                 onUpdateHome={onUpdateHome}
               />
-
-              {/* ── Auction countdown ── */}
               {home.source === 'auction.com' && (
                 <div className="ov-auction-row">
                   <AuctionCountdown home={home} compact />
                 </div>
               )}
 
-              {/* ── Body: tags | details ── */}
-              <div className="ov-body">
-                <div className="ov-body-left">
-                  <TagGroups home={home} />
-                </div>
-                <div className="ov-body-right">
-                  {(detailItems.length > 0 || rehabLines.length > 0) && (
-                    <div className="ov-details">
-                      {detailItems.map((d) => (
-                        <div key={d.label} className="ov-kv">
-                          <span>{d.label}</span><span>{d.value}</span>
-                        </div>
-                      ))}
-                      {rehabLines.length > 0 && (
-                        <>
-                          <span className="ov-section-title">Top rehab</span>
-                          {rehabLines.map((line) => (
-                            <div key={line.name} className="ov-kv">
-                              <span>{line.name}</span><span>{formatCurrency(line.cost)}</span>
-                            </div>
-                          ))}
-                        </>
-                      )}
-                    </div>
-                  )}
-                </div>
+              {/* ── Deal analysis tags ── */}
+              <div className="ov-tags-bar">
+                <TagGroups home={home} />
               </div>
 
-            </div>
-          )}
+              {/* ── Screening form (merged from Screen tab) ── */}
+              {onUpdateHome && (
+                <div className="modal-edit-panel modal-edit-panel--screen ov-screen-panel">
+                  <FunnelDetails
+                    home={home}
+                    onChange={(patch) => handleChange(patch)}
+                  />
+                </div>
+              )}
 
-          {editTab === 'screen' && onUpdateHome && (
-            <div className="modal-edit-panel modal-edit-panel--screen">
-              <FunnelDetails
-                home={home}
-                onChange={(patch) => handleChange(patch)}
-              />
             </div>
           )}
 
@@ -1180,11 +1075,6 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
               </button>
             )}
             <button type="button" className="btn btn-ghost" onClick={onClose}>Close</button>
-            {editTab === 'overview' && (
-              <button type="button" className="btn btn-primary" onClick={() => setEditTab('screen')}>
-                Edit →
-              </button>
-            )}
           </div>
         </div>
 

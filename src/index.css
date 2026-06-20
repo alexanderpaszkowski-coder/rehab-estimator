@@ -994,6 +994,12 @@ textarea { resize: vertical; }
   flex: 1;
   overflow: hidden;
 }
+/* When screen panel is embedded inside overview layout, let it grow to fill space */
+.ov-screen-panel {
+  flex: 1;
+  min-height: 0;
+  height: auto;
+}
 
 /* ── Empty state ───────────────────────────────────── */
 .empty-state {
@@ -4190,6 +4196,12 @@ textarea { resize: vertical; }
 .ov-layout {
   display: flex;
   flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+.ov-tags-bar {
+  padding: 8px 18px 0;
+  flex-shrink: 0;
 }
 
 .ov-top {

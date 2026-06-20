@@ -4419,66 +4419,20 @@ textarea { resize: vertical; }
   background: var(--surface-2);
   display: flex;
   flex-direction: column;
-  padding: 16px 14px 14px;
+  padding: 10px 14px 10px;
   gap: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
-  scrollbar-width: none;
+  overflow: hidden;
 }
-.deal-waterfall-sidebar::-webkit-scrollbar { display: none; }
 
-/* ── Property identity block at top of sidebar ────────────────────────── */
-.dwf-property-block {
-  margin-bottom: 4px;
-}
-.dwf-address-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 6px;
-  flex-wrap: wrap;
-  margin-bottom: 3px;
-}
-.dwf-address {
-  font-size: 0.95rem;
-  font-weight: 800;
-  color: var(--text);
-  line-height: 1.2;
-  letter-spacing: -0.02em;
-}
-.dwf-city {
-  font-size: 0.72rem;
-  color: var(--text-muted);
-  margin-bottom: 6px;
-}
-.dwf-spec-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin-bottom: 8px;
-}
-.dwf-meta-row {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 0.65rem;
-  color: var(--text-subtle);
-  flex-wrap: wrap;
-}
-.dwf-meta-dot { opacity: 0.4; }
-.dwf-added-by {
-  font-size: 0.65rem;
-  color: var(--text-subtle);
-  margin-top: 2px;
-}
 /* ── Property photo in sidebar ────────────────────────────────────────── */
 .dwf-photo {
   width: 100%;
-  height: 130px;
-  border-radius: 8px;
+  height: 90px;
+  border-radius: 7px;
   overflow: hidden;
   background: var(--surface-3);
   border: 1px solid var(--border);
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   flex-shrink: 0;
 }
 .dwf-photo img {
@@ -4493,18 +4447,66 @@ textarea { resize: vertical; }
   justify-content: center;
 }
 
+/* ── Property identity block at top of sidebar ────────────────────────── */
+.dwf-property-block {
+  margin-bottom: 2px;
+}
+.dwf-address-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  flex-wrap: wrap;
+  margin-bottom: 1px;
+}
+.dwf-address {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+.dwf-city {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+.dwf-spec-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin-bottom: 5px;
+}
+.dwf-spec-chips .screen-chip {
+  font-size: 0.6rem;
+  padding: 2px 5px;
+}
+.dwf-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.62rem;
+  color: var(--text-subtle);
+  flex-wrap: wrap;
+}
+.dwf-meta-dot { opacity: 0.4; }
+.dwf-added-by {
+  font-size: 0.62rem;
+  color: var(--text-subtle);
+  margin-top: 1px;
+}
+
 .dwf-section-divider {
   height: 1px;
   background: var(--border);
-  margin: 12px 0 10px;
+  margin: 7px 0 6px;
 }
 .dwf-label {
-  font-size: 0.56rem;
+  font-size: 0.55rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--text-muted);
-  margin-bottom: 10px;
+  margin-bottom: 6px;
 }
 .dwf-rows {
   display: flex;
@@ -4517,19 +4519,19 @@ textarea { resize: vertical; }
   justify-content: space-between;
   align-items: baseline;
   gap: 6px;
-  padding: 5px 0;
+  padding: 3px 0;
   border-bottom: 1px solid var(--border);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
 }
 .dwf-row:last-child { border-bottom: none; }
 .dwf-row-label { color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.dwf-row-value { font-family: var(--mono); font-size: 0.72rem; font-weight: 600; color: var(--text); white-space: nowrap; flex-shrink: 0; }
+.dwf-row-value { font-family: var(--mono); font-size: 0.68rem; font-weight: 600; color: var(--text); white-space: nowrap; flex-shrink: 0; }
 .dwf-row-value--pos { font-weight: 700; color: var(--text); }
 
 .dwf-divider {
   height: 1px;
   background: var(--border-strong);
-  margin: 10px 0 8px;
+  margin: 6px 0 5px;
 }
 
 .dwf-net-row {
@@ -4537,17 +4539,17 @@ textarea { resize: vertical; }
   justify-content: space-between;
   align-items: baseline;
   gap: 6px;
-  margin-bottom: 10px;
+  margin-bottom: 6px;
   animation: dwf-flash 0.5s ease-out;
 }
 .dwf-net-label {
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 700;
   color: var(--text);
 }
 .dwf-net-value {
   font-family: var(--mono);
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   font-weight: 800;
 }
 .dwf-net-value--pos { color: var(--success); }
@@ -4556,8 +4558,8 @@ textarea { resize: vertical; }
 .dwf-stats {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding-top: 8px;
+  gap: 4px;
+  padding-top: 5px;
   border-top: 1px dashed var(--border-strong);
   animation: dwf-flash 0.5s ease-out;
 }
@@ -4567,10 +4569,10 @@ textarea { resize: vertical; }
   align-items: baseline;
   gap: 6px;
 }
-.dwf-stat-label { font-size: 0.65rem; color: var(--text-muted); }
-.dwf-stat-value { font-family: var(--mono); font-size: 0.75rem; font-weight: 700; color: var(--text); white-space: nowrap; }
+.dwf-stat-label { font-size: 0.62rem; color: var(--text-muted); }
+.dwf-stat-value { font-family: var(--mono); font-size: 0.7rem; font-weight: 700; color: var(--text); white-space: nowrap; }
 .dwf-stat-value--roi { color: var(--success); }
-.dwf-stat-annual { font-size: 0.65rem; font-weight: 500; color: var(--text-subtle); }
+.dwf-stat-annual { font-size: 0.62rem; font-weight: 500; color: var(--text-subtle); }
 
 @keyframes dwf-flash {
   0%   { opacity: 0.4; transform: translateY(-2px); }

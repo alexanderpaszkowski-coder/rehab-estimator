@@ -994,10 +994,13 @@ textarea { resize: vertical; }
   flex: 1;
   overflow: hidden;
 }
-/* When screen panel is embedded inside overview layout, let it grow to fill space */
+/* Screen panel embedded in overview — let tab-body handle scroll, don't clip */
 .ov-screen-panel {
-  flex: 1;
-  min-height: 0;
+  height: auto;
+  overflow: visible;
+}
+.ov-screen-panel .screen-layout {
+  overflow: visible;
   height: auto;
 }
 
@@ -1005,9 +1008,11 @@ textarea { resize: vertical; }
 .modal-edit-panel--property {
   padding: 10px 14px;
   overflow: hidden;
+}
+/* Target the outer wrapper <div> rendered by PropertyInputs */
+.modal-edit-panel--property > div {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  grid-template-rows: auto auto;
   gap: 8px;
   align-content: start;
 }
@@ -1027,14 +1032,14 @@ textarea { resize: vertical; }
   color: var(--text-muted);
   margin-bottom: 7px;
 }
-/* Measurements (5 fields) and Counts (6 fields) → 2-col grid */
+/* Measurements (5 fields) and Counts (6 fields) → 2-col field grid */
 .modal-edit-panel--property .card:nth-child(1) .field-grid,
 .modal-edit-panel--property .card:nth-child(2) .field-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 5px 10px;
 }
-/* Kitchen (3 fields) and Settings (3 fields) → 3-col grid (fits on 1 row) */
+/* Kitchen (3 fields) and Settings (3 fields) → 3-col field grid (1 row each) */
 .modal-edit-panel--property .card:nth-child(3) .field-grid,
 .modal-edit-panel--property .card:nth-child(4) .field-grid {
   display: grid;
@@ -4260,8 +4265,6 @@ textarea { resize: vertical; }
 .ov-layout {
   display: flex;
   flex-direction: column;
-  height: 100%;
-  min-height: 0;
 }
 .ov-tags-bar {
   padding: 8px 18px 0;
@@ -4737,9 +4740,8 @@ textarea { resize: vertical; }
 /* ── Property photo in sidebar ────────────────────────────────────────── */
 .dwf-photo {
   width: 100%;
-  min-height: 90px;
-  max-height: 240px;
-  flex: 1;
+  height: 130px;
+  flex-shrink: 0;
   border-radius: 7px;
   overflow: hidden;
   background: var(--surface-3);
@@ -4760,6 +4762,8 @@ textarea { resize: vertical; }
 
 /* ── Property identity block at top of sidebar ────────────────────────── */
 .dwf-property-block {
+  flex: 1;
+  min-height: 0;
   margin-bottom: 2px;
 }
 .dwf-address-row {

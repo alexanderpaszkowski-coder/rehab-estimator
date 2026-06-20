@@ -55,7 +55,11 @@ export const FUNNEL_STAGES: { id: FunnelStage; label: string; color: string }[] 
   { id: 'listed',           label: 'Listed',           color: '#0891b2' },
   { id: 'sold',             label: 'Sold',             color: '#166534' },
   { id: 'passed',           label: 'Passed',           color: '#b91c1c' },
+  { id: 'auction-ended',    label: 'Auction Ended',    color: '#9ca3af' },
 ]
+
+/** Stages shown in the pipeline strip (excludes auction-ended — shown separately) */
+export const PIPELINE_STAGES = FUNNEL_STAGES.filter(s => s.id !== 'auction-ended')
 
 /** Map legacy stage IDs (pre-redesign) to the new funnel. */
 export const LEGACY_STAGE_MAP: Record<string, FunnelStage> = {

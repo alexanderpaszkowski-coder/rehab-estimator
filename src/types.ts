@@ -29,6 +29,7 @@ export type FunnelStage =
   | 'listed'
   | 'sold'
   | 'passed'
+  | 'auction-ended'     // Auction.com listing whose bidding window has closed
 
 export type TriState = 'yes' | 'no' | 'unknown' | null
 

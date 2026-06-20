@@ -3,7 +3,7 @@ import { useLockBodyScroll } from '../lib/useLockBodyScroll'
 import type { FunnelStage, HomeFile, IntakeData, PropertyInputs as PropertyInputsType, PropertySource, QuickSystem } from '../types'
 import { formatCurrency, calcBlendedRehab, calcAllInCosts } from '../lib/calculations'
 import {
-  AUCTION_SOURCES, FUNNEL_STAGES, MLS_SOURCES, getSourceLabel, getStageMeta,
+  AUCTION_SOURCES, FUNNEL_STAGES, PIPELINE_STAGES, MLS_SOURCES, getSourceLabel, getStageMeta,
   getArvLabel, getBidLabel,
 } from '../lib/funnel'
 import { analyzeDeal } from '../lib/dealScore'
@@ -29,6 +29,8 @@ interface Props {
   onUpdateHome?: (home: HomeFile) => void
   autoOpenIntake?: boolean
   streetViewStatus?: Record<string, 'fetching' | 'failed'>
+  showEnded?: boolean
+  onHideEnded?: () => void
 }
 
 type SortOption = 'spread' | 'newest' | 'arv' | 'ending-soon'
@@ -58,7 +60,7 @@ const SEND_MAILER_SOURCES: PropertySource[] = [
 ]
 
 function getActionGroup(home: HomeFile, _analysis: DealAnalysis): ActionGroupKey {
-  if (['sold', 'passed'].includes(home.stage)) return 'closed'
+  if (['sold', 'passed', 'auction-ended'].includes(home.stage)) return 'closed'
   if (['under-contract', 'rehab', 'listed'].includes(home.stage)) return 'active'
 
   // Offer ready / max bid — only when the user has explicitly promoted to solid-candidate
@@ -1754,11 +1756,129 @@ const STAGE_SHORT_LABELS: Record<FunnelStage, string> = {
   'listed':           'Listed',
   'sold':             'Sold',
   'passed':           'Pass',
+  'auction-ended':    'Ended',
+}
+
+// ── Ended Auctions view ───────────────────────────────────────────────────────
+
+function EndedAuctionCard({ home, onOpen }: { home: HomeFile; onOpen: () => void }) {
+  const arvLabel   = getArvLabel(home.source)
+  const bidLabel   = getBidLabel(home.source, home.funnel)
+  const customLabel = home.source === 'other' ? home.sourceCustom : undefined
+  const { arv, askingPrice, auctionEndAt, auctionStartAt } = home.funnel
+  const quick     = calcBlendedRehab(home)
+  const rehabEst  = quick.withContingency > 0 ? quick.withContingency : null
+
+  const endDate   = auctionEndAt ?? auctionStartAt
+  const endLabel  = endDate
+    ? new Date(endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    : null
+
+  return (
+    <div className="ended-card" onClick={onOpen}>
+      <div className="ended-card-photo">
+        {home.photoUrl
+          ? <img src={home.photoUrl} alt={home.address} loading="lazy" />
+          : <div className="ended-card-no-photo"><SourceLogo source={home.source} customLabel={customLabel} size={22} /></div>
+        }
+        <span className="ended-card-badge">Ended{endLabel ? ` · ${endLabel}` : ''}</span>
+      </div>
+      <div className="ended-card-body">
+        <div className="ended-card-street">{home.address}</div>
+        <div className="ended-card-city">{[home.city, home.state].filter(Boolean).join(', ')}</div>
+        {(arv || askingPrice || rehabEst) && (
+          <div className="ended-card-fin">
+            {arv && <div className="ended-card-fin-row"><span>{arvLabel}</span><span>{formatCurrency(arv)}</span></div>}
+            {askingPrice && <div className="ended-card-fin-row"><span>{bidLabel}</span><span>{formatCurrency(askingPrice)}</span></div>}
+            {rehabEst && <div className="ended-card-fin-row"><span>Est. Rehab</span><span>{formatCurrency(rehabEst)}</span></div>}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function EndedAuctionsView({
+  homes,
+  onHideEnded,
+  onStageChange,
+  onDelete,
+  onRefreshHome,
+  onUpdateHome,
+  refreshingIds,
+  handleRefresh,
+}: {
+  homes: HomeFile[]
+  onHideEnded?: () => void
+  onStageChange: (id: string, stage: FunnelStage) => void
+  onDelete: (id: string) => void
+  onRefreshHome?: (home: HomeFile) => Promise<void>
+  onUpdateHome?: (home: HomeFile) => void
+  refreshingIds: Set<string>
+  handleRefresh: (home: HomeFile) => Promise<void>
+}) {
+  const [summaryHome, setSummaryHome] = useState<HomeFile | null>(null)
+  const liveSummaryHome = summaryHome
+    ? (homes.find((h) => h.id === summaryHome.id) ?? summaryHome)
+    : null
+
+  // Sort by end date descending (most recently ended first)
+  const sorted = [...homes].sort((a, b) => {
+    const aEnd = a.funnel.auctionEndAt ?? a.funnel.auctionStartAt ?? ''
+    const bEnd = b.funnel.auctionEndAt ?? b.funnel.auctionStartAt ?? ''
+    return bEnd.localeCompare(aEnd)
+  })
+
+  return (
+    <div className="ended-view">
+      {liveSummaryHome && (
+        <PropertySummaryModal
+          home={liveSummaryHome}
+          onClose={() => setSummaryHome(null)}
+          onStageChange={(s) => onStageChange(liveSummaryHome.id, s)}
+          onDelete={() => {
+            if (confirm(`Delete ${liveSummaryHome.address}?`)) {
+              onDelete(liveSummaryHome.id)
+              setSummaryHome(null)
+            }
+          }}
+          onRefresh={onRefreshHome ? handleRefresh : undefined}
+          refreshing={refreshingIds.has(liveSummaryHome.id)}
+          onUpdateHome={onUpdateHome}
+        />
+      )}
+
+      <div className="ended-header">
+        <div className="ended-header-left">
+          <button type="button" className="ended-back-btn" onClick={onHideEnded}>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M9 2L4 7l5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            Pipeline
+          </button>
+          <div>
+            <h2 className="ended-title">Ended Auctions</h2>
+            <p className="ended-sub">{homes.length} {homes.length === 1 ? 'listing' : 'listings'} whose bidding window closed</p>
+          </div>
+        </div>
+      </div>
+
+      {homes.length === 0 ? (
+        <div className="ended-empty">No ended auctions yet.</div>
+      ) : (
+        <div className="ended-grid">
+          {sorted.map((home) => (
+            <EndedAuctionCard key={home.id} home={home} onOpen={() => setSummaryHome(home)} />
+          ))}
+        </div>
+      )}
+    </div>
+  )
 }
 
 // ── Main board ────────────────────────────────────────────────────────────────
 
-export function FunnelBoard({ homes, onSelect: _onSelect, onCreate, onStageChange, onDelete, onRefreshHome, onUpdateHome, autoOpenIntake, streetViewStatus }: Props) {
+export function FunnelBoard({ homes, onSelect: _onSelect, onCreate, onStageChange, onDelete, onRefreshHome, onUpdateHome, autoOpenIntake, streetViewStatus, showEnded, onHideEnded }: Props) {
   const [showIntake,    setShowIntake]    = useState(() => autoOpenIntake ?? false)
   const [search,        setSearch]        = useState('')
   const [sourceFilter,  setSourceFilter]  = useState<PropertySource | 'all'>('all')
@@ -1794,6 +1914,8 @@ export function FunnelBoard({ homes, onSelect: _onSelect, onCreate, onStageChang
   // Filtered + sorted homes
   const filtered = useMemo(() => {
     let result = homes.filter((h) => {
+      // Never show auction-ended in the main board — they live in the Ended view
+      if (h.stage === 'auction-ended') return false
       // Text search
       if (search.trim()) {
         const q = search.toLowerCase()
@@ -1847,6 +1969,23 @@ export function FunnelBoard({ homes, onSelect: _onSelect, onCreate, onStageChang
     return m
   }, [homes])
 
+  if (showEnded) {
+    return (
+      <div className="funnel-dashboard">
+        <EndedAuctionsView
+          homes={homes.filter((h) => h.stage === 'auction-ended')}
+          onHideEnded={onHideEnded}
+          onStageChange={onStageChange}
+          onDelete={onDelete}
+          onRefreshHome={onRefreshHome}
+          onUpdateHome={onUpdateHome}
+          refreshingIds={refreshingIds}
+          handleRefresh={handleRefresh}
+        />
+      </div>
+    )
+  }
+
   return (
     <div className="funnel-dashboard">
 
@@ -1873,7 +2012,7 @@ export function FunnelBoard({ homes, onSelect: _onSelect, onCreate, onStageChang
 
       {/* ── 1. Compact pipeline strip ── */}
       <section className="cpipeline">
-        {FUNNEL_STAGES.map((stage) => {
+        {PIPELINE_STAGES.map((stage) => {
           const count  = totalCounts.get(stage.id) ?? 0
           const active = stage.id === pipelineStage
           return (

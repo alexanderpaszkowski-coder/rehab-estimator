@@ -18,6 +18,7 @@ import { calcQuickEstimate, calcSowTotals, formatCurrency } from './lib/calculat
 import { SOW_TEMPLATE } from './lib/defaults'
 import { exportHomePdf } from './lib/pdf'
 import { getSourceLabel, getStageMeta } from './lib/funnel'
+import { getAuctionCountdown } from './lib/auctionSchedule'
 
 const WORKFLOW: { id: Tab; label: string; step: number }[] = [
   { id: 'lead', label: 'Lead & Screen', step: 1 },
@@ -168,6 +169,7 @@ export default function App() {
   const [saved, setSaved] = useState(false)
   const [streetViewStatus, setStreetViewStatus] = useState<Record<string, 'fetching' | 'failed'>>({})
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('theme') === 'dark')
+  const [showEnded, setShowEnded] = useState(false)
   const svFetching = useRef(new Set<string>())
 
   useEffect(() => {
@@ -376,6 +378,27 @@ export default function App() {
     return () => { cancelled = true }
   }, [session, homes, updateHome])
 
+  // Auto-transition auction.com homes whose bidding window has closed → 'auction-ended'
+  useEffect(() => {
+    if (!session || homes.length === 0) return
+    const SKIP_STAGES: FunnelStage[] = ['sold', 'passed', 'auction-ended']
+    const check = () => {
+      homes.forEach((home) => {
+        if (home.source !== 'auction.com') return
+        if (SKIP_STAGES.includes(home.stage)) return
+        const { auctionStartAt, auctionEndAt, auctionFormat, auctionComingSoon } = home.funnel
+        if (!auctionStartAt || auctionComingSoon) return
+        const state = getAuctionCountdown(auctionStartAt, auctionEndAt, auctionFormat ?? null)
+        if (state?.phase === 'ended') {
+          updateHome({ ...home, stage: 'auction-ended' })
+        }
+      })
+    }
+    check()
+    const id = setInterval(check, 60_000)
+    return () => clearInterval(id)
+  }, [session, homes, updateHome])
+
   const handleLogout = async () => {
     await supabase.auth.signOut()
     setHomes([])
@@ -386,6 +409,7 @@ export default function App() {
   const quickTotals = current ? calcQuickEstimate(current.property, current.quickEstimate) : null
   const sowTotals = current ? calcSowTotals(current, SOW_TEMPLATE) : null
   const stageMeta = current ? getStageMeta(current.stage) : null
+  const endedCount = homes.filter((h) => h.stage === 'auction-ended').length
 
   if (sessionLoading) {
     return (
@@ -424,6 +448,17 @@ export default function App() {
         </nav>
 
         <div className="topnav-end">
+          {endedCount > 0 && (
+            <button
+              type="button"
+              className={`topnav-ended-btn${showEnded ? ' topnav-ended-btn--active' : ''}`}
+              onClick={() => { setShowEnded((v) => !v); setCurrentId(null); setTab('funnel') }}
+              title="View ended auction listings"
+            >
+              Ended
+              <span className="topnav-ended-badge">{endedCount}</span>
+            </button>
+          )}
           {saved && <span className="save-indicator">✓ Saved</span>}
           <UserMenu
             email={session.user.email ?? ''}
@@ -478,6 +513,8 @@ export default function App() {
             onRefreshHome={handleRefreshHome}
             onUpdateHome={updateHome}
             streetViewStatus={streetViewStatus}
+            showEnded={showEnded}
+            onHideEnded={() => setShowEnded(false)}
           />
         )}
         {tab === 'lead' && current && <FunnelDetails home={current} onChange={updateCurrent} />}

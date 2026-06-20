@@ -674,6 +674,22 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
             )}
           </div>
 
+          {/* ── Listing links, tags, and auction bar (moved from Overview panel) ── */}
+          <div className="dwf-sidebar-meta">
+            <SummaryLinkActions
+              home={home}
+              onRefresh={onRefresh}
+              refreshing={refreshing}
+              onUpdateHome={onUpdateHome}
+            />
+            {home.source === 'auction.com' && (
+              <div className="dwf-auction-row">
+                <AuctionCountdown home={home} compact />
+              </div>
+            )}
+            <TagGroups home={home} />
+          </div>
+
           <>
               <div className="dwf-section-divider" />
               <div className="dwf-label">Deal Waterfall</div>
@@ -737,26 +753,6 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
 
           {editTab === 'overview' && (
             <div className="ov-layout">
-
-              {/* ── Listing links + auction bar ── */}
-              <SummaryLinkActions
-                home={home}
-                onRefresh={onRefresh}
-                refreshing={refreshing}
-                onUpdateHome={onUpdateHome}
-              />
-              {home.source === 'auction.com' && (
-                <div className="ov-auction-row">
-                  <AuctionCountdown home={home} compact />
-                </div>
-              )}
-
-              {/* ── Deal analysis tags ── */}
-              <div className="ov-tags-bar">
-                <TagGroups home={home} />
-              </div>
-
-              {/* ── Screening form (merged from Screen tab) ── */}
               {onUpdateHome && (
                 <div className="modal-edit-panel modal-edit-panel--screen ov-screen-panel">
                   <FunnelDetails
@@ -765,7 +761,6 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
                   />
                 </div>
               )}
-
             </div>
           )}
 

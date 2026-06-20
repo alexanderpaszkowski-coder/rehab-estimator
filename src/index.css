@@ -994,14 +994,18 @@ textarea { resize: vertical; }
   flex: 1;
   overflow: hidden;
 }
-/* Screen panel embedded in overview — let tab-body handle scroll, don't clip */
+/* Screen panel embedded in overview — fills remaining height, scrolls internally */
 .ov-screen-panel {
+  flex: 1;
+  min-height: 0;
   height: auto;
-  overflow: visible;
+  overflow-y: auto;
 }
 .ov-screen-panel .screen-layout {
-  overflow: visible;
+  overflow-y: auto;
   height: auto;
+  flex: 1;
+  min-height: 0;
 }
 
 /* ── Property tab — desktop non-scrolling 2×2 section grid ── */
@@ -4265,6 +4269,8 @@ textarea { resize: vertical; }
 .ov-layout {
   display: flex;
   flex-direction: column;
+  height: 100%;
+  min-height: 0;
 }
 .ov-tags-bar {
   padding: 8px 18px 0;
@@ -4762,8 +4768,6 @@ textarea { resize: vertical; }
 
 /* ── Property identity block at top of sidebar ────────────────────────── */
 .dwf-property-block {
-  flex: 1;
-  min-height: 0;
   margin-bottom: 2px;
 }
 .dwf-address-row {
@@ -4809,6 +4813,42 @@ textarea { resize: vertical; }
   color: var(--text-subtle);
   margin-top: 1px;
 }
+
+/* ── Sidebar meta block: link actions + tags + auction bar ────────────── */
+.dwf-sidebar-meta {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 5px 0 4px;
+}
+/* Compact link action buttons inside sidebar */
+.dwf-sidebar-meta .summary-link-actions { padding: 0; border: none; background: none; }
+.dwf-sidebar-meta .dcard-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.dwf-sidebar-meta .dcard-action-btn {
+  font-size: 0.6rem;
+  padding: 3px 7px;
+  height: auto;
+  border-radius: 4px;
+}
+.dwf-sidebar-meta .propstream-input-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 3px;
+}
+.dwf-sidebar-meta .propstream-input { font-size: 0.62rem; padding: 3px 6px; min-width: 0; flex: 1; }
+.dwf-sidebar-meta .btn { font-size: 0.6rem; padding: 3px 7px; }
+/* Compact tags inside sidebar */
+.dwf-sidebar-meta .summary-tag-groups { gap: 4px; }
+.dwf-sidebar-meta .summary-tag-group { gap: 2px; }
+.dwf-sidebar-meta .summary-tag-group-label { font-size: 0.52rem; }
+.dwf-sidebar-meta .stag { font-size: 0.58rem; padding: 2px 6px; }
+.dwf-auction-row { margin-top: 1px; }
 
 .dwf-section-divider {
   height: 1px;

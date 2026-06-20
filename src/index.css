@@ -1923,6 +1923,11 @@ textarea { resize: vertical; }
 .summary-modal,
 .modal {
   overscroll-behavior: contain;
+  touch-action: none;
+}
+
+/* Only the inner scrollable body should respond to vertical pan */
+.modal-tab-body {
   touch-action: pan-y;
 }
 .modal {
@@ -4153,6 +4158,10 @@ textarea { resize: vertical; }
   padding: 0 20px;
   gap: 0;
   flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  touch-action: pan-x;
 }
 .modal-tab-strip::-webkit-scrollbar { display: none; }
 
@@ -5788,6 +5797,8 @@ textarea { resize: vertical; }
     height: 92vh;
     min-height: 0;
     border-radius: 16px;
+    overflow: hidden;
+    touch-action: none;
   }
 
   /* ── Mobile compact header — shown on mobile, hidden on desktop ── */

@@ -872,7 +872,7 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
           )}
 
           {editTab === 'property' && onUpdateHome && (
-            <div className="modal-edit-panel">
+            <div className="modal-edit-panel modal-edit-panel--property">
               <PropertyInputsView
                 home={home}
                 onChange={(property: PropertyInputsType) => handleChange({ property })}
@@ -1139,6 +1139,34 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
         </div>{/* end modal-tab-body */}
 
         </div>{/* end modal-body-with-sidebar */}
+
+        {/* ── Mobile-only sticky deal bar (always visible, above footer) ── */}
+        <div className="modal-mobile-deal-bar">
+          {arv && (
+            <div className="mmdb-item">
+              <span className="mmdb-label">{arvLabel}</span>
+              <span className="mmdb-value">{fmt(arv)}</span>
+            </div>
+          )}
+          {askingPrice && (
+            <div className="mmdb-item">
+              <span className="mmdb-label">{bidLabel}</span>
+              <span className="mmdb-value">{fmt(askingPrice)}</span>
+            </div>
+          )}
+          <div className="mmdb-item mmdb-item--net">
+            <span className="mmdb-label">True Net</span>
+            <span className={`mmdb-value${oc.trueNet !== null && oc.trueNet >= 0 ? ' mmdb-value--pos' : ' mmdb-value--neg'}`}>
+              {oc.trueNet !== null ? fmt(oc.trueNet) : '—'}
+            </span>
+          </div>
+          {oc.roi !== null && (
+            <div className="mmdb-item">
+              <span className="mmdb-label">CoC</span>
+              <span className="mmdb-value mmdb-value--pos">{(oc.roi * 100).toFixed(0)}%</span>
+            </div>
+          )}
+        </div>
 
         {/* ── Footer ── */}
         <div className="summary-actions">

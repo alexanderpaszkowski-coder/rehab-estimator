@@ -4420,6 +4420,9 @@ textarea { resize: vertical; }
 /* Mobile compact header — hidden on desktop (shown via mobile media query) */
 .modal-mobile-header { display: none; }
 
+/* Mobile deal bar — hidden on desktop (shown via mobile media query) */
+.modal-mobile-deal-bar { display: none; }
+
 /* ── Deal Waterfall sidebar (LEFT) ───────────────────────────────────── */
 .deal-waterfall-sidebar {
   width: 220px;
@@ -5909,6 +5912,94 @@ textarea { resize: vertical; }
   .modal-edit-panel--sow,
   .modal-edit-panel--budget,
   .modal-edit-panel--estimate { height: auto; overflow: visible; }
+
+  /* ── Mobile sticky deal bar ────────────────────────── */
+  .modal-mobile-deal-bar {
+    display: flex;
+    align-items: stretch;
+    flex-shrink: 0;
+    background: var(--surface-2);
+    border-top: 1px solid var(--border);
+  }
+  .mmdb-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
+    padding: 6px 4px;
+    border-right: 1px solid var(--border);
+  }
+  .mmdb-item:last-child { border-right: none; }
+  .mmdb-item--net { background: var(--surface); }
+  .mmdb-label {
+    font-size: 0.52rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+  }
+  .mmdb-value {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: var(--text);
+    white-space: nowrap;
+  }
+  .mmdb-value--pos { color: var(--success); }
+  .mmdb-value--neg { color: var(--danger); }
+
+  /* ── Property tab — compact non-scrolling 3-col grid ─ */
+  .modal-edit-panel--property {
+    padding: 6px 8px;
+    overflow: hidden;
+  }
+  .modal-edit-panel--property .card {
+    padding: 6px 8px 8px;
+    border-radius: 6px;
+    margin-bottom: 5px;
+    box-shadow: none;
+  }
+  .modal-edit-panel--property .card h2 {
+    font-size: 0.55rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 5px;
+  }
+  .modal-edit-panel--property .field-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5px 6px;
+  }
+  .modal-edit-panel--property .field {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+  .modal-edit-panel--property .field label {
+    font-size: 0.58rem;
+    font-weight: 600;
+    margin-bottom: 0;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .modal-edit-panel--property .field .unit { display: none; }
+  .modal-edit-panel--property .field input,
+  .modal-edit-panel--property .field select {
+    padding: 4px 5px;
+    font-size: 0.68rem;
+    height: 26px;
+    border-radius: 4px;
+    border-width: 1.5px;
+  }
+  .modal-edit-panel--property .hint { display: none; }
+  .modal-edit-panel--property .page-header { display: none; }
 }
 
 /* ══════════════════════════════════════════════════════════════════════

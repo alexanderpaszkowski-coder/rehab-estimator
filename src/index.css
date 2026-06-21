@@ -4927,6 +4927,7 @@ textarea { resize: vertical; }
   min-height: 0;
   display: flex;
   flex-direction: column;
+  align-items: stretch;
   gap: 5px;
 }
 .dwf-sidebar-actions .dcard-action-btn {

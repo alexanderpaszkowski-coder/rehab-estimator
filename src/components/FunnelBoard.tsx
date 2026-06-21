@@ -682,7 +682,6 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
           {/* ── Waterfall section — scrolls if sidebar is too short ── */}
           <div className="dwf-waterfall-scroll">
               <div className="dwf-section-divider" />
-              <div className="dwf-label">Deal Waterfall</div>
               <div className="dwf-rows" key={waterfallFlashKey}>
                 <div className="dwf-row">
                   <span className="dwf-row-label">{arvLabel}</span>

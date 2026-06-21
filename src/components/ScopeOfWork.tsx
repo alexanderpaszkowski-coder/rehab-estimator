@@ -59,8 +59,6 @@ function SowAccordion({ home, onChange }: { home: HomeFile; onChange: Props['onC
     return { totalEst, activeCount }
   }
 
-  const pending   = cats.filter((c) => getCatStats(c).activeCount === 0)
-  const completed = cats.filter((c) => getCatStats(c).activeCount > 0)
   const activeCat = cats.find((c) => c.category === selected) ?? null
 
   const renderCard = (cat: CatMeta) => {
@@ -153,29 +151,10 @@ function SowAccordion({ home, onChange }: { home: HomeFile; onChange: Props['onC
         </div>
       )}
 
-      {/* Pending grid */}
-      {pending.length > 0 && (
-        <div className="sow-grid-section">
-          {pending.length < cats.length && (
-            <div className="sow-grid-section-label">To fill in</div>
-          )}
-          <div className="sow-box-grid">
-            {pending.map(renderCard)}
-          </div>
-        </div>
-      )}
-
-      {/* Completed grid */}
-      {completed.length > 0 && (
-        <div className="sow-grid-section">
-          <div className="sow-grid-section-label sow-grid-section-label--done">
-            ✓ Filled in
-          </div>
-          <div className="sow-box-grid">
-            {completed.map(renderCard)}
-          </div>
-        </div>
-      )}
+      {/* Single unified grid — all categories stay in their original order */}
+      <div className="sow-box-grid">
+        {cats.map(renderCard)}
+      </div>
 
     </div>
   )

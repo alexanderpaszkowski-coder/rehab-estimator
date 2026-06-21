@@ -669,9 +669,6 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
               <span className="dwf-meta-dot">·</span>
               <span>{formatShortDate(home.createdAt)}</span>
             </div>
-            {home.addedByName && (
-              <div className="dwf-added-by">Added by <strong>{home.addedByName}</strong></div>
-            )}
           </div>
 
           {/* ── Deal analysis tags ── */}

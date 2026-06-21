@@ -4905,17 +4905,24 @@ textarea { resize: vertical; }
 }
 
 /* ── Sidebar action buttons — flex-grow to fill blank space at bottom ─── */
-.dwf-sidebar-actions {
+/* Waterfall rows — absorbs remaining sidebar height, scrolls if tight */
+.dwf-waterfall-scroll {
   flex: 1;
   min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+}
+.dwf-waterfall-scroll::-webkit-scrollbar { display: none; }
+
+.dwf-sidebar-actions {
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
   padding-top: 8px;
   gap: 0;
 }
 .dwf-sidebar-actions .summary-link-actions {
-  flex: 1;
-  min-height: 0;
   display: flex;
   flex-direction: column;
   padding: 0;
@@ -4923,19 +4930,17 @@ textarea { resize: vertical; }
   background: transparent;
 }
 .dwf-sidebar-actions .dcard-actions {
-  flex: 1;
-  min-height: 0;
   display: flex;
   flex-direction: column;
   align-items: stretch;
   gap: 5px;
 }
 .dwf-sidebar-actions .dcard-action-btn {
-  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 7px;
+  height: 32px;
   font-size: 0.71rem;
   font-weight: 600;
   padding: 0 12px;
@@ -4946,7 +4951,6 @@ textarea { resize: vertical; }
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s;
   text-decoration: none;
-  min-height: 28px;
   white-space: nowrap;
 }
 .dwf-sidebar-actions .dcard-action-btn:hover:not(:disabled) {

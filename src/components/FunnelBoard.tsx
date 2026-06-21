@@ -679,7 +679,8 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
             <TagGroups home={home} />
           </div>
 
-          <>
+          {/* ── Waterfall section — scrolls if sidebar is too short ── */}
+          <div className="dwf-waterfall-scroll">
               <div className="dwf-section-divider" />
               <div className="dwf-label">Deal Waterfall</div>
               <div className="dwf-rows" key={waterfallFlashKey}>
@@ -735,8 +736,9 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
                   </span>
                 </div>
               </div>
+          </div>
 
-          {/* ── Action buttons pinned to bottom of sidebar ── */}
+          {/* ── Action buttons always visible at bottom of sidebar ── */}
           <div className="dwf-sidebar-actions">
             <SummaryLinkActions
               home={home}
@@ -745,8 +747,6 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
               onUpdateHome={onUpdateHome}
             />
           </div>
-
-          </>
         </div>
 
         <div className={`modal-tab-body${editTab === 'overview' ? ' modal-tab-body--overview' : ''}`}>

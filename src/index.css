@@ -2201,10 +2201,13 @@ textarea { resize: vertical; }
   padding: 20px;
   overscroll-behavior: none;
 }
-.summary-modal,
-.modal {
+.summary-modal {
   overscroll-behavior: contain;
   touch-action: none;
+}
+.modal {
+  overscroll-behavior: contain;
+  touch-action: pan-y; /* allow the intake wizard to scroll on touch */
 }
 
 /* Only the inner scrollable body should respond to vertical pan */
@@ -2217,7 +2220,7 @@ textarea { resize: vertical; }
   border: 2px solid var(--border);
   width: 100%;
   max-width: 580px;
-  max-height: 92vh;
+  max-height: 92dvh; /* dvh accounts for mobile browser chrome (address bar) */
   overflow-y: auto;
   box-shadow: 0 32px 80px rgba(0,0,0,.2);
   display: flex;
@@ -2296,6 +2299,10 @@ textarea { resize: vertical; }
   padding: 22px 28px 28px;
   border-top: 2px solid var(--border);
   margin-top: 22px;
+  position: sticky;
+  bottom: 0;
+  background: var(--surface);
+  z-index: 1;
 }
 
 .source-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
@@ -6471,6 +6478,19 @@ textarea { resize: vertical; }
   }
   .modal-edit-panel--property .hint { display: none; }
   .modal-edit-panel--property .page-header { display: none; }
+
+  /* ── Intake wizard — compact on mobile so all content fits ── */
+  .modal-overlay { padding: 10px; }
+  .modal-header { padding: 16px 18px 0; }
+  .modal-header h2 { font-size: 1.1rem; }
+  .progress-bar { padding: 12px 16px 14px; }
+  .progress-dot { width: 22px; height: 22px; font-size: 0.68rem; }
+  .progress-step span { font-size: 0.65rem; }
+  .modal-body { padding: 0 18px; }
+  .modal-actions { padding: 14px 18px 18px; margin-top: 14px; }
+  .screen-grid { gap: 12px; }
+  .screen-item label, .field label { font-size: 0.78rem; margin-bottom: 6px; }
+  .condition-pill { font-size: 0.72rem; padding: 4px 10px; }
 }
 
 /* ══════════════════════════════════════════════════════════════════════

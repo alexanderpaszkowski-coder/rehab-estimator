@@ -17,6 +17,18 @@ export function QuickEstimate({ home, onChange }: Props) {
     onChange(home.quickEstimate.map((s) => (s.id === id ? { ...s, ...patch } : s)))
   }
 
+  // For systems that share a SOW category without an item-level split (e.g. Bathrooms full/half),
+  // only the first confirmed system in the category shows the cost; subsequent ones show "Included".
+  const primarySystemForCat = new Map<string, string>() // sowCat → first confirmed system.id
+  for (const system of home.quickEstimate) {
+    const sowCat = QE_TO_SOW_CATEGORY[system.id]
+    const isConfirmed = !!(sowCat && home.sowFinalized?.[sowCat])
+    const hasItemSplit = !!QE_SOW_ITEM_IDS[system.id]
+    if (isConfirmed && sowCat && !hasItemSplit && !primarySystemForCat.has(sowCat)) {
+      primarySystemForCat.set(sowCat, system.id)
+    }
+  }
+
   return (
     <div>
       <div className="page-header">
@@ -66,7 +78,10 @@ export function QuickEstimate({ home, onChange }: Props) {
               const sowCat = QE_TO_SOW_CATEGORY[system.id]
               const isConfirmed = !!(sowCat && home.sowFinalized?.[sowCat])
               const itemIds = QE_SOW_ITEM_IDS[system.id]
-              const confirmedCost = isConfirmed
+              const isSecondaryForCat = isConfirmed && sowCat && !itemIds &&
+                primarySystemForCat.get(sowCat) !== system.id
+
+              const confirmedCost = isConfirmed && !isSecondaryForCat
                 ? (itemIds ? calcSowItemsTotal(home, itemIds) : calcSowCategoryRaw(home, sowCat))
                 : null
               const displayCost = confirmedCost ?? line?.cost ?? 0
@@ -81,15 +96,22 @@ export function QuickEstimate({ home, onChange }: Props) {
                       <span className="qe-sow-label">Finalized in Scope of Work</span>
                     </td>
                     <td className="cost">
-                      <div className="cost-cell">
-                        <span className="cost-amount">{formatCurrency(displayCost)}</span>
-                        <span className="cost-confirmed-tag">
-                          <svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-                            <polyline points="2,6 5,9 10,3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                          </svg>
-                          Confirmed
-                        </span>
-                      </div>
+                      {isSecondaryForCat ? (
+                        <div className="cost-cell">
+                          <span className="cost-amount" style={{ color: 'var(--text-muted)' }}>—</span>
+                          <span className="cost-confirmed-tag">Included above</span>
+                        </div>
+                      ) : (
+                        <div className="cost-cell">
+                          <span className="cost-amount">{formatCurrency(displayCost)}</span>
+                          <span className="cost-confirmed-tag">
+                            <svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                              <polyline points="2,6 5,9 10,3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                            Confirmed
+                          </span>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 )

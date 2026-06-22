@@ -223,15 +223,30 @@ export const QE_TO_SOW_CATEGORY: Record<string, string> = {
 /**
  * When multiple QE systems share a SOW category, this maps each QE system ID
  * to the specific SOW line item IDs it is responsible for within that category.
- * Systems not listed here cover all line items in their mapped category.
+ * Systems not listed here are the sole owner of their mapped category.
  *
- * DEMOLITION & SITE PREP split:
- *   qe-5  → demo & dumpster line items  (sow-5 … sow-11)
- *   qe-28 → hazmat line items           (sow-12 asbestos, sow-13 lead-safe)
+ * DEMOLITION & SITE PREP:  qe-5 (demo) | qe-28 (hazmat)
+ * ROOF & GUTTERS:          qe-6 (roof) | qe-7 (gutters/soffit/fascia)
+ * EXTERIOR & CURB APPEAL:  qe-8 (siding) | qe-10 (ext doors) | qe-11 (garage)
+ *                          | qe-12 (landscaping) | qe-13 (concrete/driveway)
+ * INSULATION & DRYWALL:    qe-16 (insulation) | qe-17 (drywall)
  */
 export const QE_SOW_ITEM_IDS: Record<string, string[]> = {
+  // DEMOLITION & SITE PREP
   'qe-5':  ['sow-5', 'sow-6', 'sow-7', 'sow-8', 'sow-9', 'sow-10', 'sow-11'],
   'qe-28': ['sow-12', 'sow-13'],
+  // ROOF & GUTTERS
+  'qe-6':  ['sow-17', 'sow-18', 'sow-19', 'sow-20', 'sow-21'],
+  'qe-7':  ['sow-22', 'sow-23'],
+  // EXTERIOR & CURB APPEAL
+  'qe-8':  ['sow-27', 'sow-28', 'sow-29', 'sow-30'],
+  'qe-10': ['sow-31', 'sow-32', 'sow-33'],
+  'qe-11': ['sow-34', 'sow-35'],
+  'qe-12': ['sow-36', 'sow-39', 'sow-40', 'sow-41', 'sow-42'],
+  'qe-13': ['sow-37', 'sow-38'],
+  // INSULATION & DRYWALL
+  'qe-16': ['sow-69', 'sow-70'],
+  'qe-17': ['sow-71', 'sow-72', 'sow-73'],
 }
 
 /** Compute the raw SOW line-item estimate total for one category (no contingency). */
@@ -296,20 +311,24 @@ export function calcBlendedRehab(home: HomeFile): BlendedRehabResult {
     }
   }
 
-  // Which QE systems are overridden? Track which SOW categories have already
-  // contributed their total so we don't double-count.
+  // Which QE systems are overridden? Track which SOW categories (without item
+  // splits) have already contributed their total so we don't double-count.
   const sowCategoryContributed = new Set<string>()
   const lineCosts: BlendedRehabResult['lineCosts'] = []
 
   for (const system of home.quickEstimate) {
     const sowCat = QE_TO_SOW_CATEGORY[system.id]
     if (sowCat && sowOverrideCategories.has(sowCat)) {
-      // This QE system is overridden by SOW — contribute the category total once
-      if (!sowCategoryContributed.has(sowCat)) {
-        lineCosts.push({ name: sowCat, cost: sowCategoryTotals.get(sowCat) ?? 0, source: 'sow' })
+      const itemIds = QE_SOW_ITEM_IDS[system.id]
+      if (itemIds) {
+        // System owns a specific slice of the category — always add its portion
+        lineCosts.push({ name: system.name, cost: calcSowItemsTotal(home, itemIds), source: 'sow' })
+      } else if (!sowCategoryContributed.has(sowCat)) {
+        // No item split — first (or only) system for this category gets the full total
+        lineCosts.push({ name: system.name, cost: sowCategoryTotals.get(sowCat) ?? 0, source: 'sow' })
         sowCategoryContributed.add(sowCat)
       }
-      // Subsequent QE systems in the same SOW category contribute $0
+      // else: secondary system sharing a non-split category (e.g. Bathrooms half) — skip to avoid double-count
     } else {
       lineCosts.push({ name: system.name, cost: calcQuickSystemCost(system, home.property), source: 'estimate' })
     }

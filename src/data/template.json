@@ -422,24 +422,6 @@
   "sowItems": [
     {
       "type": "category",
-      "name": "DETAILED SCOPE OF WORK \u2014 estimate, then level bids, then track actuals",
-      "category": "DETAILED SCOPE OF WORK"
-    },
-    {
-      "type": "line",
-      "id": "sow-3",
-      "category": "DETAILED SCOPE OF WORK",
-      "name": "Line Item",
-      "spec": "Spec / What's Included",
-      "unit": "Unit",
-      "unitCost": "Unit Cost",
-      "qty": "Qty",
-      "bid": "",
-      "actual": "",
-      "notes": ""
-    },
-    {
-      "type": "category",
       "name": "DEMOLITION & SITE PREP",
       "category": "DEMOLITION & SITE PREP"
     },

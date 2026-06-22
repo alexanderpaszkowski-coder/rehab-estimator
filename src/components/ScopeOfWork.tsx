@@ -88,14 +88,18 @@ function SowAccordion({ home, onChange }: { home: HomeFile; onChange: Props['onC
             )}
           </div>
         </button>
-        {isDone && isMapped && (
+        {isDone && (
           <button
             type="button"
             className={`sow-finalize-btn${isFinalized ? ' sow-finalize-btn--on' : ''}`}
             onClick={() => toggleFinalize(cat.category)}
             title={isFinalized
-              ? 'Finalized — SOW total is overriding the Quick Estimate for this category. Click to unlock.'
-              : 'Finalize — lock in this SOW total to replace the Quick Estimate for this category.'
+              ? (isMapped
+                  ? 'Finalized — SOW total is overriding the Quick Estimate for this category. Click to unlock.'
+                  : 'Finalized — SOW total is added to the rehab budget. Click to unlock.')
+              : (isMapped
+                  ? 'Finalize — lock in this SOW total to replace the Quick Estimate for this category.'
+                  : 'Finalize — lock in this SOW total to add it to the rehab budget.')
             }
           >
             {isFinalized ? '🔒 Finalized' : 'Finalize'}

@@ -27,6 +27,10 @@ function sowUnitLabel(unit: string): string {
   return SOW_UNIT_LABELS[unit] ?? unit.toLowerCase()
 }
 
+function isFlatAllowance(unit: string): boolean {
+  return unit === 'LS'
+}
+
 interface Props {
   home: HomeFile
   onChange: (patch: Partial<Pick<HomeFile, 'sowLines' | 'sowFinalized'>>) => void
@@ -154,7 +158,9 @@ function SowAccordion({ home, onChange }: { home: HomeFile; onChange: Props['onC
                 <span className="sow-micro-item-name" title={lineTooltip(line)}>{line.name}</span>
                 <span className="sow-micro-unit-cost">
                   ${line.unitCost}
-                  {line.unit && <span className="sow-micro-rate-unit">/{line.unit}</span>}
+                  {line.unit && !isFlatAllowance(line.unit) && (
+                    <span className="sow-micro-rate-unit">/{line.unit}</span>
+                  )}
                 </span>
                 <div className="sow-micro-qty">
                   <input
@@ -162,10 +168,16 @@ function SowAccordion({ home, onChange }: { home: HomeFile; onChange: Props['onC
                     className="sow-micro-input"
                     value={data.qty === '' ? '' : data.qty}
                     placeholder="0"
-                    title={line.unit ? `Quantity (${sowUnitLabel(line.unit)})` : undefined}
+                    title={
+                      isFlatAllowance(line.unit)
+                        ? 'Enter 1 to include this flat allowance'
+                        : line.unit
+                          ? `Quantity (${sowUnitLabel(line.unit)})`
+                          : undefined
+                    }
                     onChange={(e) => updateLine(line.id, 'qty', e.target.value)}
                   />
-                  {line.unit && (
+                  {line.unit && !isFlatAllowance(line.unit) && (
                     <span className="sow-micro-unit-label">{sowUnitLabel(line.unit)}</span>
                   )}
                 </div>
@@ -301,20 +313,30 @@ export function ScopeOfWork({ home, onChange, compact = false }: Props) {
             <div key={item.id} className={`sow-line ${hasQty ? 'has-qty' : ''}`}>
               <span className="line-name" title={lineTooltip(item)}>{item.name}</span>
               <span className="line-spec">{item.spec}</span>
-              <span className="sow-unit-label">{sowUnitLabel(item.unit)}</span>
+              <span className="sow-unit-label">
+                {isFlatAllowance(item.unit) ? '—' : sowUnitLabel(item.unit)}
+              </span>
               <span className="mono">
                 ${item.unitCost}
-                {item.unit && <span className="sow-rate-unit">/{item.unit}</span>}
+                {item.unit && !isFlatAllowance(item.unit) && (
+                  <span className="sow-rate-unit">/{item.unit}</span>
+                )}
               </span>
               <div className="sow-qty-wrap">
                 <input
                   type="number"
                   value={data.qty === '' ? '' : data.qty}
                   placeholder="0"
-                  title={item.unit ? `Quantity (${sowUnitLabel(item.unit)})` : undefined}
+                  title={
+                    isFlatAllowance(item.unit)
+                      ? 'Enter 1 to include this flat allowance'
+                      : item.unit
+                        ? `Quantity (${sowUnitLabel(item.unit)})`
+                        : undefined
+                  }
                   onChange={(e) => updateLine(item.id, 'qty', e.target.value)}
                 />
-                {item.unit && (
+                {item.unit && !isFlatAllowance(item.unit) && (
                   <span className="sow-qty-unit">{sowUnitLabel(item.unit)}</span>
                 )}
               </div>

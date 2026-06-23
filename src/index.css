@@ -5688,11 +5688,18 @@ textarea { resize: vertical; }
 }
 .sow-detail-close:hover { background: var(--surface-3); color: var(--text); }
 
+.sow-detail-table {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 84px 112px 76px 76px;
+  column-gap: 8px;
+  padding: 0 16px;
+}
+
 .sow-detail-col-header {
   display: grid;
-  grid-template-columns: 1fr 74px 90px 70px 70px;
-  gap: 6px;
-  padding: 5px 16px;
+  grid-template-columns: minmax(0, 1fr) 84px 112px 76px 76px;
+  grid-column: 1 / -1;
+  padding: 5px 0;
   background: var(--surface-2);
   font-size: 0.6rem;
   font-weight: 700;
@@ -5703,16 +5710,30 @@ textarea { resize: vertical; }
   position: sticky;
   top: 0;
   z-index: 1;
+  align-items: end;
 }
 
 .sow-detail-row {
   display: grid;
-  grid-template-columns: 1fr 74px 90px 70px 70px;
-  gap: 6px;
-  padding: 5px 16px;
+  grid-template-columns: minmax(0, 1fr) 84px 112px 76px 76px;
+  grid-column: 1 / -1;
+  padding: 5px 0;
   align-items: center;
   border-bottom: 1px solid var(--border);
 }
+
+@supports (grid-template-columns: subgrid) {
+  .sow-detail-col-header,
+  .sow-detail-row {
+    grid-template-columns: subgrid;
+  }
+}
+
+.sow-dcol--item { text-align: left; min-width: 0; }
+.sow-dcol--rate,
+.sow-dcol--est,
+.sow-dcol--bid { text-align: right; }
+.sow-dcol--qty { text-align: left; min-width: 0; }
 .sow-detail-row:last-child { border-bottom: none; }
 .sow-detail-row:hover { background: var(--surface-2); }
 .sow-detail-row--active { background: #fffdf8; }
@@ -5731,8 +5752,8 @@ textarea { resize: vertical; }
   font-size: 0.72rem;
   font-family: var(--mono);
   color: var(--text-muted);
-  text-align: right;
   line-height: 1.15;
+  white-space: nowrap;
 }
 .sow-micro-rate-unit {
   display: inline;
@@ -5745,10 +5766,18 @@ textarea { resize: vertical; }
   align-items: center;
   gap: 4px;
   min-width: 0;
+  overflow: hidden;
 }
 .sow-micro-qty .sow-micro-input {
-  width: 42px;
+  width: 44px;
   flex: none;
+}
+.sow-micro-bid {
+  min-width: 0;
+}
+.sow-micro-bid .sow-micro-input {
+  width: 100%;
+  box-sizing: border-box;
 }
 .sow-micro-unit-label {
   flex-shrink: 0;
@@ -5779,7 +5808,7 @@ textarea { resize: vertical; }
   font-family: var(--mono);
   font-weight: 600;
   color: var(--text);
-  text-align: right;
+  white-space: nowrap;
 }
 
 /* ── Auction Alert Bar ───────────────────────────────────────────────── */

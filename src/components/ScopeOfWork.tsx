@@ -142,56 +142,60 @@ function SowAccordion({ home, onChange }: { home: HomeFile; onChange: Props['onC
             <span className="sow-detail-title">{activeCat.name}</span>
             <button type="button" className="sow-detail-close" onClick={() => setSelected(null)}>✕</button>
           </div>
-          <div className="sow-detail-col-header">
-            <span>Item</span>
-            <span>$/unit</span>
-            <span>Qty</span>
-            <span>Est.</span>
-            <span>Bid</span>
-          </div>
-          {activeCat.lines.map((line) => {
-            const data = home.sowLines[line.id] ?? { qty: '', bid: '', actual: '', notes: '' }
-            const estimate = calcLineEstimate(line.unitCost, data.qty, line.category, home.property)
-            const hasQty = num(data.qty) > 0
-            return (
-              <div key={line.id} className={`sow-detail-row${hasQty ? ' sow-detail-row--active' : ''}`}>
-                <span className="sow-micro-item-name" title={lineTooltip(line)}>{line.name}</span>
-                <span className="sow-micro-unit-cost">
-                  ${line.unitCost}
-                  {line.unit && !isFlatAllowance(line.unit) && (
-                    <span className="sow-micro-rate-unit">/{line.unit}</span>
-                  )}
-                </span>
-                <div className="sow-micro-qty">
-                  <input
-                    type="number"
-                    className="sow-micro-input"
-                    value={data.qty === '' ? '' : data.qty}
-                    placeholder="0"
-                    title={
-                      isFlatAllowance(line.unit)
-                        ? 'Enter 1 to include this flat allowance'
-                        : line.unit
-                          ? `Quantity (${sowUnitLabel(line.unit)})`
-                          : undefined
-                    }
-                    onChange={(e) => updateLine(line.id, 'qty', e.target.value)}
-                  />
-                  {line.unit && (
-                    <span className="sow-micro-unit-label">{sowUnitLabel(line.unit)}</span>
-                  )}
+          <div className="sow-detail-table">
+            <div className="sow-detail-col-header">
+              <span className="sow-dcol sow-dcol--item">Item</span>
+              <span className="sow-dcol sow-dcol--rate">$/unit</span>
+              <span className="sow-dcol sow-dcol--qty">Qty</span>
+              <span className="sow-dcol sow-dcol--est">Est.</span>
+              <span className="sow-dcol sow-dcol--bid">Bid</span>
+            </div>
+            {activeCat.lines.map((line) => {
+              const data = home.sowLines[line.id] ?? { qty: '', bid: '', actual: '', notes: '' }
+              const estimate = calcLineEstimate(line.unitCost, data.qty, line.category, home.property)
+              const hasQty = num(data.qty) > 0
+              return (
+                <div key={line.id} className={`sow-detail-row${hasQty ? ' sow-detail-row--active' : ''}`}>
+                  <span className="sow-micro-item-name sow-dcol sow-dcol--item" title={lineTooltip(line)}>{line.name}</span>
+                  <span className="sow-micro-unit-cost sow-dcol sow-dcol--rate">
+                    ${line.unitCost}
+                    {line.unit && !isFlatAllowance(line.unit) && (
+                      <span className="sow-micro-rate-unit">/{line.unit}</span>
+                    )}
+                  </span>
+                  <div className="sow-micro-qty sow-dcol sow-dcol--qty">
+                    <input
+                      type="number"
+                      className="sow-micro-input"
+                      value={data.qty === '' ? '' : data.qty}
+                      placeholder="0"
+                      title={
+                        isFlatAllowance(line.unit)
+                          ? 'Enter 1 to include this flat allowance'
+                          : line.unit
+                            ? `Quantity (${sowUnitLabel(line.unit)})`
+                            : undefined
+                      }
+                      onChange={(e) => updateLine(line.id, 'qty', e.target.value)}
+                    />
+                    {line.unit && (
+                      <span className="sow-micro-unit-label">{sowUnitLabel(line.unit)}</span>
+                    )}
+                  </div>
+                  <span className="sow-micro-est sow-dcol sow-dcol--est">{estimate > 0 ? formatCurrency(estimate) : '—'}</span>
+                  <div className="sow-micro-bid sow-dcol sow-dcol--bid">
+                    <input
+                      type="number"
+                      className="sow-micro-input"
+                      value={data.bid === '' ? '' : data.bid}
+                      placeholder="—"
+                      onChange={(e) => updateLine(line.id, 'bid', e.target.value)}
+                    />
+                  </div>
                 </div>
-                <span className="sow-micro-est">{estimate > 0 ? formatCurrency(estimate) : '—'}</span>
-                <input
-                  type="number"
-                  className="sow-micro-input"
-                  value={data.bid === '' ? '' : data.bid}
-                  placeholder="—"
-                  onChange={(e) => updateLine(line.id, 'bid', e.target.value)}
-                />
-              </div>
-            )
-          })}
+              )
+            })}
+          </div>
         </div>
       )}
 

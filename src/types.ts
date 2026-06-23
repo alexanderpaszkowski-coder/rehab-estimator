@@ -95,6 +95,7 @@ export interface SowLine {
   bid: number | string
   actual: number | string
   notes: string
+  tip?: string
 }
 
 export interface SowCategory {

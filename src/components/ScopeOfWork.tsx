@@ -8,6 +8,11 @@ import { copyScopeOfWork } from '../lib/copyContent'
 /** All SOW category strings that have a corresponding QuickEstimate system */
 const QE_MAPPED_SOW_CATS = new Set(Object.values(QE_TO_SOW_CATEGORY))
 
+function lineTooltip(line: Pick<SowLine, 'spec' | 'tip'>): string | undefined {
+  const parts = [line.spec, line.tip].filter(Boolean)
+  return parts.length ? parts.join('\n\n') : undefined
+}
+
 interface Props {
   home: HomeFile
   onChange: (patch: Partial<Pick<HomeFile, 'sowLines' | 'sowFinalized'>>) => void
@@ -132,7 +137,7 @@ function SowAccordion({ home, onChange }: { home: HomeFile; onChange: Props['onC
             const hasQty = num(data.qty) > 0
             return (
               <div key={line.id} className={`sow-detail-row${hasQty ? ' sow-detail-row--active' : ''}`}>
-                <span className="sow-micro-item-name" title={line.spec ?? undefined}>{line.name}</span>
+                <span className="sow-micro-item-name" title={lineTooltip(line)}>{line.name}</span>
                 <span className="sow-micro-unit-cost">${line.unitCost}</span>
                 <input
                   type="number"
@@ -271,7 +276,7 @@ export function ScopeOfWork({ home, onChange, compact = false }: Props) {
 
           return (
             <div key={item.id} className={`sow-line ${hasQty ? 'has-qty' : ''}`}>
-              <span className="line-name">{item.name}</span>
+              <span className="line-name" title={lineTooltip(item)}>{item.name}</span>
               <span className="line-spec">{item.spec}</span>
               <span style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>{item.unit}</span>
               <span className="mono">${item.unitCost}</span>

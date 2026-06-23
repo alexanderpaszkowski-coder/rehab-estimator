@@ -432,11 +432,12 @@
       "name": "Interior demo \u2014 full gut",
       "spec": "Strip to studs: plaster/drywall, flooring, fixtures, cabinets",
       "unit": "SF",
-      "unitCost": 3.5,
+      "unitCost": 2,
       "qty": "",
       "bid": "",
       "actual": "",
-      "notes": ""
+      "notes": "",
+      "tip": "Self-perform or use day-labor crews ($40\u2013$80/hr); salvage and sell copper, intact appliances, and HVAC for scrap to offset cost. Keep a bin staged so the crew never stops to haul."
     },
     {
       "type": "line",
@@ -445,11 +446,12 @@
       "name": "Interior demo \u2014 light/selective",
       "spec": "Flooring, fixtures, partial walls only",
       "unit": "SF",
-      "unitCost": 1.5,
+      "unitCost": 1,
       "qty": "",
       "bid": "",
       "actual": "",
-      "notes": ""
+      "notes": "",
+      "tip": "Demo only what's actually being replaced; protect keep-areas to avoid collateral repair. Cheaper than gutting whenever finishes are salvageable."
     },
     {
       "type": "line",
@@ -458,11 +460,12 @@
       "name": "Kitchen demo",
       "spec": "Cabinets, counters, appliances out",
       "unit": "EA",
-      "unitCost": 600,
+      "unitCost": 400,
       "qty": "",
       "bid": "",
       "actual": "",
-      "notes": ""
+      "notes": "",
+      "tip": "Unscrew (don't smash) intact cabinets \u2014 donate to a Habitat ReStore for a tax deduction or resell on Marketplace. Sell working appliances to recover cash."
     },
     {
       "type": "line",
@@ -471,11 +474,12 @@
       "name": "Bathroom demo (per bath)",
       "spec": "Tub, vanity, toilet, tile out",
       "unit": "EA",
-      "unitCost": 450,
+      "unitCost": 300,
       "qty": "",
       "bid": "",
       "actual": "",
-      "notes": ""
+      "notes": "",
+      "tip": "Cast-iron tubs have scrap value; keep sound backer board to cut rebuild cost. Reglaze instead of replacing where condition allows."
     },
     {
       "type": "line",
@@ -484,11 +488,12 @@
       "name": "Wall paneling removal",
       "spec": "Tear-off + prep for drywall",
       "unit": "SF",
-      "unitCost": 0.75,
+      "unitCost": 0.5,
       "qty": "",
       "bid": "",
       "actual": "",
-      "notes": ""
+      "notes": "",
+      "tip": "Nailed panels pull fast and cheap; if the wall behind is sound, drywall/skim-coat over the paneling and skip this line item entirely."
     },
     {
       "type": "line",
@@ -497,11 +502,12 @@
       "name": "Dumpster \u2014 30 yd",
       "spec": "Haul + disposal",
       "unit": "EA",
-      "unitCost": 600,
+      "unitCost": 450,
       "qty": "",
       "bid": "",
       "actual": "",
-      "notes": ""
+      "notes": "",
+      "tip": "Quote local Chicago independents against national haulers; ask for an all-in flat rate including tonnage. Keep the bin on the property/driveway to avoid a $25\u2013$60/day street permit."
     },
     {
       "type": "line",
@@ -510,11 +516,12 @@
       "name": "Dumpster \u2014 40 yd",
       "spec": "Haul + disposal",
       "unit": "EA",
-      "unitCost": 750,
+      "unitCost": 550,
       "qty": "",
       "bid": "",
       "actual": "",
-      "notes": ""
+      "notes": "",
+      "tip": "Break down bulky debris to fill efficiently and avoid a second haul; route clean concrete/fill separately (cheaper than mixed-load tonnage overage at $60\u2013$90/ton)."
     },
     {
       "type": "line",
@@ -523,11 +530,12 @@
       "name": "Asbestos test + abatement allowance",
       "spec": "Licensed removal (9x9 tile, pipe wrap)",
       "unit": "LS",
-      "unitCost": 4000,
+      "unitCost": 2000,
       "qty": "",
       "bid": "",
       "actual": "",
-      "notes": ""
+      "notes": "",
+      "tip": "Test first ($375), then abate only what the rehab actually disturbs. Many flips leave encapsulated, non-friable materials (e.g., floor tile/mastic) in place under new flooring and avoid abatement altogether. Spend the rest of the allowance only on a positive result."
     },
     {
       "type": "line",
@@ -536,11 +544,12 @@
       "name": "Lead-safe (RRP) containment",
       "spec": "Pre-1978 practices premium",
       "unit": "LS",
-      "unitCost": 1200,
+      "unitCost": 500,
       "qty": "",
       "bid": "",
       "actual": "",
-      "notes": ""
+      "notes": "",
+      "tip": "Get your firm RRP-certified ($300 / 5 yrs) to dodge the certified-contractor wage premium on pre-1978 homes. Reuse containment setups and batch dust-generating work to minimize separate setups."
     },
     {
       "type": "subtotal",

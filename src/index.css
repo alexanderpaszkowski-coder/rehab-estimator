@@ -801,7 +801,7 @@ textarea { resize: vertical; }
 .sow-scroll { max-height: calc(100vh - 300px); overflow: auto; border: 1px solid var(--border); border-radius: var(--radius); }
 .sow-header {
   display: grid;
-  grid-template-columns: 1.4fr 1.6fr 50px 80px 70px 90px 90px 90px 1fr;
+  grid-template-columns: 1.4fr 1.6fr 58px 88px 88px 90px 90px 90px 1fr;
   gap: 8px;
   padding: 8px 14px;
   font-size: 0.68rem;
@@ -830,7 +830,7 @@ textarea { resize: vertical; }
 }
 .sow-line {
   display: grid;
-  grid-template-columns: 1.4fr 1.6fr 50px 80px 70px 90px 90px 90px 1fr;
+  grid-template-columns: 1.4fr 1.6fr 58px 88px 88px 90px 90px 90px 1fr;
   gap: 8px;
   padding: 7px 14px;
   border-bottom: 1px solid var(--border);
@@ -843,6 +843,38 @@ textarea { resize: vertical; }
 .sow-line .line-spec { font-size: 0.74rem; color: var(--text-muted); }
 .sow-line input { padding: 5px 7px; font-size: 0.8rem; }
 .sow-line .mono { font-family: var(--mono); font-size: 0.8rem; text-align: right; }
+.sow-unit-label {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+.sow-rate-unit {
+  font-size: 0.62rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-left: 1px;
+}
+.sow-qty-wrap {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+.sow-qty-wrap input {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+  font-family: var(--mono);
+}
+.sow-qty-unit {
+  flex-shrink: 0;
+  font-size: 0.66rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  line-height: 1.1;
+  max-width: 36px;
+}
 
 /* ── Summary table ─────────────────────────────────── */
 .flag-badge {
@@ -5658,7 +5690,7 @@ textarea { resize: vertical; }
 
 .sow-detail-col-header {
   display: grid;
-  grid-template-columns: 1fr 54px 54px 70px 70px;
+  grid-template-columns: 1fr 56px 88px 70px 70px;
   gap: 6px;
   padding: 5px 16px;
   background: var(--surface-2);
@@ -5675,7 +5707,7 @@ textarea { resize: vertical; }
 
 .sow-detail-row {
   display: grid;
-  grid-template-columns: 1fr 54px 54px 70px 70px;
+  grid-template-columns: 1fr 56px 88px 70px 70px;
   gap: 6px;
   padding: 5px 16px;
   align-items: center;
@@ -5700,6 +5732,32 @@ textarea { resize: vertical; }
   font-family: var(--mono);
   color: var(--text-muted);
   text-align: right;
+  line-height: 1.15;
+}
+.sow-micro-rate-unit {
+  display: block;
+  font-size: 0.56rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+}
+.sow-micro-qty {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+.sow-micro-qty .sow-micro-input {
+  flex: 1;
+  min-width: 0;
+}
+.sow-micro-unit-label {
+  flex-shrink: 0;
+  font-size: 0.58rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  line-height: 1.1;
+  max-width: 34px;
 }
 .sow-micro-input {
   width: 100%;

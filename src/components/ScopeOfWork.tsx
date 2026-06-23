@@ -13,6 +13,20 @@ function lineTooltip(line: Pick<SowLine, 'spec' | 'tip'>): string | undefined {
   return parts.length ? parts.join('\n\n') : undefined
 }
 
+const SOW_UNIT_LABELS: Record<string, string> = {
+  SF: 'sq ft',
+  EA: 'each',
+  LS: 'flat',
+  SQ: 'sq',
+  LF: 'lin ft',
+  FT: 'ft',
+}
+
+function sowUnitLabel(unit: string): string {
+  if (!unit) return ''
+  return SOW_UNIT_LABELS[unit] ?? unit.toLowerCase()
+}
+
 interface Props {
   home: HomeFile
   onChange: (patch: Partial<Pick<HomeFile, 'sowLines' | 'sowFinalized'>>) => void
@@ -138,14 +152,23 @@ function SowAccordion({ home, onChange }: { home: HomeFile; onChange: Props['onC
             return (
               <div key={line.id} className={`sow-detail-row${hasQty ? ' sow-detail-row--active' : ''}`}>
                 <span className="sow-micro-item-name" title={lineTooltip(line)}>{line.name}</span>
-                <span className="sow-micro-unit-cost">${line.unitCost}</span>
-                <input
-                  type="number"
-                  className="sow-micro-input"
-                  value={data.qty === '' ? '' : data.qty}
-                  placeholder="0"
-                  onChange={(e) => updateLine(line.id, 'qty', e.target.value)}
-                />
+                <span className="sow-micro-unit-cost">
+                  ${line.unitCost}
+                  {line.unit && <span className="sow-micro-rate-unit">/{line.unit}</span>}
+                </span>
+                <div className="sow-micro-qty">
+                  <input
+                    type="number"
+                    className="sow-micro-input"
+                    value={data.qty === '' ? '' : data.qty}
+                    placeholder="0"
+                    title={line.unit ? `Quantity (${sowUnitLabel(line.unit)})` : undefined}
+                    onChange={(e) => updateLine(line.id, 'qty', e.target.value)}
+                  />
+                  {line.unit && (
+                    <span className="sow-micro-unit-label">{sowUnitLabel(line.unit)}</span>
+                  )}
+                </div>
                 <span className="sow-micro-est">{estimate > 0 ? formatCurrency(estimate) : '—'}</span>
                 <input
                   type="number"
@@ -278,14 +301,23 @@ export function ScopeOfWork({ home, onChange, compact = false }: Props) {
             <div key={item.id} className={`sow-line ${hasQty ? 'has-qty' : ''}`}>
               <span className="line-name" title={lineTooltip(item)}>{item.name}</span>
               <span className="line-spec">{item.spec}</span>
-              <span style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>{item.unit}</span>
-              <span className="mono">${item.unitCost}</span>
-              <input
-                type="number"
-                value={data.qty === '' ? '' : data.qty}
-                placeholder="0"
-                onChange={(e) => updateLine(item.id, 'qty', e.target.value)}
-              />
+              <span className="sow-unit-label">{sowUnitLabel(item.unit)}</span>
+              <span className="mono">
+                ${item.unitCost}
+                {item.unit && <span className="sow-rate-unit">/{item.unit}</span>}
+              </span>
+              <div className="sow-qty-wrap">
+                <input
+                  type="number"
+                  value={data.qty === '' ? '' : data.qty}
+                  placeholder="0"
+                  title={item.unit ? `Quantity (${sowUnitLabel(item.unit)})` : undefined}
+                  onChange={(e) => updateLine(item.id, 'qty', e.target.value)}
+                />
+                {item.unit && (
+                  <span className="sow-qty-unit">{sowUnitLabel(item.unit)}</span>
+                )}
+              </div>
               <span className="mono">{formatCurrency(estimate)}</span>
               <input
                 type="number"

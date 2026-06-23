@@ -177,7 +177,7 @@ function SowAccordion({ home, onChange }: { home: HomeFile; onChange: Props['onC
                     }
                     onChange={(e) => updateLine(line.id, 'qty', e.target.value)}
                   />
-                  {line.unit && !isFlatAllowance(line.unit) && (
+                  {line.unit && (
                     <span className="sow-micro-unit-label">{sowUnitLabel(line.unit)}</span>
                   )}
                 </div>
@@ -336,7 +336,7 @@ export function ScopeOfWork({ home, onChange, compact = false }: Props) {
                   }
                   onChange={(e) => updateLine(item.id, 'qty', e.target.value)}
                 />
-                {item.unit && !isFlatAllowance(item.unit) && (
+                {item.unit && (
                   <span className="sow-qty-unit">{sowUnitLabel(item.unit)}</span>
                 )}
               </div>

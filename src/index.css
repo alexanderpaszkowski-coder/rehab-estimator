@@ -862,18 +862,18 @@ textarea { resize: vertical; }
   min-width: 0;
 }
 .sow-qty-wrap input {
-  flex: 1;
-  min-width: 0;
+  width: 56px;
+  flex: none;
   text-align: center;
   font-family: var(--mono);
 }
 .sow-qty-unit {
   flex-shrink: 0;
-  font-size: 0.66rem;
+  font-size: 0.72rem;
   font-weight: 600;
   color: var(--text-muted);
   line-height: 1.1;
-  max-width: 36px;
+  white-space: nowrap;
 }
 
 /* ── Summary table ─────────────────────────────────── */
@@ -5690,7 +5690,7 @@ textarea { resize: vertical; }
 
 .sow-detail-col-header {
   display: grid;
-  grid-template-columns: 1fr 56px 88px 70px 70px;
+  grid-template-columns: 1fr 74px 90px 70px 70px;
   gap: 6px;
   padding: 5px 16px;
   background: var(--surface-2);
@@ -5707,7 +5707,7 @@ textarea { resize: vertical; }
 
 .sow-detail-row {
   display: grid;
-  grid-template-columns: 1fr 56px 88px 70px 70px;
+  grid-template-columns: 1fr 74px 90px 70px 70px;
   gap: 6px;
   padding: 5px 16px;
   align-items: center;
@@ -5735,11 +5735,10 @@ textarea { resize: vertical; }
   line-height: 1.15;
 }
 .sow-micro-rate-unit {
-  display: block;
-  font-size: 0.56rem;
-  font-weight: 600;
+  display: inline;
+  font-size: 0.62rem;
+  font-weight: 500;
   color: var(--text-muted);
-  letter-spacing: 0.02em;
 }
 .sow-micro-qty {
   display: flex;
@@ -5748,16 +5747,16 @@ textarea { resize: vertical; }
   min-width: 0;
 }
 .sow-micro-qty .sow-micro-input {
-  flex: 1;
-  min-width: 0;
+  width: 42px;
+  flex: none;
 }
 .sow-micro-unit-label {
   flex-shrink: 0;
-  font-size: 0.58rem;
+  font-size: 0.6rem;
   font-weight: 600;
   color: var(--text-muted);
   line-height: 1.1;
-  max-width: 34px;
+  white-space: nowrap;
 }
 .sow-micro-input {
   width: 100%;

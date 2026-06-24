@@ -57,8 +57,8 @@ export function callsComplete(c: OffMarketContact)  {
 // ── Step header ──────────────────────────────────────────────────────────────
 
 function StepHeader({
-  num, title, subtitle, complete,
-}: { num: number; title: string; subtitle: string; complete: boolean }) {
+  num, title, subtitle, complete, onUndo,
+}: { num: number; title: string; subtitle: string; complete: boolean; onUndo?: () => void }) {
   return (
     <div className="contact-step-header">
       <span className={`contact-step-badge${complete ? ' contact-step-badge--done' : ''}`}>
@@ -70,7 +70,16 @@ function StepHeader({
         <span className="contact-step-title">{title}</span>
         <span className="contact-step-subtitle">{subtitle}</span>
       </div>
-      {complete && <span className="contact-step-done-chip">Done</span>}
+      {complete && (
+        <div className="contact-step-done-row">
+          <span className="contact-step-done-chip">Done</span>
+          {onUndo && (
+            <button type="button" className="contact-undo-btn" onClick={onUndo} title="Undo">
+              Undo
+            </button>
+          )}
+        </div>
+      )}
     </div>
   )
 }
@@ -139,7 +148,9 @@ export function OffMarketContactPanel({ home, onChange }: Props) {
 
       {/* ── Step 1: Property Owner ─────────────────────────────────────── */}
       <div className={`contact-step card${step1Done ? ' contact-step--done' : ''}`}>
-        <StepHeader num={1} title="Property Owner" subtitle="Look up via PropStream or county" complete={step1Done} />
+        <StepHeader num={1} title="Property Owner" subtitle="Look up via PropStream or county" complete={step1Done}
+          onUndo={step1Done ? () => patchContact({ ownerName: '', ownerName2: '' }) : undefined}
+        />
         <div className="contact-step-body">
           <div className="field">
             <label>Owner name</label>
@@ -178,7 +189,9 @@ export function OffMarketContactPanel({ home, onChange }: Props) {
 
       {/* ── Step 2: Phone Numbers ──────────────────────────────────────── */}
       <div className={`contact-step card${step2Done ? ' contact-step--done' : ''}`}>
-        <StepHeader num={2} title="Phone Numbers" subtitle="Skip-trace or PropStream (max 3)" complete={step2Done} />
+        <StepHeader num={2} title="Phone Numbers" subtitle="Skip-trace or PropStream (max 3)" complete={step2Done}
+          onUndo={step2Done ? () => patchContact({ phones: [] }) : undefined}
+        />
         <div className="contact-step-body">
           {contact.phones.length === 0 && (
             <p className="contact-empty-hint">No numbers added yet.</p>
@@ -229,7 +242,9 @@ export function OffMarketContactPanel({ home, onChange }: Props) {
 
       {/* ── Step 3: Send Mailer ────────────────────────────────────────── */}
       <div className={`contact-step card${step3Done ? ' contact-step--done' : ''}`}>
-        <StepHeader num={3} title="Send Mailer" subtitle="Record type and date sent" complete={step3Done} />
+        <StepHeader num={3} title="Send Mailer" subtitle="Record type and date sent" complete={step3Done}
+          onUndo={step3Done ? () => patchContact({ mailerSentAt: null, mailerType: null }) : undefined}
+        />
         <div className="contact-step-body">
           <div className="contact-step-field-block">
             <label className="contact-field-label">Type</label>
@@ -259,7 +274,9 @@ export function OffMarketContactPanel({ home, onChange }: Props) {
 
       {/* ── Step 4: Phone Calls ────────────────────────────────────────── */}
       <div className={`contact-step card${step4Done ? ' contact-step--done' : ''}`}>
-        <StepHeader num={4} title="Phone Contact" subtitle="Log each call attempt" complete={step4Done} />
+        <StepHeader num={4} title="Phone Contact" subtitle="Log each call attempt" complete={step4Done}
+          onUndo={step4Done ? () => patchContact({ callAttempts: [] }) : undefined}
+        />
         <div className="contact-step-body">
           {contact.callAttempts.length > 0 && (
             <div className="call-log">

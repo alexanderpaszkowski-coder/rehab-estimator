@@ -25,11 +25,11 @@ function todayISO(): string {
 }
 
 const CALL_OUTCOME_OPTIONS: { id: CallOutcome; label: string; cls: string }[] = [
-  { id: 'no-answer',     label: 'No Answer',     cls: 'grey'    },
-  { id: 'voicemail',     label: 'Voicemail',      cls: 'yellow'  },
-  { id: 'reached',       label: 'Reached',        cls: 'green'   },
-  { id: 'not-interested', label: 'Not Interested', cls: 'red'    },
-  { id: 'interested',    label: 'Interested',     cls: 'success' },
+  { id: 'no-answer',      label: 'No Answer',     cls: 'grey'    },
+  { id: 'voicemail',      label: 'Voicemail',      cls: 'yellow'  },
+  { id: 'reached',        label: 'Reached',        cls: 'green'   },
+  { id: 'not-interested', label: 'Not Interested', cls: 'red'     },
+  { id: 'interested',     label: 'Interested',     cls: 'success' },
 ]
 
 const MAILER_TYPES: { id: MailerType; label: string }[] = [
@@ -47,10 +47,10 @@ const PHONE_TYPES: { id: PhoneType; label: string }[] = [
 
 // ── Step completion helpers ──────────────────────────────────────────────────
 
-function ownerComplete(c: OffMarketContact) { return c.ownerName.trim().length > 0 }
-function phonesComplete(c: OffMarketContact) { return c.phones.some(p => p.number.trim().length > 0) }
-function mailerComplete(c: OffMarketContact) { return !!c.mailerSentAt }
-function callsComplete(c: OffMarketContact) {
+export function ownerComplete(c: OffMarketContact)  { return c.ownerName.trim().length > 0 }
+export function phonesComplete(c: OffMarketContact) { return c.phones.some(p => p.number.trim().length > 0) }
+export function mailerComplete(c: OffMarketContact) { return !!c.mailerSentAt }
+export function callsComplete(c: OffMarketContact)  {
   return c.callAttempts.some(a => a.outcome === 'reached' || a.outcome === 'interested')
 }
 
@@ -63,7 +63,7 @@ function StepHeader({
     <div className="contact-step-header">
       <span className={`contact-step-badge${complete ? ' contact-step-badge--done' : ''}`}>
         {complete
-          ? <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          ? <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
           : num}
       </span>
       <div className="contact-step-header-text">
@@ -129,13 +129,6 @@ export function OffMarketContactPanel({ home, onChange }: Props) {
     patchContact({ callAttempts: contact.callAttempts.filter(a => a.id !== id) })
   }
 
-  // ── External link helpers ──────────────────────────────────────────────────
-
-  const countySearchUrl = () => {
-    const q = encodeURIComponent(`${home.address} ${home.city} ${home.state} property owner county records`)
-    return `https://www.google.com/search?q=${q}`
-  }
-
   const step1Done = ownerComplete(contact)
   const step2Done = phonesComplete(contact)
   const step3Done = mailerComplete(contact)
@@ -146,74 +139,49 @@ export function OffMarketContactPanel({ home, onChange }: Props) {
 
       {/* ── Step 1: Property Owner ─────────────────────────────────────── */}
       <div className={`contact-step card${step1Done ? ' contact-step--done' : ''}`}>
-        <StepHeader
-          num={1}
-          title="Determine Property Owner"
-          subtitle="Look up owner info via county records or PropStream"
-          complete={step1Done}
-        />
+        <StepHeader num={1} title="Property Owner" subtitle="Look up via PropStream or county" complete={step1Done} />
         <div className="contact-step-body">
-          <div className="contact-owner-grid">
-            <div className="field">
-              <label>Owner name</label>
-              <input
-                type="text"
-                value={contact.ownerName}
-                onChange={(e) => patchContact({ ownerName: e.target.value })}
-                placeholder="First Last"
-              />
-            </div>
-            <div className="field">
-              <label>Co-owner name <span className="contact-optional">(optional)</span></label>
-              <input
-                type="text"
-                value={contact.ownerName2}
-                onChange={(e) => patchContact({ ownerName2: e.target.value })}
-                placeholder="First Last"
-              />
-            </div>
+          <div className="field">
+            <label>Owner name</label>
+            <input
+              type="text"
+              value={contact.ownerName}
+              onChange={(e) => patchContact({ ownerName: e.target.value })}
+              placeholder="First Last"
+            />
           </div>
-          <div className="contact-link-row">
+          <div className="field">
+            <label>Co-owner <span className="contact-optional">(optional)</span></label>
+            <input
+              type="text"
+              value={contact.ownerName2}
+              onChange={(e) => patchContact({ ownerName2: e.target.value })}
+              placeholder="First Last"
+            />
+          </div>
+          {home.propstreamUrl && (
             <a
               className="contact-ext-btn"
-              href={countySearchUrl()}
+              href={home.propstreamUrl}
               target="_blank"
               rel="noopener noreferrer"
             >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
               </svg>
-              County Records
+              PropStream
             </a>
-            {home.propstreamUrl && (
-              <a
-                className="contact-ext-btn"
-                href={home.propstreamUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-                  <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
-                </svg>
-                PropStream
-              </a>
-            )}
-          </div>
+          )}
         </div>
       </div>
 
       {/* ── Step 2: Phone Numbers ──────────────────────────────────────── */}
       <div className={`contact-step card${step2Done ? ' contact-step--done' : ''}`}>
-        <StepHeader
-          num={2}
-          title="Find Phone Numbers"
-          subtitle="Add up to 3 phone numbers from skip-trace or PropStream"
-          complete={step2Done}
-        />
+        <StepHeader num={2} title="Phone Numbers" subtitle="Skip-trace or PropStream (max 3)" complete={step2Done} />
         <div className="contact-step-body">
           {contact.phones.length === 0 && (
-            <p className="contact-empty-hint">No phone numbers added yet.</p>
+            <p className="contact-empty-hint">No numbers added yet.</p>
           )}
           {contact.phones.map((phone, i) => (
             <div className="phone-entry-row" key={i}>
@@ -242,7 +210,7 @@ export function OffMarketContactPanel({ home, onChange }: Props) {
                 onClick={() => removePhone(i)}
                 title="Remove"
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M18 6 6 18M6 6l12 12"/>
                 </svg>
               </button>
@@ -250,10 +218,10 @@ export function OffMarketContactPanel({ home, onChange }: Props) {
           ))}
           {contact.phones.length < 3 && (
             <button type="button" className="contact-add-btn" onClick={addPhone}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
               </svg>
-              Add phone number
+              Add number
             </button>
           )}
         </div>
@@ -261,51 +229,38 @@ export function OffMarketContactPanel({ home, onChange }: Props) {
 
       {/* ── Step 3: Send Mailer ────────────────────────────────────────── */}
       <div className={`contact-step card${step3Done ? ' contact-step--done' : ''}`}>
-        <StepHeader
-          num={3}
-          title="Send Mailer"
-          subtitle="Choose mailer type and record the date it was sent"
-          complete={step3Done}
-        />
+        <StepHeader num={3} title="Send Mailer" subtitle="Record type and date sent" complete={step3Done} />
         <div className="contact-step-body">
-          <div className="contact-mailer-grid">
-            <div className="contact-step-field-block">
-              <label className="contact-field-label">Mailer type</label>
-              <div className="condition-pills">
-                {MAILER_TYPES.map((mt) => (
-                  <button
-                    key={mt.id}
-                    type="button"
-                    className={`condition-pill ${contact.mailerType === mt.id ? 'active-light' : ''}`}
-                    onClick={() => patchContact({ mailerType: contact.mailerType === mt.id ? null : mt.id })}
-                  >
-                    {mt.label}
-                  </button>
-                ))}
-              </div>
+          <div className="contact-step-field-block">
+            <label className="contact-field-label">Type</label>
+            <div className="condition-pills">
+              {MAILER_TYPES.map((mt) => (
+                <button
+                  key={mt.id}
+                  type="button"
+                  className={`condition-pill ${contact.mailerType === mt.id ? 'active-light' : ''}`}
+                  onClick={() => patchContact({ mailerType: contact.mailerType === mt.id ? null : mt.id })}
+                >
+                  {mt.label}
+                </button>
+              ))}
             </div>
-            <div className="field contact-mailer-date-field">
-              <label>Date sent</label>
-              <input
-                type="date"
-                value={contact.mailerSentAt ?? ''}
-                onChange={(e) => patchContact({ mailerSentAt: e.target.value || null })}
-              />
-            </div>
+          </div>
+          <div className="field">
+            <label>Date sent</label>
+            <input
+              type="date"
+              value={contact.mailerSentAt ?? ''}
+              onChange={(e) => patchContact({ mailerSentAt: e.target.value || null })}
+            />
           </div>
         </div>
       </div>
 
       {/* ── Step 4: Phone Calls ────────────────────────────────────────── */}
       <div className={`contact-step card${step4Done ? ' contact-step--done' : ''}`}>
-        <StepHeader
-          num={4}
-          title="Make Phone Contact"
-          subtitle="Log each call attempt and track outcomes"
-          complete={step4Done}
-        />
+        <StepHeader num={4} title="Phone Contact" subtitle="Log each call attempt" complete={step4Done} />
         <div className="contact-step-body">
-          {/* Call log */}
           {contact.callAttempts.length > 0 && (
             <div className="call-log">
               {contact.callAttempts.map((attempt) => {
@@ -319,7 +274,7 @@ export function OffMarketContactPanel({ home, onChange }: Props) {
                       {opt?.label ?? attempt.outcome}
                     </span>
                     {attempt.notes && (
-                      <span className="call-log-notes">{attempt.notes}</span>
+                      <span className="call-log-notes" title={attempt.notes}>{attempt.notes}</span>
                     )}
                     <button
                       type="button"
@@ -327,7 +282,7 @@ export function OffMarketContactPanel({ home, onChange }: Props) {
                       onClick={() => removeCall(attempt.id)}
                       title="Remove"
                     >
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M18 6 6 18M6 6l12 12"/>
                       </svg>
                     </button>
@@ -337,65 +292,46 @@ export function OffMarketContactPanel({ home, onChange }: Props) {
             </div>
           )}
 
-          {/* Log call form */}
           {showCallForm ? (
             <div className="call-draft-form">
               <div className="call-draft-row">
-                <div className="field call-draft-date">
-                  <label>Date</label>
-                  <input
-                    type="date"
-                    value={callDraft.date}
-                    onChange={(e) => setCallDraft(d => ({ ...d, date: e.target.value }))}
-                  />
-                </div>
-                <div className="call-draft-outcome">
-                  <label className="contact-field-label">Outcome</label>
-                  <div className="condition-pills">
-                    {CALL_OUTCOME_OPTIONS.map((opt) => (
-                      <button
-                        key={opt.id}
-                        type="button"
-                        className={`condition-pill ${callDraft.outcome === opt.id ? `active-${opt.cls === 'success' ? 'light' : opt.cls}` : ''}`}
-                        onClick={() => setCallDraft(d => ({ ...d, outcome: d.outcome === opt.id ? null : opt.id }))}
-                      >
-                        {opt.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <div className="field">
-                <label>Notes <span className="contact-optional">(optional)</span></label>
-                <textarea
-                  rows={2}
-                  value={callDraft.notes}
-                  onChange={(e) => setCallDraft(d => ({ ...d, notes: e.target.value }))}
-                  placeholder="What was discussed…"
-                  style={{ resize: 'none' }}
+                <input
+                  type="date"
+                  className="call-draft-date-input"
+                  value={callDraft.date}
+                  onChange={(e) => setCallDraft(d => ({ ...d, date: e.target.value }))}
                 />
+                <div className="condition-pills call-draft-pills">
+                  {CALL_OUTCOME_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      className={`condition-pill ${callDraft.outcome === opt.id ? `active-${opt.cls === 'success' ? 'light' : opt.cls}` : ''}`}
+                      onClick={() => setCallDraft(d => ({ ...d, outcome: d.outcome === opt.id ? null : opt.id }))}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
               </div>
+              <input
+                type="text"
+                value={callDraft.notes}
+                onChange={(e) => setCallDraft(d => ({ ...d, notes: e.target.value }))}
+                placeholder="Notes (optional)"
+              />
               <div className="call-draft-actions">
-                <button
-                  type="button"
-                  className="btn btn-primary btn-sm"
-                  onClick={logCall}
-                  disabled={!callDraft.outcome}
-                >
-                  Save Call
+                <button type="button" className="btn btn-primary btn-sm" onClick={logCall} disabled={!callDraft.outcome}>
+                  Save
                 </button>
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-sm"
-                  onClick={() => setShowCallForm(false)}
-                >
+                <button type="button" className="btn btn-secondary btn-sm" onClick={() => setShowCallForm(false)}>
                   Cancel
                 </button>
               </div>
             </div>
           ) : (
             <button type="button" className="contact-add-btn" onClick={() => setShowCallForm(true)}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
               </svg>
               Log a call
@@ -404,12 +340,12 @@ export function OffMarketContactPanel({ home, onChange }: Props) {
         </div>
       </div>
 
-      {/* ── Compact Screening Card ─────────────────────────────────────── */}
+      {/* ── Compact Screening Strip ────────────────────────────────────── */}
       <div className="card contact-screening-card">
         <div className="contact-screening-header">
           <span className="contact-screening-label">Screening</span>
         </div>
-        <div className="screen-grid-compact contact-screening-grid">
+        <div className="contact-screening-grid screen-grid-compact">
           <div className="field">
             <label>ARV</label>
             <input
@@ -441,9 +377,7 @@ export function OffMarketContactPanel({ home, onChange }: Props) {
             <label>Available for sale?</label>
             <div className="condition-pills">
               {(['yes', 'no', 'unknown'] as const).map((o) => (
-                <button
-                  key={o}
-                  type="button"
+                <button key={o} type="button"
                   className={`condition-pill ${home.funnel.availableForSale === o ? `active-${o === 'yes' ? 'light' : o === 'no' ? 'heavy' : 'none'}` : ''}`}
                   onClick={() => updateFunnel({ availableForSale: home.funnel.availableForSale === o ? null : o })}
                 >
@@ -456,9 +390,7 @@ export function OffMarketContactPanel({ home, onChange }: Props) {
             <label>Seller motivated?</label>
             <div className="condition-pills">
               {(['yes', 'no', 'unknown'] as const).map((o) => (
-                <button
-                  key={o}
-                  type="button"
+                <button key={o} type="button"
                   className={`condition-pill ${home.funnel.sellerMotivated === o ? `active-${o === 'yes' ? 'light' : o === 'no' ? 'heavy' : 'none'}` : ''}`}
                   onClick={() => updateFunnel({ sellerMotivated: home.funnel.sellerMotivated === o ? null : o })}
                 >
@@ -470,7 +402,7 @@ export function OffMarketContactPanel({ home, onChange }: Props) {
           <div className="field screen-notes-field">
             <label>Quick notes</label>
             <textarea
-              rows={2}
+              rows={1}
               value={home.funnel.quickNotes}
               onChange={(e) => updateFunnel({ quickNotes: e.target.value })}
               style={{ resize: 'none' }}

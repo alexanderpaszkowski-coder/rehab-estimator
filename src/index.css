@@ -4598,21 +4598,32 @@ textarea { resize: vertical; }
 
 /* ── Off-Market Contact Funnel ──────────────────────────────────────── */
 .modal-edit-panel--contact {
-  padding: 0 4px 16px;
-}
-
-.contact-funnel {
+  padding: 6px 8px 8px;
+  height: 100%;
   display: flex;
   flex-direction: column;
-  gap: 10px;
 }
 
-/* Step cards */
+/* 2×2 grid of step cards + full-width screening strip */
+.contact-funnel {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr auto;
+  gap: 7px;
+  flex: 1;
+  min-height: 0;
+}
+
+/* Step cards fill their grid cell */
 .contact-step.card {
-  padding: 14px 16px 12px;
+  padding: 10px 12px 10px;
   margin-bottom: 0;
   border-left: 3px solid var(--border-strong);
   transition: border-color .2s;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
 }
 .contact-step--done.card {
   border-left-color: var(--success);
@@ -4622,8 +4633,9 @@ textarea { resize: vertical; }
 .contact-step-header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 12px;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-shrink: 0;
 }
 
 /* Numbered badge */
@@ -4631,13 +4643,13 @@ textarea { resize: vertical; }
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
-  min-width: 22px;
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
   border-radius: 50%;
   background: var(--surface-3);
   border: 1.5px solid var(--border-strong);
-  font-size: 0.68rem;
+  font-size: 0.64rem;
   font-weight: 700;
   color: var(--text-muted);
   flex-shrink: 0;
@@ -4651,30 +4663,32 @@ textarea { resize: vertical; }
 .contact-step-header-text {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 0;
   flex: 1;
   min-width: 0;
 }
 .contact-step-title {
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   font-weight: 700;
   color: var(--text);
   letter-spacing: -0.01em;
+  line-height: 1.2;
 }
 .contact-step-subtitle {
-  font-size: 0.68rem;
+  font-size: 0.62rem;
   color: var(--text-muted);
+  line-height: 1.3;
 }
 
 .contact-step-done-chip {
-  font-size: 0.62rem;
+  font-size: 0.58rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--success);
   background: var(--success-soft);
   border-radius: 20px;
-  padding: 2px 8px;
+  padding: 1px 7px;
   flex-shrink: 0;
 }
 
@@ -4682,64 +4696,54 @@ textarea { resize: vertical; }
 .contact-step-body {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
+.contact-step-body .field { margin-bottom: 0; }
 .contact-step-body .field label,
 .contact-field-label {
   display: block;
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 600;
   color: var(--text-muted);
-  margin-bottom: 5px;
+  margin-bottom: 3px;
 }
 .contact-step-body input[type="text"],
 .contact-step-body input[type="tel"],
 .contact-step-body input[type="date"],
 .contact-step-body input[type="number"],
 .contact-step-body textarea {
-  font-size: 0.78rem;
-  padding: 5px 8px;
+  font-size: 0.74rem;
+  padding: 4px 7px;
 }
 .contact-step-body .condition-pill {
-  font-size: 0.65rem;
-  padding: 2px 8px;
-}
-
-/* Owner grid */
-.contact-owner-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-@media (max-width: 600px) {
-  .contact-owner-grid { grid-template-columns: 1fr; }
+  font-size: 0.62rem;
+  padding: 2px 7px;
 }
 
 .contact-optional {
-  font-size: 0.68rem;
+  font-size: 0.64rem;
   font-weight: 400;
   color: var(--text-subtle);
 }
 
-/* External link row */
-.contact-link-row {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  margin-top: 4px;
-}
+/* PropStream link */
 .contact-ext-btn {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  font-size: 0.68rem;
+  gap: 4px;
+  font-size: 0.65rem;
   font-weight: 600;
   color: var(--accent);
   background: var(--accent-soft);
   border-radius: var(--radius-xs);
-  padding: 3px 9px;
+  padding: 2px 8px;
   text-decoration: none;
   transition: background .15s;
+  margin-top: 2px;
+  align-self: flex-start;
 }
 .contact-ext-btn:hover { background: #ffe4d6; }
 
@@ -4747,29 +4751,28 @@ textarea { resize: vertical; }
 .phone-entry-row {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 5px;
 }
 .phone-entry-number {
   flex: 1;
   min-width: 0;
 }
-.phone-entry-pills {
-  flex-shrink: 0;
-}
+.phone-entry-pills { flex-shrink: 0; }
 
 /* Add / remove buttons */
 .contact-add-btn {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  font-size: 0.72rem;
+  gap: 4px;
+  font-size: 0.68rem;
   font-weight: 600;
   color: var(--accent);
-  padding: 4px 0;
+  padding: 2px 0;
   background: none;
   border: none;
   cursor: pointer;
   transition: opacity .15s;
+  flex-shrink: 0;
 }
 .contact-add-btn:hover { opacity: 0.75; }
 
@@ -4777,9 +4780,9 @@ textarea { resize: vertical; }
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
-  min-width: 24px;
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
   border-radius: 50%;
   background: none;
   color: var(--text-subtle);
@@ -4789,22 +4792,12 @@ textarea { resize: vertical; }
 }
 .contact-remove-btn:hover { background: #fef2f2; color: var(--danger); }
 
-/* Mailer grid */
-.contact-mailer-grid {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 12px;
-  align-items: start;
-}
-.contact-step-field-block { display: flex; flex-direction: column; }
-.contact-mailer-date-field { min-width: 130px; }
-@media (max-width: 600px) {
-  .contact-mailer-grid { grid-template-columns: 1fr; }
-}
+/* Mailer step fields */
+.contact-step-field-block { display: flex; flex-direction: column; gap: 3px; }
 
 /* Empty hint */
 .contact-empty-hint {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: var(--text-subtle);
   font-style: italic;
 }
@@ -4813,27 +4806,27 @@ textarea { resize: vertical; }
 .call-log {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  margin-bottom: 6px;
+  gap: 3px;
+  margin-bottom: 4px;
 }
 .call-log-entry {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 5px 8px;
+  gap: 6px;
+  padding: 4px 6px;
   background: var(--surface-2);
   border-radius: var(--radius-xs);
   border: 1px solid var(--border);
 }
 .call-log-date {
-  font-size: 0.68rem;
+  font-size: 0.64rem;
   font-weight: 600;
   color: var(--text-muted);
   white-space: nowrap;
-  min-width: 40px;
+  min-width: 36px;
 }
 .call-log-notes {
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   color: var(--text-muted);
   flex: 1;
   min-width: 0;
@@ -4846,57 +4839,63 @@ textarea { resize: vertical; }
 /* Outcome chips */
 .call-outcome-chip {
   display: inline-block;
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   border-radius: 20px;
-  padding: 2px 8px;
+  padding: 1px 7px;
   white-space: nowrap;
   flex-shrink: 0;
 }
-.call-outcome-chip--grey    { background: var(--surface-3);    color: var(--text-muted);  }
-.call-outcome-chip--yellow  { background: var(--warning-soft); color: var(--warning);     }
-.call-outcome-chip--green   { background: var(--success-soft); color: var(--success);     }
-.call-outcome-chip--success { background: var(--success-soft); color: var(--success);     }
-.call-outcome-chip--red     { background: #fef2f2;             color: var(--danger);      }
+.call-outcome-chip--grey    { background: var(--surface-3);    color: var(--text-muted); }
+.call-outcome-chip--yellow  { background: var(--warning-soft); color: var(--warning);    }
+.call-outcome-chip--green   { background: var(--success-soft); color: var(--success);    }
+.call-outcome-chip--success { background: var(--success-soft); color: var(--success);    }
+.call-outcome-chip--red     { background: #fef2f2;             color: var(--danger);     }
 
-/* Call draft form */
+/* Compact call draft form */
 .call-draft-form {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 10px 12px;
+  gap: 5px;
+  padding: 7px 8px;
   background: var(--surface-2);
   border-radius: var(--radius-sm);
   border: 1.5px solid var(--border);
 }
 .call-draft-row {
   display: flex;
-  gap: 10px;
-  align-items: flex-start;
+  gap: 6px;
+  align-items: center;
 }
-.call-draft-date { min-width: 130px; max-width: 140px; }
-.call-draft-outcome { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.call-draft-date-input {
+  width: 120px;
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  padding: 3px 6px;
+}
+.call-draft-pills { flex: 1; flex-wrap: wrap; }
 .call-draft-actions {
   display: flex;
-  gap: 6px;
+  gap: 5px;
 }
-@media (max-width: 600px) {
-  .call-draft-row { flex-direction: column; }
-  .call-draft-date { max-width: 100%; }
+.call-draft-actions .btn-sm {
+  padding: 3px 10px;
+  font-size: 0.7rem;
 }
 
-/* Compact screening card at the bottom */
+/* Screening card — spans full width, row 3 */
 .contact-screening-card.card {
-  padding: 12px 16px 10px;
+  grid-column: 1 / -1;
+  padding: 8px 12px 8px;
   margin-bottom: 0;
 }
 .contact-screening-header {
-  margin-bottom: 10px;
+  margin-bottom: 6px;
 }
 .contact-screening-label {
-  font-size: 0.68rem;
+  font-size: 0.64rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.07em;
@@ -4904,14 +4903,28 @@ textarea { resize: vertical; }
 }
 .contact-screening-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+  align-items: start;
 }
 .contact-screening-grid .screen-notes-field {
-  grid-column: 1 / -1;
+  grid-column: 5 / -1;
 }
-@media (max-width: 600px) {
-  .contact-screening-grid { grid-template-columns: 1fr; }
+.contact-screening-grid .field label,
+.contact-screening-grid .screen-item label {
+  font-size: 0.64rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 3px;
+}
+.contact-screening-grid input[type="number"],
+.contact-screening-grid textarea {
+  font-size: 0.72rem;
+  padding: 3px 6px;
+}
+.contact-screening-grid .condition-pill {
+  font-size: 0.58rem;
+  padding: 1px 6px;
 }
 
 /* ── Modal edit panel — compact overrides ───────────────────────────── */

@@ -1056,11 +1056,12 @@
       "name": "Partition wall \u2014 new",
       "spec": "2x4 16\" OC",
       "unit": "LF",
-      "unitCost": 18,
+      "unitCost": 12,
       "qty": "",
       "bid": "",
       "actual": "",
-      "notes": ""
+      "notes": "",
+      "tip": "Frame with standard SPF studs at 16\" OC and only where the layout truly needs a wall \u2014 open plans show better and cost less. Use in-house carpenter/labor. Remember this rate is framing only; drywall, tape, and paint live in other line items."
     },
     {
       "type": "line",
@@ -1069,11 +1070,12 @@
       "name": "Bearing wall opening + LVL header",
       "spec": "Engineered",
       "unit": "EA",
-      "unitCost": 2200,
+      "unitCost": 1500,
       "qty": "",
       "bid": "",
       "actual": "",
-      "notes": ""
+      "notes": "",
+      "tip": "Keep the span short (a 6\u20138 ft opening is dramatically cheaper than a wide one); leave the beam dropped/boxed instead of flushing it into the ceiling to save labor; one structural-engineer letter covers the sizing; avoid walls carrying plumbing/HVAC/electrical that force expensive reroutes."
     },
     {
       "type": "line",
@@ -1082,11 +1084,12 @@
       "name": "Subfloor replacement",
       "spec": "3/4 T&G OSB",
       "unit": "SF",
-      "unitCost": 3.25,
+      "unitCost": 3.0,
       "qty": "",
       "bid": "",
       "actual": "",
-      "notes": ""
+      "notes": "",
+      "tip": "Replace only the soft/rotted sections, not the whole floor; standard \u00be\" (23/32\") T&G plywood or OSB screwed to existing joists; in-house labor."
     },
     {
       "type": "line",
@@ -1095,11 +1098,12 @@
       "name": "Joist sister/repair",
       "spec": "Per joist",
       "unit": "EA",
-      "unitCost": 175,
+      "unitCost": 125,
       "qty": "",
       "bid": "",
       "actual": "",
-      "notes": ""
+      "notes": "",
+      "tip": "Sister only the cracked/deflected joists with dimensional lumber alongside; do it while the subfloor is already open to avoid double demo; glue-and-screw where code allows instead of through-bolting."
     },
     {
       "type": "line",
@@ -1108,11 +1112,12 @@
       "name": "Stair rebuild/repair",
       "spec": "Treads, risers, stringers",
       "unit": "LS",
-      "unitCost": 1200,
+      "unitCost": 900,
       "qty": "",
       "bid": "",
       "actual": "",
-      "notes": ""
+      "notes": "",
+      "tip": "Repair and re-secure sound stringers and swap only failed treads rather than a full rebuild; paint risers + paint/runner the treads (cheap) instead of new hardwood; reserve a full rebuild for stairs that are failed or out of code."
     },
     {
       "type": "subtotal",

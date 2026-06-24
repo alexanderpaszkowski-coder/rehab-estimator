@@ -14,7 +14,8 @@ import { getListingUrl, isRefreshable } from '../lib/listingRefresh'
 import { generateAiRehabPrompt } from '../lib/copyContent'
 import { getAuctionDeadlineMs, getAuctionCountdown } from '../lib/auctionSchedule'
 import { FunnelDetails } from './FunnelDetails'
-import { OffMarketContactPanel } from './OffMarketContact'
+import { OffMarketContactPanel, ownerComplete, phonesComplete, mailerComplete, callsComplete } from './OffMarketContact'
+import { DEFAULT_CONTACT } from '../lib/defaults'
 import { PropertyInputs as PropertyInputsView } from './PropertyInputs'
 import { QuickEstimate } from './QuickEstimate'
 import { ScopeOfWork } from './ScopeOfWork'
@@ -40,19 +41,27 @@ type ViewMode = 'on-market' | 'off-market'
 const OFF_MARKET_SOURCES: PropertySource[] = [
   'driving-for-dollars', 'off-market', 'wholesale', 'direct-mail', 'other',
 ]
-type ActionGroupKey = 'send-mailer' | 'need-arv' | 'need-rehab' | 'need-hml' | 'offer-ready' | 'max-bid' | 'active' | 'closed'
+type ActionGroupKey =
+  | 'find-owner' | 'find-phones' | 'send-mailer' | 'make-call'
+  | 'need-arv' | 'need-rehab' | 'need-hml' | 'offer-ready' | 'max-bid' | 'active' | 'closed'
 
-const ACTION_GROUP_ORDER: ActionGroupKey[] = ['send-mailer', 'need-arv', 'need-rehab', 'need-hml', 'offer-ready', 'max-bid', 'active', 'closed']
+const ACTION_GROUP_ORDER: ActionGroupKey[] = [
+  'find-owner', 'find-phones', 'send-mailer', 'make-call',
+  'need-arv', 'need-rehab', 'need-hml', 'offer-ready', 'max-bid', 'active', 'closed',
+]
 
 const ACTION_GROUP_META: Record<ActionGroupKey, { label: string; sub: string; color: string }> = {
-  'send-mailer': { label: 'Send Mailer',             sub: 'Off-market / drive-by — send a letter or make contact first', color: '#7c3aed' },
-  'need-arv':    { label: 'Need ARV',                sub: 'Run comps to establish value before going further',            color: '#2563eb' },
-  'need-rehab':  { label: 'Need Rehab Numbers',      sub: 'Complete the full rehab scope — every system, not just a start', color: '#1e3a5f' },
-  'need-hml':    { label: 'Need Hard Money Numbers', sub: 'Run financing scenarios with your lender',                     color: '#0891b2' },
-  'offer-ready': { label: 'Offer Ready',             sub: 'All numbers confirmed — move quickly',                         color: '#15803d' },
-  'max-bid':     { label: 'Max Bid Needed',          sub: 'Auction — calculate your walk-away number before it opens',    color: '#1e293b' },
-  'active':      { label: 'Active',                  sub: 'Under contract, in rehab, or listed',                          color: '#6b7280' },
-  'closed':      { label: 'Closed',                  sub: 'Sold or passed on',                                            color: '#9ca3af' },
+  'find-owner':  { label: 'Step 1 — Find Owner',      sub: 'Look up the property owner via PropStream or county records',   color: '#7c3aed' },
+  'find-phones': { label: 'Step 2 — Find Phones',     sub: 'Skip-trace or pull phone numbers from PropStream',              color: '#9333ea' },
+  'send-mailer': { label: 'Step 3 — Send Mailer',     sub: 'Send a yellow letter, postcard, or typed letter to the owner',  color: '#c026d3' },
+  'make-call':   { label: 'Step 4 — Make Contact',    sub: 'Call the owner and log the outcome',                            color: '#db2777' },
+  'need-arv':    { label: 'Need ARV',                 sub: 'Run comps to establish value before going further',             color: '#2563eb' },
+  'need-rehab':  { label: 'Need Rehab Numbers',       sub: 'Complete the full rehab scope — every system, not just a start', color: '#1e3a5f' },
+  'need-hml':    { label: 'Need Hard Money Numbers',  sub: 'Run financing scenarios with your lender',                      color: '#0891b2' },
+  'offer-ready': { label: 'Offer Ready',              sub: 'All numbers confirmed — move quickly',                          color: '#15803d' },
+  'max-bid':     { label: 'Max Bid Needed',           sub: 'Auction — calculate your walk-away number before it opens',     color: '#1e293b' },
+  'active':      { label: 'Active',                   sub: 'Under contract, in rehab, or listed',                           color: '#6b7280' },
+  'closed':      { label: 'Closed',                   sub: 'Sold or passed on',                                             color: '#9ca3af' },
 }
 
 // Off-market / direct-contact sources where you send mail before anything else
@@ -75,11 +84,14 @@ function getActionGroup(home: HomeFile, _analysis: DealAnalysis): ActionGroupKey
   // ARV is done but rehab scope not yet complete
   if (home.stage === 'arv-calculated') return 'need-rehab'
 
-  // New lead (lead stage) — off-market sources need contact work first;
-  // once owner is identified, move on to ARV like any other lead
+  // New lead (lead stage) — off-market sources step through the contact funnel
   if (SEND_MAILER_SOURCES.includes(home.source)) {
-    const ownerKnown = home.contact?.ownerName?.trim()
-    return ownerKnown ? 'need-arv' : 'send-mailer'
+    const c = home.contact ?? DEFAULT_CONTACT
+    if (!ownerComplete(c))  return 'find-owner'
+    if (!phonesComplete(c)) return 'find-phones'
+    if (!mailerComplete(c)) return 'send-mailer'
+    if (!callsComplete(c))  return 'make-call'
+    return 'need-arv'
   }
 
   // Online listing with no further work done

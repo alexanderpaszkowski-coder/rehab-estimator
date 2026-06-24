@@ -1,6 +1,6 @@
 import templateData from '../data/template.json'
 import { DEFAULT_FUNNEL, normalizeStage } from './funnel'
-import type { DealCosts, FunnelScreen, HomeFile, IntakeData, PropertyInputs, QuickSystem, SowItem } from '../types'
+import type { DealCosts, FunnelScreen, HomeFile, IntakeData, OffMarketContact, PropertyInputs, QuickSystem, SowItem } from '../types'
 
 const template = templateData as {
   quickEstimateSystems: QuickSystem[]
@@ -21,6 +21,15 @@ export const FINISH_CATEGORIES = new Set([
   'Interior Doors, Trim & Closets',
   'Exterior & Curb Appeal',
 ])
+
+export const DEFAULT_CONTACT: OffMarketContact = {
+  ownerName: '',
+  ownerName2: '',
+  phones: [],
+  mailerSentAt: null,
+  mailerType: null,
+  callAttempts: [],
+}
 
 export const DEFAULT_DEAL_COSTS: DealCosts = {
   buySideClosingPct:  0.02,
@@ -134,6 +143,9 @@ export function migrateHome(raw: Partial<HomeFile> & { address: string }): HomeF
     listingUrl: raw.listingUrl ?? raw.links?.[0],
     propstreamUrl: raw.propstreamUrl,
     lastScrapedAt: raw.lastScrapedAt,
+    contact: raw.contact
+      ? { ...DEFAULT_CONTACT, ...raw.contact }
+      : undefined,
   }
   return merged
 }

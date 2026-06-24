@@ -14,6 +14,7 @@ import { getListingUrl, isRefreshable } from '../lib/listingRefresh'
 import { generateAiRehabPrompt } from '../lib/copyContent'
 import { getAuctionDeadlineMs, getAuctionCountdown } from '../lib/auctionSchedule'
 import { FunnelDetails } from './FunnelDetails'
+import { OffMarketContactPanel } from './OffMarketContact'
 import { PropertyInputs as PropertyInputsView } from './PropertyInputs'
 import { QuickEstimate } from './QuickEstimate'
 import { ScopeOfWork } from './ScopeOfWork'
@@ -74,8 +75,12 @@ function getActionGroup(home: HomeFile, _analysis: DealAnalysis): ActionGroupKey
   // ARV is done but rehab scope not yet complete
   if (home.stage === 'arv-calculated') return 'need-rehab'
 
-  // New lead (lead stage) — off-market sources need a mailer before anything else
-  if (SEND_MAILER_SOURCES.includes(home.source)) return 'send-mailer'
+  // New lead (lead stage) — off-market sources need contact work first;
+  // once owner is identified, move on to ARV like any other lead
+  if (SEND_MAILER_SOURCES.includes(home.source)) {
+    const ownerKnown = home.contact?.ownerName?.trim()
+    return ownerKnown ? 'need-arv' : 'send-mailer'
+  }
 
   // Online listing with no further work done
   return 'need-arv'
@@ -756,12 +761,23 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
                 </div>
               )}
               {onUpdateHome && (
-                <div className="modal-edit-panel modal-edit-panel--screen ov-screen-panel">
-                  <FunnelDetails
-                    home={home}
-                    onChange={(patch) => handleChange(patch)}
-                  />
-                </div>
+                OFF_MARKET_SOURCES.includes(home.source)
+                  ? (
+                    <div className="modal-edit-panel modal-edit-panel--contact ov-screen-panel">
+                      <OffMarketContactPanel
+                        home={home}
+                        onChange={(patch) => handleChange(patch)}
+                      />
+                    </div>
+                  )
+                  : (
+                    <div className="modal-edit-panel modal-edit-panel--screen ov-screen-panel">
+                      <FunnelDetails
+                        home={home}
+                        onChange={(patch) => handleChange(patch)}
+                      />
+                    </div>
+                  )
               )}
             </div>
           )}

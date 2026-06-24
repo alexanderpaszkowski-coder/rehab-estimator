@@ -1,4 +1,30 @@
 export type Condition = 'None' | 'Light' | 'Moderate' | 'Heavy'
+
+export type PhoneType   = 'mobile' | 'landline' | 'unknown'
+export type CallOutcome = 'no-answer' | 'voicemail' | 'reached' | 'not-interested' | 'interested'
+export type MailerType  = 'yellow-letter' | 'postcard' | 'typed-letter' | 'other'
+
+export interface PhoneEntry {
+  number: string
+  type: PhoneType
+}
+
+export interface CallAttempt {
+  id: string
+  /** ISO date string (YYYY-MM-DD) */
+  date: string
+  outcome: CallOutcome
+  notes: string
+}
+
+export interface OffMarketContact {
+  ownerName: string
+  ownerName2: string
+  phones: PhoneEntry[]
+  mailerSentAt: string | null
+  mailerType: MailerType | null
+  callAttempts: CallAttempt[]
+}
 export type FinishGrade = 'Rental' | 'Flip-Builder' | 'Premium'
 export type Tab = 'funnel' | 'lead' | 'property' | 'quick' | 'sow' | 'summary'
 
@@ -200,6 +226,8 @@ export interface HomeFile {
   propstreamUrl?: string
   /** Last time listing data was refreshed from source */
   lastScrapedAt?: string
+  /** Off-market contact tracking (owner, phones, mailer, calls) */
+  contact?: OffMarketContact
 }
 
 export interface CategorySummary {

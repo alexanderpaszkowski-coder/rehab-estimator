@@ -4596,6 +4596,324 @@ textarea { resize: vertical; }
   border-bottom: 1px solid var(--border);
 }
 
+/* ── Off-Market Contact Funnel ──────────────────────────────────────── */
+.modal-edit-panel--contact {
+  padding: 0 4px 16px;
+}
+
+.contact-funnel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Step cards */
+.contact-step.card {
+  padding: 14px 16px 12px;
+  margin-bottom: 0;
+  border-left: 3px solid var(--border-strong);
+  transition: border-color .2s;
+}
+.contact-step--done.card {
+  border-left-color: var(--success);
+}
+
+/* Step header row */
+.contact-step-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+/* Numbered badge */
+.contact-step-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  border-radius: 50%;
+  background: var(--surface-3);
+  border: 1.5px solid var(--border-strong);
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+.contact-step-badge--done {
+  background: var(--success);
+  border-color: var(--success);
+  color: #fff;
+}
+
+.contact-step-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+.contact-step-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+.contact-step-subtitle {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+.contact-step-done-chip {
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--success);
+  background: var(--success-soft);
+  border-radius: 20px;
+  padding: 2px 8px;
+  flex-shrink: 0;
+}
+
+/* Step body — inputs */
+.contact-step-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.contact-step-body .field label,
+.contact-field-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 5px;
+}
+.contact-step-body input[type="text"],
+.contact-step-body input[type="tel"],
+.contact-step-body input[type="date"],
+.contact-step-body input[type="number"],
+.contact-step-body textarea {
+  font-size: 0.78rem;
+  padding: 5px 8px;
+}
+.contact-step-body .condition-pill {
+  font-size: 0.65rem;
+  padding: 2px 8px;
+}
+
+/* Owner grid */
+.contact-owner-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+@media (max-width: 600px) {
+  .contact-owner-grid { grid-template-columns: 1fr; }
+}
+
+.contact-optional {
+  font-size: 0.68rem;
+  font-weight: 400;
+  color: var(--text-subtle);
+}
+
+/* External link row */
+.contact-link-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+.contact-ext-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: var(--radius-xs);
+  padding: 3px 9px;
+  text-decoration: none;
+  transition: background .15s;
+}
+.contact-ext-btn:hover { background: #ffe4d6; }
+
+/* Phone entry rows */
+.phone-entry-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.phone-entry-number {
+  flex: 1;
+  min-width: 0;
+}
+.phone-entry-pills {
+  flex-shrink: 0;
+}
+
+/* Add / remove buttons */
+.contact-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--accent);
+  padding: 4px 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: opacity .15s;
+}
+.contact-add-btn:hover { opacity: 0.75; }
+
+.contact-remove-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  border-radius: 50%;
+  background: none;
+  color: var(--text-subtle);
+  cursor: pointer;
+  transition: background .15s, color .15s;
+  flex-shrink: 0;
+}
+.contact-remove-btn:hover { background: #fef2f2; color: var(--danger); }
+
+/* Mailer grid */
+.contact-mailer-grid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: start;
+}
+.contact-step-field-block { display: flex; flex-direction: column; }
+.contact-mailer-date-field { min-width: 130px; }
+@media (max-width: 600px) {
+  .contact-mailer-grid { grid-template-columns: 1fr; }
+}
+
+/* Empty hint */
+.contact-empty-hint {
+  font-size: 0.75rem;
+  color: var(--text-subtle);
+  font-style: italic;
+}
+
+/* Call log */
+.call-log {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+.call-log-entry {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  background: var(--surface-2);
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--border);
+}
+.call-log-date {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+  min-width: 40px;
+}
+.call-log-notes {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.call-log-remove { margin-left: auto; }
+
+/* Outcome chips */
+.call-outcome-chip {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-radius: 20px;
+  padding: 2px 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.call-outcome-chip--grey    { background: var(--surface-3);    color: var(--text-muted);  }
+.call-outcome-chip--yellow  { background: var(--warning-soft); color: var(--warning);     }
+.call-outcome-chip--green   { background: var(--success-soft); color: var(--success);     }
+.call-outcome-chip--success { background: var(--success-soft); color: var(--success);     }
+.call-outcome-chip--red     { background: #fef2f2;             color: var(--danger);      }
+
+/* Call draft form */
+.call-draft-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border);
+}
+.call-draft-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.call-draft-date { min-width: 130px; max-width: 140px; }
+.call-draft-outcome { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.call-draft-actions {
+  display: flex;
+  gap: 6px;
+}
+@media (max-width: 600px) {
+  .call-draft-row { flex-direction: column; }
+  .call-draft-date { max-width: 100%; }
+}
+
+/* Compact screening card at the bottom */
+.contact-screening-card.card {
+  padding: 12px 16px 10px;
+  margin-bottom: 0;
+}
+.contact-screening-header {
+  margin-bottom: 10px;
+}
+.contact-screening-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-muted);
+}
+.contact-screening-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.contact-screening-grid .screen-notes-field {
+  grid-column: 1 / -1;
+}
+@media (max-width: 600px) {
+  .contact-screening-grid { grid-template-columns: 1fr; }
+}
+
 /* ── Modal edit panel — compact overrides ───────────────────────────── */
 .modal-edit-panel {
   padding: 0 4px 16px;

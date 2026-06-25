@@ -14,7 +14,7 @@ import { getListingUrl, isRefreshable } from '../lib/listingRefresh'
 import { generateAiRehabPrompt } from '../lib/copyContent'
 import { getAuctionDeadlineMs, getAuctionCountdown } from '../lib/auctionSchedule'
 import { FunnelDetails } from './FunnelDetails'
-import { OffMarketContactPanel, ownerComplete, phonesComplete, mailerComplete, callsComplete } from './OffMarketContact'
+import { OffMarketContactPanel, ScreeningStrip, ownerComplete, phonesComplete, mailerComplete, callsComplete } from './OffMarketContact'
 import { DEFAULT_CONTACT } from '../lib/defaults'
 import { PropertyInputs as PropertyInputsView } from './PropertyInputs'
 import { QuickEstimate } from './QuickEstimate'
@@ -458,6 +458,11 @@ function SummaryLinkActions({
             className="dcard-action-btn dcard-action-btn--propstream"
             title="Open in PropStream"
           >
+            <img
+              src="https://www.propstream.com/favicon.ico"
+              alt=""
+              style={{ width: 14, height: 14, borderRadius: 3, flexShrink: 0, display: 'block' }}
+            />
             PropStream
           </a>
         )}
@@ -776,6 +781,10 @@ function PropertySummaryModal({ home, onClose, onStageChange, onDelete, onRefres
                 OFF_MARKET_SOURCES.includes(home.source)
                   ? (
                     <div className="modal-edit-panel modal-edit-panel--contact ov-screen-panel">
+                      <ScreeningStrip
+                        home={home}
+                        onChange={(patch) => handleChange(patch)}
+                      />
                       <OffMarketContactPanel
                         home={home}
                         onChange={(patch) => handleChange(patch)}

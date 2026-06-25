@@ -4886,25 +4886,33 @@ textarea { resize: vertical; }
   border-radius: var(--radius-sm);
   border: 1.5px solid var(--border);
 }
-.call-draft-row {
+/* Row 1: outcome pills — full width, wrap to 2 rows max */
+.call-draft-pills {
+  flex-wrap: wrap;
+  gap: 4px;
+}
+/* Row 2: date + notes + save on one line */
+.call-draft-bottom-row {
   display: flex;
-  gap: 6px;
   align-items: center;
-}
-.call-draft-date-input {
-  width: 120px;
-  flex-shrink: 0;
-  font-size: 0.72rem;
-  padding: 3px 6px;
-}
-.call-draft-pills { flex: 1; flex-wrap: wrap; }
-.call-draft-actions {
-  display: flex;
   gap: 5px;
 }
-.call-draft-actions .btn-sm {
-  padding: 3px 10px;
-  font-size: 0.7rem;
+.call-draft-date-input {
+  width: 108px;
+  flex-shrink: 0;
+  font-size: 0.68rem !important;
+  padding: 3px 5px !important;
+}
+.call-draft-notes-input {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.68rem;
+  padding: 3px 6px;
+}
+.call-draft-save-btn {
+  padding: 3px 10px !important;
+  font-size: 0.68rem !important;
+  flex-shrink: 0;
 }
 
 /* Screening card — spans full width, row 3 */

@@ -311,38 +311,41 @@ export function OffMarketContactPanel({ home, onChange }: Props) {
 
           {showCallForm ? (
             <div className="call-draft-form">
-              <div className="call-draft-row">
+              {/* Row 1: outcome pills full width */}
+              <div className="condition-pills call-draft-pills">
+                {CALL_OUTCOME_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    className={`condition-pill ${callDraft.outcome === opt.id ? `active-${opt.cls === 'success' ? 'light' : opt.cls}` : ''}`}
+                    onClick={() => setCallDraft(d => ({ ...d, outcome: d.outcome === opt.id ? null : opt.id }))}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+              {/* Row 2: date + notes + save inline */}
+              <div className="call-draft-bottom-row">
                 <input
                   type="date"
                   className="call-draft-date-input"
                   value={callDraft.date}
                   onChange={(e) => setCallDraft(d => ({ ...d, date: e.target.value }))}
                 />
-                <div className="condition-pills call-draft-pills">
-                  {CALL_OUTCOME_OPTIONS.map((opt) => (
-                    <button
-                      key={opt.id}
-                      type="button"
-                      className={`condition-pill ${callDraft.outcome === opt.id ? `active-${opt.cls === 'success' ? 'light' : opt.cls}` : ''}`}
-                      onClick={() => setCallDraft(d => ({ ...d, outcome: d.outcome === opt.id ? null : opt.id }))}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <input
-                type="text"
-                value={callDraft.notes}
-                onChange={(e) => setCallDraft(d => ({ ...d, notes: e.target.value }))}
-                placeholder="Notes (optional)"
-              />
-              <div className="call-draft-actions">
-                <button type="button" className="btn btn-primary btn-sm" onClick={logCall} disabled={!callDraft.outcome}>
+                <input
+                  type="text"
+                  className="call-draft-notes-input"
+                  value={callDraft.notes}
+                  onChange={(e) => setCallDraft(d => ({ ...d, notes: e.target.value }))}
+                  placeholder="Notes (optional)"
+                />
+                <button type="button" className="btn btn-primary btn-sm call-draft-save-btn" onClick={logCall} disabled={!callDraft.outcome}>
                   Save
                 </button>
-                <button type="button" className="btn btn-secondary btn-sm" onClick={() => setShowCallForm(false)}>
-                  Cancel
+                <button type="button" className="contact-remove-btn" onClick={() => setShowCallForm(false)} title="Cancel">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 6 6 18M6 6l12 12"/>
+                  </svg>
                 </button>
               </div>
             </div>
